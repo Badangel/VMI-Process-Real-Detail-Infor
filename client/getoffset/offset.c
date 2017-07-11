@@ -8,8 +8,34 @@
 #include <linux/file.h>
 #include <linux/path.h>
 #include <linux/mount.h>
+#include <linux/net.h>
+#include <net/sock.h>
 
 struct task_struct task;
+
+#define EMBEDDED_LEVELS 2
+struct nameidata {
+	struct path	path;
+	struct qstr	last;
+	struct path	root;
+	struct inode	*inode; /* path.dentry.d_inode */
+	unsigned int	flags;
+	unsigned	seq, m_seq;
+	int		last_type;
+	unsigned	depth;
+	int		total_link_count;
+	struct saved {
+		struct path link;
+		void *cookie;
+		const char *name;
+		struct inode *inode;
+		unsigned seq;
+	} *stack, internal[EMBEDDED_LEVELS];
+	struct filename	*name;
+	struct nameidata *saved;
+	unsigned	root_seq;
+	int		dfd;
+};
 
 void show_task(void)
 {
@@ -32,25 +58,47 @@ void show_task(void)
 	unsigned long lfs = (unsigned long)(&(task.fs)) - p;
 	unsigned long lfiles = (unsigned long)(&(task.files)) - p;
 	unsigned long ldelays = (unsigned long)(&(task.delays)) - p;
+	unsigned long lnameidata = (unsigned long)(&(task.nameidata)) - p;
+	unsigned long lgroup_leader = (unsigned long)(&(task.group_leader)) - p;
+	unsigned long lutime = (unsigned long)(&(task.utime)) - p;
+	unsigned long lstime = (unsigned long)(&(task.stime)) - p;
+	unsigned long lstart_time = (unsigned long)(&(task.start_time)) - p;
+	unsigned long lreal_start_time = (unsigned long)(&(task.real_start_time)) - p;
+	unsigned long lnsproxy = (unsigned long)(&(task.nsproxy)) - p;
+	unsigned long lreal_parent = (unsigned long)(&(task.real_parent)) - p;
+	unsigned long lparent = (unsigned long)(&(task.parent)) - p;
+	unsigned long lbio_list = (unsigned long)(&(task.bio_list)) - p;
+	unsigned long lsplice_pipe = (unsigned long)(&(task.splice_pipe)) - p;
 
 	//task_struct show
 	printk("-----------task_struct-----------");
-	printk("total_size: 0x%x\n", task_size);
-	printk("tasks_offset: 0x%x\n", ltasks);
-	printk("state_offset: 0x%x\n", lstate);
-	printk("flags_offset: 0x%x\n", lflags);
-	printk("prio_offset: 0x%x\n", lprio);
-	printk("static_prio_offset: 0x%x\n", lstatic_prio);
-	printk("normal_prio_offset: 0x%x\n", lnormal_prio);
-	printk("rt_priority_offset: 0x%x\n", lrt_priority);
-	printk("pid_offset: 0x%x\n", lpid);
-	printk("tgid_offset: 0x%x\n", ltgid);
-	printk("common_offset: 0x%x\n", lcommon);
-	printk("ioac_offset: 0x%x\n", lioac);
-	printk("mm_offset: 0x%x\n", lmm);
-	printk("fs_offset: 0x%x\n", lfs);
-	printk("files_offset: 0x%x\n", lfiles);
-	printk("delays_offset: 0x%x\n\n", ldelays);
+	printk("total_size: %d\n", task_size);
+	printk("tasks_offset: %d\n", ltasks);
+	printk("state_offset: %d\n", lstate);
+	printk("flags_offset: %d\n", lflags);
+	printk("prio_offset: %d\n", lprio);
+	printk("static_prio_offset: %d\n", lstatic_prio);
+	printk("normal_prio_offset: %d\n", lnormal_prio);
+	printk("rt_priority_offset: %d\n", lrt_priority);
+	printk("pid_offset: %d\n", lpid);
+	printk("tgid_offset: %d\n", ltgid);
+	printk("common_offset: %d\n", lcommon);
+	printk("ioac_offset: %d\n", lioac);
+	printk("mm_offset: %d\n", lmm);
+	printk("fs_offset: %d\n", lfs);
+	printk("files_offset: %d\n", lfiles);
+	printk("nameidata_offset: %d\n", lnameidata);
+	printk("group_leader_offset: %d\n", lgroup_leader);
+	printk("utime_offset: %d\n", lutime);
+	printk("utime_offset: %d\n", lstime);
+	printk("start_time_offset: %d\n", lstart_time);
+	printk("real_start_time_offset: %d\n", lreal_start_time);
+	printk("nsproxy_time_offset: %d\n", lnsproxy);
+	printk("task_real_parent_offset: %d\n", lreal_parent);
+	printk("task_parent_offset: %d\n", lparent);
+	printk("bio_list_offset: %d\n", lbio_list);
+	printk("splice_pipe_offset: %d\n", lsplice_pipe);
+	printk("delays_offset: %d\n\n", ldelays);
 
 	
 }
@@ -67,9 +115,9 @@ void show_mm(void)
 	
 	//mm_struct  show
 	printk("-----------mm_struct-----------");
-	printk("total_size: 0x%x\n", mm_size);
-	printk("pgd_offset: 0x%x\n", lpgd);
-	printk("startcode_offset: 0x%x\n\n", laddr);
+	printk("total_size: %d\n", mm_size);
+	printk("pgd_offset: %d\n", lpgd);
+	printk("startcode_offset: %d\n\n", laddr);
 }
 
 void show_fopera(void)
@@ -88,13 +136,13 @@ void show_fopera(void)
 
 	//file_operations show
 	printk("-----------file_operations-----------");
-	printk("total_size: 0x%x\n", opera_size);
-	printk("owner_offset: 0x%x\n", owner_addr);
-	printk("read_offset: 0x%x\n", read_addr);
-	printk("write_offset: 0x%x\n", write_addr);
-	printk("open_offset: 0x%x\n\n", open_addr);
-	//printk("aio_read_offset: 0x%x\n", aio_read_addr);
-	//printk("readdir_offset: 0x%x\n\n", readdir_addr);
+	printk("total_size: %d\n", opera_size);
+	printk("owner_offset: %d\n", owner_addr);
+	printk("read_offset: %d\n", read_addr);
+	printk("write_offset: %d\n", write_addr);
+	printk("open_offset: %d\n\n", open_addr);
+	//printk("aio_read_offset: %d\n", aio_read_addr);
+	//printk("readdir_offset: %d\n\n", readdir_addr);
 }
 
 void show_fs(void)
@@ -110,9 +158,9 @@ void show_fs(void)
 	
 	//fs_struct  show
 	printk("-----------fs_struct-----------");
-	printk("total_size: 0x%x\n", fs_size);
-	printk("root_offset: 0x%x\n", lroot);
-	printk("pwd_offset: 0x%x\n\n", lpwd);
+	printk("total_size: %d\n", fs_size);
+	printk("root_offset: %d\n", lroot);
+	printk("pwd_offset: %d\n\n", lpwd);
 }
 
 void show_files_struct(void)
@@ -131,11 +179,11 @@ void show_files_struct(void)
 	
 	//files_struct  show
 	printk("-----------files_struct-----------");
-	printk("total_size: 0x%x\n", files_size);
-	printk("count_offset: 0x%x\n", lcount);
-	printk("fdt_offset: 0x%x\n", lfdt);
-	printk("fdtab_offset: 0x%x\n", lfdtab);
-	printk("fd_array_offset: 0x%x\n\n", lfd_array);
+	printk("total_size: %d\n", files_size);
+	printk("count_offset: %d\n", lcount);
+	printk("fdt_offset: %d\n", lfdt);
+	printk("fdtab_offset: %d\n", lfdtab);
+	printk("fd_array_offset: %d\n\n", lfd_array);
 }
 
 void show_fdtable(void)
@@ -152,10 +200,10 @@ void show_fdtable(void)
 	
 	//files_struct  show
 	printk("-----------fdtable_struct-----------");
-	printk("total_size: 0x%x\n", fdt_size);
-	printk("max_fds_offset: 0x%x\n", lmax_fds);
-	printk("fd_offset: 0x%x\n", lfd);
-	printk("fd_rcu_offset: 0x%x\n\n", lfd_rcu);
+	printk("total_size: %d\n", fdt_size);
+	printk("max_fds_offset: %d\n", lmax_fds);
+	printk("fd_offset: %d\n", lfd);
+	printk("fd_rcu_offset: %d\n\n", lfd_rcu);
 }
 void show_file(void)
 {
@@ -168,14 +216,75 @@ void show_file(void)
 	unsigned long lf_inode = (unsigned long)(&(f.f_inode)) - p_f;
 	unsigned long lf_op = (unsigned long)(&(f.f_op)) - p_f;
 	unsigned long lf_count = (unsigned long)(&(f.f_count)) - p_f;
+	unsigned long lf_flags = (unsigned long)(&(f.f_flags)) - p_f;
+	unsigned long lprivate_data = (unsigned long)(&(f.private_data)) - p_f;
 
 	//file  show
 	printk("-----------file-----------");
-	printk("total_size: 0x%x\n", file_size);
-	printk("f_path_offset: 0x%x\n", lf_path);
-	printk("f_inode_offset: 0x%x\n", lf_inode);
-	printk("f_op_offset: 0x%x\n", lf_op);
-	printk("f_count_offset: 0x%x\n\n", lf_count);
+	printk("total_size: %d\n", file_size);
+	printk("f_path_offset: %d\n", lf_path);
+	printk("f_inode_offset: %d\n", lf_inode);
+	printk("f_op_offset: %d\n", lf_op);
+	printk("f_flags_offset: %d\n", lf_flags);
+	printk("f_private_data_offset: %d\n", lprivate_data);
+	printk("f_count_offset: %d\n\n", lf_count);
+}
+
+void show_socket(void)
+{
+
+	struct socket sock1;
+	unsigned long p_sock = (unsigned long)&sock1;
+
+	//socket offset
+	unsigned long socket_size = sizeof(sock1);
+	unsigned long lstate = (unsigned long)(&(sock1.state))- p_sock;
+	unsigned long lsocket_flags = (unsigned long)(&(sock1.flags)) - p_sock;
+	unsigned long lsocket_file = (unsigned long)(&(sock1.file)) - p_sock;
+	unsigned long lsk = (unsigned long)(&(sock1.sk)) - p_sock;
+	
+	//socket  show
+	printk("-----------socket_struct-----------");
+	printk("total_size: %d\n", socket_size);
+	printk("state_offset: %d\n", lstate);
+	printk("socket_flags_offset: %d\n", lsocket_flags);
+	printk("socket_file_offset: %d\n", lsocket_file);
+	printk("socket_sk_offset: %d\n\n", lsk);
+}
+
+void show_sock(void)
+{
+
+	struct sock sk1;
+	unsigned long p_sk = (unsigned long)&sk1;
+
+	//sock offset
+	unsigned long sock_size = sizeof(sk1);
+	unsigned long l__sk_common = (unsigned long)(&(sk1.__sk_common))- p_sk;
+	unsigned long l__sk_common_skc_daddr = (unsigned long)(&(sk1.__sk_common.skc_daddr)) - p_sk;
+	unsigned long l__sk_common_skc_rcv_saddr = (unsigned long)(&(sk1.__sk_common.skc_rcv_saddr)) - p_sk;
+	unsigned long lsk_daddr = (unsigned long)(&(sk1.sk_daddr)) - p_sk;
+	unsigned long lsk_rcv_saddr = (unsigned long)(&(sk1.sk_rcv_saddr)) - p_sk;
+	unsigned long lsk_num = (unsigned long)(&(sk1.sk_num)) - p_sk;
+	unsigned long lsk_dport = (unsigned long)(&(sk1.sk_dport)) - p_sk;
+	unsigned long lsk_prot = (unsigned long)(&(sk1.sk_prot)) - p_sk;
+	unsigned long lsk_v6_daddr = (unsigned long)(&(sk1.sk_v6_daddr)) - p_sk;
+	unsigned long lsk_v6_rcv_saddr = (unsigned long)(&(sk1.sk_v6_rcv_saddr)) - p_sk;
+
+	
+	//sock  show
+	printk("-----------sock_struct-----------");
+	printk("total_size: %d\n", sock_size);
+	printk("__sk_common_offset: %d\n", l__sk_common);
+	printk("__sk_common_skc_daddr_offset: %d\n", l__sk_common_skc_daddr);
+	printk("__sk_common_skc_rcv_saddr_offset: %d\n", l__sk_common_skc_rcv_saddr);
+	printk("sk_daddr_offset: %d\n", lsk_daddr);
+	printk("sk_rcv_saddr_offset: %d\n", lsk_rcv_saddr);
+	printk("sk_num_offset: %d\n", lsk_num);
+	printk("sk_dport_offset: %d\n", lsk_dport);
+	printk("sk_prot_offset: %d\n", lsk_prot);
+	printk("sk_v6_daddr_offset: %d\n", lsk_v6_daddr);
+	printk("sk_v6_rcv_saddr_offset: %d\n\n", lsk_v6_rcv_saddr);
 }
 
 void show_path(void)
@@ -191,9 +300,9 @@ void show_path(void)
 	
 	//path  show
 	printk("-----------path_struct-----------");
-	printk("total_size: 0x%x\n", pa_size);
-	printk("mnt_offset: 0x%x\n", lmnt);
-	printk("dentry_offset: 0x%x\n\n", ldentry);
+	printk("total_size: %d\n", pa_size);
+	printk("mnt_offset: %d\n", lmnt);
+	printk("dentry_offset: %d\n\n", ldentry);
 }
 
 void show_dentry(void)
@@ -202,10 +311,12 @@ void show_dentry(void)
 	struct qstr str;
 	struct vfsmount vfs;
 	struct inode ino;
+	struct nameidata nameida;
 	unsigned long p_fdir = (unsigned long)&dir;
 	unsigned long p_qstr = (unsigned long)&str;
 	unsigned long p_vfs = (unsigned long)&vfs;
 	unsigned long p_ino = (unsigned long)&ino;
+	unsigned long p_nameida = (unsigned long)&nameida;
 
 	//dentry offset
 	unsigned long dir_size = sizeof(dir);
@@ -214,9 +325,9 @@ void show_dentry(void)
 	
 	//dentry  show
 	printk("-----------dentry-----------");
-	printk("total_size: 0x%x\n", dir_size);
-	printk("parent_offset: 0x%x\n", lparent);
-	printk("name_offset: 0x%x\n\n", lname);
+	printk("total_size: %d\n", dir_size);
+	printk("parent_offset: %d\n", lparent);
+	printk("name_offset: %d\n\n", lname);
 
 	//qstr offset
 	unsigned long qstr_size = sizeof(str);
@@ -224,8 +335,8 @@ void show_dentry(void)
 	
 	//qstr  show
 	printk("-----------qstr-----------");
-	printk("total_size: 0x%x\n", qstr_size);
-	printk("name_offset: 0x%x\n\n", lpname);
+	printk("total_size: %d\n", qstr_size);
+	printk("name_offset: %d\n\n", lpname);
 
 	//vfsmount offset
 	unsigned long vfs_size = sizeof(vfs);
@@ -234,9 +345,9 @@ void show_dentry(void)
 
 	//vfsmount  show
 	printk("-----------vfsmount-----------");
-	printk("total_size: 0x%x\n", vfs_size);
-	printk("mnt_root_offset: 0x%x\n", lmnt_root);
-	printk("mnt_sb_offset: 0x%x\n\n", lmnt_sb);
+	printk("total_size: %d\n", vfs_size);
+	printk("mnt_root_offset: %d\n", lmnt_root);
+	printk("mnt_sb_offset: %d\n\n", lmnt_sb);
 
 	//inode offset
 	unsigned long ino_size = sizeof(ino);
@@ -246,10 +357,28 @@ void show_dentry(void)
 
 	//inode  show
 	printk("-----------inode-----------");
-	printk("total_size: 0x%x\n", ino_size);
-	printk("i_opflags_offset: 0x%x\n", liopflags);
-	printk("i_uid_offset: 0x%x\n\n", liuid);
-	printk("i_gid_offset: 0x%x\n\n", ligid);
+	printk("total_size: %d\n", ino_size);
+	printk("i_opflags_offset: %d\n", liopflags);
+	printk("i_uid_offset: %d\n", liuid);
+	printk("i_gid_offset: %d\n\n", ligid);
+	
+	//nameidata offset
+	unsigned long nameidata_size = sizeof(nameida);
+	unsigned long llast = (unsigned long)(&(nameida.last)) - p_nameida;
+	unsigned long lnameidata_root = (unsigned long)(&(nameida.root)) - p_nameida;
+	unsigned long lnameidata_inode = (unsigned long)(&(nameida.inode)) - p_nameida;
+	unsigned long lnameidata_depth = (unsigned long)(&(nameida.depth)) - p_nameida;
+	unsigned long lnameidate_name = (unsigned long)(&(nameida.name)) - p_nameida;
+
+	//nameidata  show
+	printk("-----------nameidata-----------");
+	printk("total_size: %d\n", nameidata_size);
+	printk("llast_offset: %d\n", llast);
+	printk("nameidata_root_offset: %d\n", lnameidata_root);
+	printk("nameidata_inode_offset: %d\n", lnameidata_inode);
+	printk("nameidata_depth_offset: %d\n", lnameidata_depth);
+	printk("nameidate_name_offset: %d\n\n", lnameidate_name);
+
 
 }
 
@@ -264,6 +393,8 @@ static int hello_init(void) {
 	show_files_struct();
 	show_fdtable();
 	show_file();
+	show_socket();
+	show_sock();
 	show_path();
 	show_dentry();
 	
