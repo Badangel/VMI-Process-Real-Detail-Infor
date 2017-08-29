@@ -217,7 +217,7 @@ static struct syscall syscalls[NUMBER_OF_SYSCALLS] =
     {.num = 199, .addr = 0xffffffff81235440, .name = "sys_fremovexattr", .pre = 0x00},
     {.num = 200, .addr = 0xffffffff81091a90, .name = "sys_tkill", .pre = 0x00},
     {.num = 201, .addr = 0xffffffff810ebc20, .name = "sys_time", .pre = 0x00},
-    {.num = 202, .addr = 0xffffffff81103b80, .name = "sys_futex", .pre = 0x00},
+    {.num = 202, .addr = 0x0000000000000000, .name = "sys_futex", .pre = 0x00},//0xffffffff81103b80
     {.num = 203, .addr = 0xffffffff810ae810, .name = "sys_sched_setaffinity", .pre = 0x00},
     {.num = 204, .addr = 0xffffffff810ae930, .name = "sys_sched_getaffinity", .pre = 0x00},
     {.num = 205, .addr = 0xffffffff8103d860, .name = "sys_set_thread_area", .pre = 0x00},
@@ -243,7 +243,7 @@ static struct syscall syscalls[NUMBER_OF_SYSCALLS] =
     {.num = 225, .addr = 0xffffffff810f23a0, .name = "sys_timer_getoverrun", .pre = 0x00},
     {.num = 226, .addr = 0xffffffff810f2600, .name = "sys_timer_delete", .pre = 0x00},
     {.num = 227, .addr = 0xffffffff810f28d0, .name = "sys_clock_settime", .pre = 0x00},
-    {.num = 228, .addr = 0xffffffff810f2990, .name = "sys_clock_gettime", .pre = 0x00},
+    {.num = 228, .addr = 0xffffffff810f2990, .name = "sys_clock_gettime", .pre = 0x00},//0xffffffff810f2990
     {.num = 229, .addr = 0xffffffff810f2a50, .name = "sys_clock_getres", .pre = 0x00},
     {.num = 230, .addr = 0xffffffff810f2b10, .name = "sys_clock_nanosleep", .pre = 0x00},
     {.num = 231, .addr = 0xffffffff810848a0, .name = "sys_exit_group", .pre = 0x00},
