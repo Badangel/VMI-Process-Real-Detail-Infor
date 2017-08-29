@@ -16,7 +16,7 @@ addr_t sys_call_socket_addr = 0xffffffff8170f7c0;
 
 int syscallnum[NUMBER_OF_SYSCALLS]= {0};
 
-
+reg_t rdi, rax,cr3;
 reg_t regrip = 0;
 static int i;
 reg_t sysenter_ip = 0;
@@ -34,7 +34,8 @@ int ec = 0;
 int sys_num = -1;
 event_response_t singlestep_cb(vmi_instance_t vmi, vmi_event_t *event)
 {
-    printf("enter one ");
+    ///printf("enter one ");
+
     vmi_write_8_va(vmi, syscalls[sys_num].addr, 0, &trap);
 //    if(sys_num == 59)
 //    {
@@ -44,8 +45,8 @@ event_response_t singlestep_cb(vmi_instance_t vmi, vmi_event_t *event)
 //    {
 //        vmi_write_8_va(vmi, sys_call_socket_addr, 0, &trap);
 //    }
-    printf("one step %d\n",k);
-    k++;
+    printf("%d one step %d\n",rax,k);
+    ++k;
     //vmi_set_vcpureg(vmi,trap,SYSENTER_EIP,0);
     //vmi_set_vcpureg(vmi,trap,RIP,0);
     return VMI_EVENT_RESPONSE_TOGGLE_SINGLESTEP;
@@ -54,14 +55,14 @@ event_response_t singlestep_cb(vmi_instance_t vmi, vmi_event_t *event)
 event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
 {
 
-    reg_t rdi, rax,cr3;
+
     vmi_get_vcpureg(vmi, &rax, RAX, event->vcpu_id);
     // vmi_get_vcpureg(vmi, &rdi, RDI, event->vcpu_id);
     vmi_get_vcpureg(vmi, &cr3, CR3, event->vcpu_id);
     vmi_pid_t pid = vmi_dtb_to_pid(vmi, cr3);
 
 
-    printf("%d  syscall#=%u ec:%d ", pid,(unsigned int)rax,ec);
+    printf("%d  syscall#=%u ec:%d \n", pid,(unsigned int)rax,ec);
 
 
 //reg_t rbx, rcx,rdx;
@@ -86,14 +87,14 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
     //vmi_set_vcpureg(vmi,regrip,RIP,0);
 
     event->interrupt_event.reinject = 0;
-    printf("return\n");
+    ///printf("return\n");
 //    if(ec!=k)
 //    {
 //        ec = k;
 //        printf("!!\n");
 //        return 0;
 //    }
-    ec++;
+    ++ec;
 
     return VMI_EVENT_RESPONSE_TOGGLE_SINGLESTEP;
 }
@@ -176,6 +177,7 @@ int main(int argc, char **argv)
         else
         {
             printf("syscall:%d no change\n",i);
+            syscallnum[i] = -1;
         }
 
         // reg_t cr0,cr00;
@@ -220,7 +222,8 @@ int main(int argc, char **argv)
     f3 = fopen("syscallres.txt","w");
 
     // TODO 4: remove traps and close LibVMI
-    fprintf(f3,"total : %d",k);
+    fprintf(f3,"total : %d\n",k);
+    printf("total k:%d ec:%d \n",k,ec);
     for(i = 0; i < NUMBER_OF_SYSCALLS; i++)
     {
         printf("%s :%d\n",syscalls[i].name,syscallnum[i]);

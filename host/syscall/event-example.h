@@ -15,17 +15,17 @@ struct syscall
 
 static struct syscall syscalls[NUMBER_OF_SYSCALLS] =
 {
-    {.num = 0, .addr = 0xffffffff8120f4f0, .name = "sys_read", .pre = 0x00},
-    {.num = 1, .addr = 0xffffffff8120f5b0, .name = "sys_write", .pre = 0x00},
+    {.num = 0, .addr = 0x0000000000000000, .name = "sys_read", .pre = 0x00},//0xffffffff8120f4f0
+    {.num = 1, .addr = 0x0000000000000000, .name = "sys_write", .pre = 0x00},//0xffffffff8120f5b0
     {.num = 2, .addr = 0xffffffff8120d9c0, .name = "sys_open", .pre = 0x00},
-    {.num = 3, .addr = 0xffffffff8120b8a0, .name = "sys_close", .pre = 0x00},
+    {.num = 3, .addr = 0x0000000000000000, .name = "sys_close", .pre = 0x00},//0xffffffff8120b8a0 can't sign in
     {.num = 4, .addr = 0xffffffff81213d40, .name = "sys_stat", .pre = 0x00},
     {.num = 5, .addr = 0xffffffff81213d60, .name = "sys_fstat", .pre = 0x00},
     {.num = 6, .addr = 0xffffffff81213d50, .name = "sys_lstat", .pre = 0x00},
-    {.num = 7, .addr = 0xffffffff81224590, .name = "sys_poll", .pre = 0x00},
+    {.num = 7, .addr = 0x0000000000000000, .name = "sys_poll", .pre = 0x00},//0xffffffff81224590
     {.num = 8, .addr = 0xffffffff8120e400, .name = "sys_lseek", .pre = 0x00},
     {.num = 9, .addr = 0xffffffff81034050, .name = "sys_mmap", .pre = 0x00},
-    {.num = 10, .addr = 0xffffffff811cab50, .name = "sys_mprotect", .pre = 0x00},
+    {.num = 10, .addr = 0x0000000000000000, .name = "sys_mprotect", .pre = 0x00},//0xffffffff811cab50
     {.num = 11, .addr = 0xffffffff811c94a0, .name = "sys_munmap", .pre = 0x00},
     {.num = 12, .addr = 0xffffffff811c88a0, .name = "sys_brk", .pre = 0x00},
     {.num = 13, .addr = 0xffffffff81092400, .name = "sys_rt_sigaction", .pre = 0x00},
@@ -35,10 +35,10 @@ static struct syscall syscalls[NUMBER_OF_SYSCALLS] =
     {.num = 17, .addr = 0xffffffff8120f670, .name = "sys_pread64", .pre = 0x00},
     {.num = 18, .addr = 0xffffffff8120f720, .name = "sys_pwrite64", .pre = 0x00},
     {.num = 19, .addr = 0xffffffff8120f8e0, .name = "sys_readv", .pre = 0x00},
-    {.num = 20, .addr = 0xffffffff8120f9d0, .name = "sys_writev", .pre = 0x00},
+    {.num = 20, .addr = 0x0000000000000000, .name = "sys_writev", .pre = 0x00},//0xffffffff8120f9d0
     {.num = 21, .addr = 0xffffffff8120ca20, .name = "sys_access", .pre = 0x00},
     {.num = 22, .addr = 0xffffffff81218000, .name = "sys_pipe", .pre = 0x00},
-    {.num = 23, .addr = 0xffffffff81223c70, .name = "sys_select", .pre = 0x00},
+    {.num = 23, .addr = 0x0000000000000000, .name = "sys_select", .pre = 0x00},//0xffffffff81223c70
     {.num = 24, .addr = 0xffffffff810ae9e0, .name = "sys_sched_yield", .pre = 0x00},
     {.num = 25, .addr = 0xffffffff811cb940, .name = "sys_mremap", .pre = 0x00},
     {.num = 26, .addr = 0xffffffff811cbe30, .name = "sys_msync", .pre = 0x00},
@@ -53,7 +53,7 @@ static struct syscall syscalls[NUMBER_OF_SYSCALLS] =
     {.num = 35, .addr = 0xffffffff810f0a30, .name = "sys_nanosleep", .pre = 0x00},
     {.num = 36, .addr = 0xffffffff810f0f10, .name = "sys_getitimer", .pre = 0x00},
     {.num = 37, .addr = 0xffffffff810ef380, .name = "sys_alarm", .pre = 0x00},
-    {.num = 38, .addr = 0xffffffff810f12e0, .name = "sys_setitimer", .pre = 0x00},
+    {.num = 38, .addr = 0x0000000000000000, .name = "sys_setitimer", .pre = 0x00},//0xffffffff810f12e0
     {.num = 39, .addr = 0xffffffff81094e70, .name = "sys_getpid", .pre = 0x00},
     {.num = 40, .addr = 0xffffffff8120fe60, .name = "sys_sendfile", .pre = 0x00},
     {.num = 41, .addr = 0xffffffff8170f7c0, .name = "sys_socket", .pre = 0x00},
@@ -62,7 +62,7 @@ static struct syscall syscalls[NUMBER_OF_SYSCALLS] =
     {.num = 44, .addr = 0xffffffff8170fbe0, .name = "sys_sendto", .pre = 0x00},
     {.num = 45, .addr = 0xffffffff8170fc10, .name = "sys_recvfrom", .pre = 0x00},
     {.num = 46, .addr = 0xffffffff8170ff20, .name = "sys_sendmsg", .pre = 0x00},
-    {.num = 47, .addr = 0xffffffff81710180, .name = "sys_recvmsg", .pre = 0x00},
+    {.num = 47, .addr = 0x0000000000000000, .name = "sys_recvmsg", .pre = 0x00},//0xffffffff81710180
     {.num = 48, .addr = 0xffffffff8170fe00, .name = "sys_shutdown", .pre = 0x00},
     {.num = 49, .addr = 0xffffffff8170fac0, .name = "sys_bind", .pre = 0x00},
     {.num = 50, .addr = 0xffffffff8170fad0, .name = "sys_listen", .pre = 0x00},
@@ -111,7 +111,7 @@ static struct syscall syscalls[NUMBER_OF_SYSCALLS] =
     {.num = 93, .addr = 0xffffffff8120d390, .name = "sys_fchown", .pre = 0x00},
     {.num = 94, .addr = 0xffffffff8120d2b0, .name = "sys_lchown", .pre = 0x00},
     {.num = 95, .addr = 0xffffffff81096000, .name = "sys_umask", .pre = 0x00},
-    {.num = 96, .addr = 0xffffffff810ebce0, .name = "sys_gettimeofday", .pre = 0x00},
+    {.num = 96, .addr = 0x0000000000000000, .name = "sys_gettimeofday", .pre = 0x00},//0xffffffff810ebce0
     {.num = 97, .addr = 0xffffffff81095c40, .name = "sys_getrlimit", .pre = 0x00},
     {.num = 98, .addr = 0xffffffff81095fb0, .name = "sys_getrusage", .pre = 0x00},
     {.num = 99, .addr = 0xffffffff81096520, .name = "sys_sysinfo", .pre = 0x00},
@@ -217,7 +217,7 @@ static struct syscall syscalls[NUMBER_OF_SYSCALLS] =
     {.num = 199, .addr = 0xffffffff81235440, .name = "sys_fremovexattr", .pre = 0x00},
     {.num = 200, .addr = 0xffffffff81091a90, .name = "sys_tkill", .pre = 0x00},
     {.num = 201, .addr = 0xffffffff810ebc20, .name = "sys_time", .pre = 0x00},
-    {.num = 202, .addr = 0x0000000000000000, .name = "sys_futex", .pre = 0x00},//0xffffffff81103b80
+    {.num = 202, .addr = 0x0000000000000000, .name = "sys_futex", .pre = 0x00},//0xffffffff81103b80 get into error
     {.num = 203, .addr = 0xffffffff810ae810, .name = "sys_sched_setaffinity", .pre = 0x00},
     {.num = 204, .addr = 0xffffffff810ae930, .name = "sys_sched_getaffinity", .pre = 0x00},
     {.num = 205, .addr = 0xffffffff8103d860, .name = "sys_set_thread_area", .pre = 0x00},
@@ -243,7 +243,7 @@ static struct syscall syscalls[NUMBER_OF_SYSCALLS] =
     {.num = 225, .addr = 0xffffffff810f23a0, .name = "sys_timer_getoverrun", .pre = 0x00},
     {.num = 226, .addr = 0xffffffff810f2600, .name = "sys_timer_delete", .pre = 0x00},
     {.num = 227, .addr = 0xffffffff810f28d0, .name = "sys_clock_settime", .pre = 0x00},
-    {.num = 228, .addr = 0xffffffff810f2990, .name = "sys_clock_gettime", .pre = 0x00},//0xffffffff810f2990
+    {.num = 228, .addr = 0x0000000000000000, .name = "sys_clock_gettime", .pre = 0x00},//0xffffffff810f2990
     {.num = 229, .addr = 0xffffffff810f2a50, .name = "sys_clock_getres", .pre = 0x00},
     {.num = 230, .addr = 0xffffffff810f2b10, .name = "sys_clock_nanosleep", .pre = 0x00},
     {.num = 231, .addr = 0xffffffff810848a0, .name = "sys_exit_group", .pre = 0x00},
