@@ -12,7 +12,6 @@ int main()
     int f2num;
     while(f2>>f2name){
         f2>>f2num;
-       // printf("%s:%d\n",f2name.c_str(),f2num);
        int a = 0;
        ifstream f1("syscalladd.txt");
         while(f1>>f1ad>>f1b>>f1name){
@@ -26,6 +25,6 @@ int main()
             f3<<"{.num = "<<f2num<<", .addr = 0x0000000000000000, .name = \""<<f2name.c_str()<<"\", .pre = 0x00},\n";
         }
     }
-    cout << "Hello world!" << endl;
+    
     return 0;
 }
