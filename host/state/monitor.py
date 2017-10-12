@@ -3,7 +3,9 @@ import sys
 import libvirt
 import time
 from xml.etree import ElementTree
-def getDomainMemUsed(dom_mem_stats):  
+def getDomainMemUsed(dom_mem_stats):
+    #print(dom_mem_stats)   
+    #print dom_mem_stats
     free_mem=float(dom_mem_stats['unused'])/1024.0
     total_mem= float(dom_mem_stats['available'])/1024.0
     used_mem=total_mem-free_mem
@@ -14,6 +16,7 @@ def getDomainCPUInfo(dom):
     ti = dict()
     ti['t'] = time.time()
     dominfo=dom.info()
+    print(dominfo)
     ti['ct'] = dominfo[4]
    # print('CPU:')
    # for a in dominfo:
@@ -98,17 +101,17 @@ if __name__ == "__main__":
     '''
     
     AllDomains = conn.listAllDomains(0)   
-    n = 1;
+    n = 1
     for AD in AllDomains:
         print("domain"+str(n)+': '+AD.name()+'  ',end='')
         if AD.ID() == -1:
             print('shutdown')
         else:
             print(str(AD.ID()))
-            getDomainMemUsed(AD.memoryStats())
+            #getDomainMemUsed(AD.memoryStats())
             getDomainCPUUsed(AD)
             getDomainNetork(AD)
-            getDomainDisk(AD)
+            #getDomainDisk(AD)
             
              
         n=n+1
