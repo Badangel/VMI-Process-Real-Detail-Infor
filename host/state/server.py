@@ -12,7 +12,7 @@ class MyHandler(SocketServer.BaseRequestHandler):
             data = self.request.recv(2048)
             while True: 
                 a=a+1
-                print ('wait....',a)
+                #print ('wait....',a)
                 data = self.request.recv(8900)
                 #print len(data),data,time.ctime()
                 #print ('data:',data)

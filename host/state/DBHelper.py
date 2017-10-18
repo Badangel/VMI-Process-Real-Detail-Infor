@@ -16,11 +16,14 @@ class DBHelper:
     def dosql(self, sql):
         cursor = self.conn.cursor()
         try:
-            cursor.execute(sql)
+            res = cursor.execute(sql)
         except:
             self.conn.rollback()
+            print "mysql error"
         finally:
             self.conn.commit()
+            print "add one data"
+            return res
 
     #query ,return data list
     def select(self, sql):

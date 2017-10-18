@@ -1,5 +1,6 @@
 import pyvmi
 import sys
+import time
 
 def get_os_params(vmi):
     ostype = vmi.get_ostype()
@@ -40,20 +41,46 @@ def processes(vmi):
     next_process = vmi.read_addr_va(list_head + tasks_offset, 0)
     list_head = next_process
     nump = 0
+    #file_ps = open('ps', 'r')
+   # ps_lines = file_ps.readlines()
+    #if len(ps_lines)>0:
+    #    print time.ctime(),ps_lines[len(ps_lines)-1]
+    pslist = []
 
     while True:
         procname = vmi.read_str_va(next_process + name_offset, 0)
         pid = vmi.read_32_va(next_process + pid_offset, 0)
         next_process = vmi.read_addr_va(next_process, 0)
+        
         nump += 1
-        #print "[%3d] %s"%(nump, procname)
+        tmp = [nump,pid,procname]
+        #print tmp
+        pslist.append(tmp)
+        #print "[%3d] %s"%(nump, procname),
+        '''
+        if nump<len(ps_lines)-1:
+            psin = ps_lines[nump].split()
+            if procname != psin[5]:
+                print "[%3d] %5d %s"%(nump,pid, procname),psin[1],psin[5]
+        else:
+            print "[%3d] %5d %s"%(nump,pid, procname)
         if (list_head == next_process):
+            tmp = nump
+            tmp+=1
+            while tmp<len(ps_lines):
+                print "[%3d]"%(tmp),
+                print "in vm ps: %s"%(ps_lines[tmp])
+                tmp+=1
+            print "inpsnum:%d outosnum:%d"%(tmp,nump)
             return nump
+            '''
+        if (list_head == next_process):
+            return nump,pslist
 
 def main(argv):
     vmi = pyvmi.init_complete("ubuntu1604")
     n = 1
-    n = processes(vmi)
+    n,s = processes(vmi)
     print "len %d" % (n)
 if __name__ == "__main__":
     main(sys.argv)
