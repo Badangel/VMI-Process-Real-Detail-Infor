@@ -681,23 +681,12 @@ int main (int argc, char **argv)
 
         LinkQueue queue;
         initQueue(&queue);
-        TaskNode tasknodetmp;
-        //printf("!!first!!minflt:%d ",tasknodetmp.minflt);
-        tasknodetmp.minflt = 1;
-        //printf("!!taskinfotmp!!minflt:%d ",tasknodetmp.minflt);
-        insertQueue(&queue,&tasknodetmp);
-
-        TaskNode tasknodetmp1;
-        tasknodetmp1.minflt = 2;
-        insertQueue(&queue,&tasknodetmp1);
-
-        TaskNode tasknodetmp2;
-        tasknodetmp2.minflt = 4;
-        insertQueue(&queue,&tasknodetmp2);
-
-        TaskNode* tmp = queue.front->next;
-        printf("!!tmp!!minflt:%d\n ",tmp->minflt);
-        traversal(queue);
+        TaskInfo taskinfotmp;
+        taskinfotmp.minflt = 1;
+        printf("!!taskinfotmp!!minflt:%d",taskinfotmp.minflt);
+        insertQueue(&queue,&taskinfotmp);
+        TaskInfo tmp = queue.front;
+        printf("!!tmp!!minflt:%d",tmp.minflt);
 
 
 
