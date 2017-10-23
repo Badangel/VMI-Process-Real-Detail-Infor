@@ -137,36 +137,39 @@ uint32_t flags;
 /**
 *This funtion get the qstr name.
 */
-char* get_qstr_name(vmi_instance_t vmi,addr_t qstr_addr)
+char* get_qstr_name(vmi_instance_t vmi,char *name,addr_t qstr_addr)
 {
-    char qstr_d_name[255]="";
+    char qstr_name[255] = "";
+    //qstr_name = (char*)malloc(255);
+    //qstr_d_name[0] = '';
     char c = 1;
     //while(c != NULL && filetype != 0)
     printf("??");
-    while(c != NULL)
+    while(c != '\0')
     {
         vmi_read_8_va(vmi, qstr_addr, 0, &c);
         qstr_addr = qstr_addr + nadd;
         //printf("%c",c);
         char c_rmp[2]= {c};
-        strcat(qstr_d_name,c_rmp);
+        strcat(qstr_name,c_rmp);
 
     }
+    strcpy(name,qstr_name);
     // printf("qstr:%s ",qstr_d_name);
-    return qstr_d_name;
-
+    return name;
 }
 
 /**
 *This funtion get the dentry qstr name.
 */
-char* get_dentry_name(vmi_instance_t vmi,addr_t dentry_addr)
+char* get_dentry_name(vmi_instance_t vmi,char *name,addr_t dentry_addr)
 {
-    char qstr_d_name[255]="";
+    char qstr_d_name[255] = "";
+    //qstr_d_name = (char*)malloc(255);
     char c = 1;
     vmi_read_addr_va(vmi, dentry_addr + dname_offset + qname_offset, 0, &p_name);
     //while(c != NULL && filetype != 0)
-    while(c != NULL)
+    while(c != '\0')
     {
         vmi_read_8_va(vmi, p_name, 0, &c);
         p_name = p_name + nadd;
@@ -176,7 +179,8 @@ char* get_dentry_name(vmi_instance_t vmi,addr_t dentry_addr)
 
     }
     // printf("qstr:%s ",qstr_d_name);
-    return qstr_d_name;
+    strcpy(name,qstr_d_name);
+    return name;
 
 }
 
@@ -184,9 +188,11 @@ char* get_dentry_name(vmi_instance_t vmi,addr_t dentry_addr)
 *This funtion for show the relevant files infomations.
 *Include files socket and so on.
 */
-void get_files_info(vmi_instance_t vmi,addr_t fdaddr,unsigned int max_file)
+void get_files_info(vmi_instance_t vmi,addr_t fdaddr,unsigned int max_file, FdInfo *fdinfoaddr)
 {
     int i;
+    FdInfo tmp={{0,0,0,0,0,0},{0,0,0,0,0},0,0,0,0,0};
+
 
     for(i=0; i<max_file; i++)
     {
@@ -195,6 +201,7 @@ void get_files_info(vmi_instance_t vmi,addr_t fdaddr,unsigned int max_file)
         fdaddr = fdaddr + fdadd;
         if(file!=0)
         {
+            tmp.numfd = tmp.numfd + 1;
             printf("%3d  ",i);
             int filetype = 50;
             //vmi_read_addr_va(vmi, file + 16, 0, &f_path);
@@ -204,12 +211,12 @@ void get_files_info(vmi_instance_t vmi,addr_t fdaddr,unsigned int max_file)
 
             /* read flags*/
             vmi_read_32_va(vmi, file + f_flags_offset, 0, &flags);
-            printf("flag:%lu ",flags);
+            printf("flag:%u ",flags);
 
             /* read the fmode */
             vmi_read_32_va(vmi, file + f_mode_offset, 0, &fmode);
             int j = 0;
-            printf("rwx:%lu ",fmode);
+            printf("rwx:%u ",fmode);
 //            unsigned int flag = 1;
 //            for(;j<32;j++){
 //                if(fmode&(flag<<j)){
@@ -232,7 +239,7 @@ void get_files_info(vmi_instance_t vmi,addr_t fdaddr,unsigned int max_file)
             vmi_read_32_va(vmi, i_node, 0, &imode);
             vmi_read_32_va(vmi, i_node + i_uid_offset, 0, &kuid);
             vmi_read_32_va(vmi, i_node + i_gid_offset, 0, &kgid);
-            printf("imode:%lu ku:gid([%4d]:[%4d]) ",imode,kuid,kgid);
+            printf("imode:%u ku:gid([%4d]:[%4d]) ",imode,kuid,kgid);
 
 
             vmi_read_addr_va(vmi, mnt, 0, &droot);
@@ -251,21 +258,31 @@ void get_files_info(vmi_instance_t vmi,addr_t fdaddr,unsigned int max_file)
 
             // char *vfsname = get_dentry_name(vmi,droot);
             char vfsname[255]="";
-            strcat(vfsname,get_dentry_name(vmi,droot));
+            get_dentry_name(vmi,vfsname,droot);
+
+            //strcat(vfsname,get_dentry_name(vmi,droot));
             if(vfsname[0]!='/')
             {
                 filetype=0;
-                printf("vn:%s",vfsname);
+                printf("vn:%s ",vfsname);
+            }
+            else{
+                tmp.fileinfo = tmp.fileinfo + 1;
             }
 
             char a = '1';
             int tcp = 1;
             char filename[255]="";
-            strcat(filename,get_dentry_name(vmi,dentry1));
-            printf("%s",filename);
+            //strcat(filename,get_dentry_name(vmi,dentry1));
+            get_dentry_name(vmi,filename,dentry1);
+            printf("fs:%s",filename);
+
+            if(strcmp(vfsname,"pipe")==0)tmp.pipeinfo = tmp.pipeinfo+1;
+            if(strcmp(vfsname,"\0")==0)tmp.nullinfo = tmp.nullinfo+1;
             if(strcmp(filename,"TCPv6")==0)
             {
                 tcp = 0;
+                tmp.socketinfo[3]=tmp.socketinfo[3]+1;
             }
 //            while(a!=NULL)
 //            {
@@ -277,8 +294,17 @@ void get_files_info(vmi_instance_t vmi,addr_t fdaddr,unsigned int max_file)
 //                    tcp = 0;
 //                }
 //            }
+
             if(vfsname[0] != '/'&&tcp == 1)
             {
+                if(strcmp(filename,"UNIX")==0)tmp.socketinfo[0] = tmp.socketinfo[0] + 1;
+                if(strcmp(filename,"NETLINK")==0)tmp.socketinfo[1] = tmp.socketinfo[1] + 1;
+                if(strcmp(filename,"TCP")==0)tmp.socketinfo[2] = tmp.socketinfo[2] + 1;
+                if(strcmp(filename,"UDP")==0)tmp.socketinfo[3] = tmp.socketinfo[3] + 1;
+                if(strcmp(filename,"eventfd")==0)tmp.anon_inodeinfo[0] = tmp.anon_inodeinfo[0]+1;
+                if(strcmp(filename,"inotify")==0)tmp.anon_inodeinfo[1] = tmp.anon_inodeinfo[1]+1;
+                if(strcmp(filename,"timerfd")==0)tmp.anon_inodeinfo[2] = tmp.anon_inodeinfo[2]+1;
+                if(strcmp(filename,"signalfd")==0)tmp.anon_inodeinfo[3] = tmp.anon_inodeinfo[3]+1;
                 vmi_read_addr_va(vmi, file + private_date_offset, 0, &private_date);
                 vmi_read_addr_va(vmi, private_date + socket_sk_offset, 0, &sk);
                 vmi_read_32_va(vmi, sk + sk_daddr_offset, 0, &daddr);
@@ -288,11 +314,13 @@ void get_files_info(vmi_instance_t vmi,addr_t fdaddr,unsigned int max_file)
                 vmi_read_16_va(vmi, sk + sk_num_offset, 0, &sk_num);
                 vmi_read_16_va(vmi, sk + sk_dport_offset, 0, &sk_dport);
                 // printf("local:%x(num:%x)  source:%x(port:%x)",rcv_saddr,sk_num,daddr,sk_dport);
-                printf(" %d.%d.%d.%d:%d <-- ",rcvIp[0],rcvIp[1],rcvIp[2],rcvIp[3],sk_num);
+                printf(" %d.%d.%d.%d:%d <--- ",rcvIp[0],rcvIp[1],rcvIp[2],rcvIp[3],sk_num);
                 printf("%d.%d.%d.%d:%d ",dIp[0],dIp[1],dIp[2],dIp[3],sk_dport);
+
             }
             if(tcp == 0)
             {
+
                 vmi_read_addr_va(vmi, file + private_date_offset, 0, &private_date);
                 vmi_read_addr_va(vmi, private_date + socket_sk_offset, 0, &sk);
                 vmi_read_64_va(vmi, sk + sk_v6_daddr_offet, 0, &v6_daddr);
@@ -319,7 +347,7 @@ void get_files_info(vmi_instance_t vmi,addr_t fdaddr,unsigned int max_file)
                 // vmi_read_addr_va(vmi, d_parent + dname_offset + qname_offset, 0, &p_name);
                 // a=1;
                 char parentname[255]="";
-                strcat(parentname,get_dentry_name(vmi,d_parent));
+                get_dentry_name(vmi,parentname,d_parent);
                 printf("%s",parentname);
                 if(strcmp(parentname,"/")==0)
                 {
@@ -338,7 +366,7 @@ void get_files_info(vmi_instance_t vmi,addr_t fdaddr,unsigned int max_file)
                 printf("  ");
                 vmi_read_addr_va(vmi, d_parent + parent_offset, 0, &d_parent);
             }
-            printf("|| \n");
+            printf("||%d \n",n);
 
             ////////////////////////////////////////////////////
             /*small with dentry qstr name.
@@ -355,6 +383,7 @@ void get_files_info(vmi_instance_t vmi,addr_t fdaddr,unsigned int max_file)
 
         }
     }
+    fdinfoaddr = &tmp;
 }
 
 /**
@@ -367,20 +396,22 @@ void get_nameidata_info(vmi_instance_t vmi, addr_t nameidat)
     addr_t namei_root = nameidat + nameidata_root_offset;
 
 
+    //char *getname;
     char nameipath[255]="";
     // get_dentry_name(vmi,namei_path+dentry_offset);
-    strcat(nameipath,get_dentry_name(vmi,namei_path+dentry_offset));
+    get_dentry_name(vmi,nameipath,namei_path+dentry_offset);
     printf("nameipath:%s  ",nameipath);
 
 
     char nameilast[255]="";
     //get_qstr_name(vmi,namei_last+8);
-    strcat(nameilast,get_qstr_name(vmi,namei_last+qname_offset));
+    get_qstr_name(vmi,nameilast,namei_last+qname_offset);
+
     printf("nameilast:%s  ",nameilast);
 
 
     char nameiroot[255]="";
-    strcat(nameiroot,get_dentry_name(vmi,namei_root+dentry_offset));
+    get_dentry_name(vmi,nameiroot,namei_root+dentry_offset);
     printf("nameipath:%s\n",nameiroot);
 
 
@@ -393,30 +424,30 @@ void get_fs_info(vmi_instance_t vmi, addr_t fs)
 {
     vmi_read_addr_va(vmi, fs + fsroot_offset + dentry_offset, 0, &fsroot_dentry);
     vmi_read_addr_va(vmi, fs + fspwd_offset + dentry_offset, 0, &fspwd_dentry);
-    if(fsroot_dentry != NULL&& fspwd_dentry != NULL)
+    if(fsroot_dentry != 0&& fspwd_dentry != 0)//!!!!!befor != NULL
     {
         addr_t vfs_mnt = 0;
         addr_t mnt_dentry = 0;
         vmi_read_addr_va(vmi, fs + fsroot_offset, 0, &vfs_mnt);
         vmi_read_addr_va(vmi, vfs_mnt, 0, &mnt_dentry);
         char rootvfsdentry[255]="";
-        strcat(rootvfsdentry,get_dentry_name(vmi,mnt_dentry));
+        get_dentry_name(vmi,rootvfsdentry,mnt_dentry);
         printf("rootvfs:%s ",rootvfsdentry);
 
         char rootdentry[255]="";
-        strcat(rootdentry,get_dentry_name(vmi,fsroot_dentry));
+        get_dentry_name(vmi,rootdentry,fsroot_dentry);
         printf("root:%s ",rootdentry);
 
 
         vmi_read_addr_va(vmi, fs + fspwd_offset, 0, &vfs_mnt);
         vmi_read_addr_va(vmi, vfs_mnt, 0, &mnt_dentry);
         char pwdvfsdentry[255]="";
-        strcat(pwdvfsdentry,get_dentry_name(vmi,mnt_dentry));
+        get_dentry_name(vmi,pwdvfsdentry,mnt_dentry);
         printf("pwdvfs:%s ",pwdvfsdentry);
 
 
         char pwddentrystr[255]="";
-        strcat(pwddentrystr,get_dentry_name(vmi,fspwd_dentry));
+        get_dentry_name(vmi,pwddentrystr,fspwd_dentry);
         int n = 3;
         while(n > 0 && pwddentrystr[0] != '/')
         {
@@ -424,7 +455,7 @@ void get_fs_info(vmi_instance_t vmi, addr_t fs)
             char pwddentry[255]="";
             vmi_read_addr_va(vmi, fspwd_dentry + parent_offset, 0, &fspwd_dentry);
             strcat(pwddentrystr,"/");
-            strcat(pwddentry,get_dentry_name(vmi,fspwd_dentry));
+            get_dentry_name(vmi,pwddentry,fspwd_dentry);
             if(pwddentry[0] == '/')
             {
                 n = 0;
@@ -434,7 +465,7 @@ void get_fs_info(vmi_instance_t vmi, addr_t fs)
                 strcat(pwddentrystr,pwddentry);
             }
         }
-        printf("pwd:%s\n",pwddentrystr);
+        printf("pwd:%s \n",pwddentrystr);
     }
 }
 
@@ -567,9 +598,21 @@ int main (int argc, char **argv)
 
     next_list_entry = list_head;
 
+    //task queue
+    LinkQueue queue;
+    initQueue(&queue);
+
     /* walk the task list */
     do
     {
+
+
+        TaskNode tasknodetmp;
+        //printf("!!first!!minflt:%d ",tasknodetmp.minflt);
+
+        //printf("!!taskinfotmp!!minflt:%d ",tasknodetmp.minflt);
+
+
 
         current_process = next_list_entry - tasks_offset;
         //printf("current_process:%lu\n",current_process);
@@ -593,6 +636,10 @@ int main (int argc, char **argv)
         vmi_read_addr_va(vmi, current_process + task_parent_offset, 0, &task_parent);
         vmi_read_32_va(vmi, task_parent + pid_offset, 0, (uint32_t*)&parent_pid);
 
+        tasknodetmp.tspid = pid;
+        tasknodetmp.tsparent = real_parent_pid;
+
+
         procname = vmi_read_str_va(vmi, current_process + name_offset, 0);
 
         if (!procname)
@@ -607,6 +654,7 @@ int main (int argc, char **argv)
 
         vmi_read_addr_va(vmi, current_process + group_leader_offset, 0, &group_leader);
         vmi_read_32_va(vmi, group_leader + pid_offset, 0, (uint32_t*)&group_leader_pid);
+        tasknodetmp.tsgroupleader = group_leader_pid;
         printf("groupleader:%d ",group_leader_pid);
 
         /* show fs information */
@@ -616,16 +664,21 @@ int main (int argc, char **argv)
         /* show start time */
         uint64_t starttime = 0;
         vmi_read_64_va(vmi, current_process + start_time_offset, 0, (uint64_t*)&starttime);
+        tasknodetmp.tsstart_time = starttime;
         uint64_t realstarttime = 0;
         vmi_read_64_va(vmi, current_process + real_start_time_offset, 0, &realstarttime);
-        printf("starttime:%u  realstarttime:%u ",starttime,realstarttime);
+        tasknodetmp.tsstart_time = starttime;
+        tasknodetmp.tsrealstart_time = realstarttime;
+        printf("starttime:%lu  realstarttime:%lu ",starttime,realstarttime);
 
         /* show mm fault and swap info */
         unsigned long minflt = 0;
         vmi_read_64_va(vmi, current_process + min_flt_offset, 0, &minflt);
         unsigned long majflt = 0;
         vmi_read_64_va(vmi, current_process + maj_flt_offset, 0, &majflt);
-        printf("minflt:%u majflt:%u \n", minflt, majflt);
+        tasknodetmp.tsminflt = minflt;
+        tasknodetmp.tsmajflt = majflt;
+        printf("minflt:%lu majflt:%lu \n", minflt, majflt);
 
         /* show task prio */
         // first num same,the last num equal 0
@@ -635,6 +688,7 @@ int main (int argc, char **argv)
         vmi_read_32_va(vmi, current_process + static_prio_offset, 0, &static_prio);
         vmi_read_32_va(vmi, current_process + normal_prio_offset, 0, &normal_prio);
         vmi_read_32_va(vmi, current_process + rt_priority_offset, 0, &rt_priority);
+        tasknodetmp.tsprio = prio;
         printf("prio:%d static_prio:%d normal_prio:%d rt_priority:%u \n", prio, static_prio, normal_prio, rt_priority);
 
 
@@ -649,7 +703,9 @@ int main (int argc, char **argv)
         vmi_read_64_va(vmi, current_process + stime_offset+8, 0, &utimescaled);
         vmi_read_64_va(vmi, current_process + stime_offset+16, 0, &stimescaled);
         vmi_read_64_va(vmi, current_process + stime_offset + 24, 0, &gtime);
-        printf("utime:%u stime:%u utimescaled:%u stimescaled:%u gtime:%u\n", utime, stime, utimescaled, stimescaled, gtime);
+        tasknodetmp.tsutime = utime;
+        tasknodetmp.tsstime = stime;
+        printf("utime:%lu stime:%lu utimescaled:%lu stimescaled:%lu gtime:%lu\n", utime, stime, utimescaled, stimescaled, gtime);
 
 
 
@@ -678,33 +734,16 @@ int main (int argc, char **argv)
         vmi_read_32_va(vmi, fdt + maxfds_offset, 0, &max_fds);
         vmi_read_addr_va(vmi, fdt + fd_offset, 0, &fd);
 
+        tasknodetmp.tsfdnum = max_fds;
 
-        LinkQueue queue;
-        initQueue(&queue);
-        TaskNode tasknodetmp;
-        //printf("!!first!!minflt:%d ",tasknodetmp.minflt);
-        tasknodetmp.minflt = 1;
-        //printf("!!taskinfotmp!!minflt:%d ",tasknodetmp.minflt);
-        insertQueue(&queue,&tasknodetmp);
-
-        TaskNode tasknodetmp1;
-        tasknodetmp1.minflt = 2;
-        insertQueue(&queue,&tasknodetmp1);
-
-        TaskNode tasknodetmp2;
-        tasknodetmp2.minflt = 4;
-        insertQueue(&queue,&tasknodetmp2);
-
-        TaskNode* tmp = queue.front->next;
-        printf("!!tmp!!minflt:%d\n ",tmp->minflt);
-        traversal(queue);
-
-
+        FdInfo *tmpfdinfo;
 
         /* show files info about this task_struct */
-        get_files_info(vmi,fd,max_fds);
+        get_files_info(vmi,fd,max_fds,tmpfdinfo);
+        tasknodetmp.tsfdinfo = tmpfdinfo;
 
 
+        pushQueue(&queue,&tasknodetmp);
 
 
         if (procname)
@@ -724,6 +763,7 @@ int main (int argc, char **argv)
 
     }
     while(next_list_entry != list_head);
+    traversal(&queue);
 
 error_exit:
     /* resume the vm */

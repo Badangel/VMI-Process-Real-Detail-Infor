@@ -6,16 +6,26 @@
 #include <stdlib.h>
 
 typedef struct TaskNode{
-    struct fdinfo *fsfdinfo;
-    int tsparent;
-    int tsgroupleader;
+    uint32_t tspid;
+    unsigned int tsfdnum;
+    //socket in UNIX,NETLINK,TCP,UDP,TCPv6,other
+    FdInfo *tsfdinfo;
+    int tssocketinfo[6];
+    //anon_inode in eventfd,inotify,timerfd,signalfd,other
+    int tsanon_inodeinfo[5];
+    int tspipeinfo;
+    int tsnullinfo;
+    int tsnuminfo;
+
+    uint32_t tsparent;
+    uint32_t tsgroupleader;
     int tsprio;
     unsigned int tsutime;
     unsigned int tsstime;
     uint64_t tsstart_time;
     uint64_t tsrealstart_time;
-    unsigned long minflt;
-    unsigned long majflt;
+    unsigned long tsminflt;
+    unsigned long tsmajflt;
     struct TaskNode* next;
 
 }TaskNode;
@@ -35,12 +45,12 @@ void initQueue(LinkQueue *queue)
     queue->front->next = NULL;
 }
 
-bool isEmpty(LinkQueue queue)
+bool isEmpty(LinkQueue *queue)
 {
-    return queue.rear == queue.front ? true : false;
+    return queue->rear == queue->front ? true : false;
 }
 
-void insertQueue(LinkQueue *queue, TaskNode* tmptasknode)
+void pushQueue(LinkQueue *queue, TaskNode* tmptasknode)
 {
     TaskNode* q = (TaskNode*)malloc(sizeof(TaskNode));
 
@@ -55,21 +65,23 @@ void insertQueue(LinkQueue *queue, TaskNode* tmptasknode)
     //printf("front minflt:%d ",queue->front->minflt);
 }
 
-void traversal(LinkQueue queue)
+void traversal(LinkQueue *queue)
 {
     int i = 1;
-    TaskNode* q = queue.front->next;
+    TaskNode* q = queue->front->next;
     while(q != NULL){
-        printf(" queue %d is: %d\n",i,q->minflt);
+        printf("queue %d id is: %d\n",i,q->tspid);
+        printf("prio:%d parentid:%d utimes:%d minflt:%d\n",q->tsprio,q->tsparent,q->tsutime,q->tsminflt);
+        printf("total:%d||UNIX:%d NETLINK:%d TCP:%d UDP:%d TCPv6:%d",q->tsfdinfo->numfd,q->tsfdinfo->socketinfo[0],q->tsfdinfo->socketinfo[1],q->tsfdinfo->socketinfo[2],q->tsfdinfo->socketinfo[3],q->tsfdinfo->socketinfo[4],q->tsfdinfo->socketinfo[5]);
         q = q->next;
         i++;
     }
 }
 
-void deleteQueue(LinkQueue *queue)
+void popQueue(LinkQueue *queue)
 {
     TaskNode* q = NULL;
-    if(!isEmpty(*queue)){
+    if(!isEmpty(queue)){
         q = queue->front->next;
         queue->front->next = q->next;
         if(queue->rear ==q){
