@@ -9,13 +9,14 @@ typedef struct TaskNode{
     uint32_t tspid;
     unsigned int tsfdnum;
     //socket in UNIX,NETLINK,TCP,UDP,TCPv6,other
-    FdInfo *tsfdinfo;
-    int tssocketinfo[6];
-    //anon_inode in eventfd,inotify,timerfd,signalfd,other
-    int tsanon_inodeinfo[5];
-    int tspipeinfo;
-    int tsnullinfo;
-    int tsnuminfo;
+    //FdInfo tsfdinfo;
+    int socketinfo[6];
+    //anon_inode in [eventfd],inotify,[timerfd],[signalfd],[eventpoll],other
+    int anon_inodeinfo[6];
+    int pipeinfo;
+    int nullinfo;
+    int numinfo;
+    int fileinfo;
 
     uint32_t tsparent;
     uint32_t tsgroupleader;
@@ -26,6 +27,8 @@ typedef struct TaskNode{
     uint64_t tsrealstart_time;
     unsigned long tsminflt;
     unsigned long tsmajflt;
+
+    char tsname[255];
     struct TaskNode* next;
 
 }TaskNode;
@@ -65,14 +68,18 @@ void pushQueue(LinkQueue *queue, TaskNode* tmptasknode)
     //printf("front minflt:%d ",queue->front->minflt);
 }
 
-void traversal(LinkQueue *queue)
+void traversal(LinkQueue queue)
 {
     int i = 1;
-    TaskNode* q = queue->front->next;
+    TaskNode* q = queue.front->next;
     while(q != NULL){
-        printf("queue %d id is: %d\n",i,q->tspid);
-        printf("prio:%d parentid:%d utimes:%d minflt:%d\n",q->tsprio,q->tsparent,q->tsutime,q->tsminflt);
-        printf("total:%d||UNIX:%d NETLINK:%d TCP:%d UDP:%d TCPv6:%d",q->tsfdinfo->numfd,q->tsfdinfo->socketinfo[0],q->tsfdinfo->socketinfo[1],q->tsfdinfo->socketinfo[2],q->tsfdinfo->socketinfo[3],q->tsfdinfo->socketinfo[4],q->tsfdinfo->socketinfo[5]);
+        printf("queue %d %s id is: %d\n",i,q->tsname,q->tspid);
+        printf("prio:%d parentid:%d grouplead:%d minflt:%ld majflt:%ld\n",q->tsprio,q->tsparent,q->tsgroupleader,q->tsminflt,q->tsmajflt);
+        printf("utime:%d stime:%d start_time:%lf realstart_time:%lf\n",q->tsutime,q->tsstime,q->tsstart_time/60000000000.0,q->tsrealstart_time/60000000000.0);
+        printf("total:%d\nUNIX:%d NETLINK:%d TCP:%d UDP:%d TCPv6:%d\n",q->tsfdnum,q->socketinfo[0],q->socketinfo[1],q->socketinfo[2],q->socketinfo[3],q->socketinfo[4]);
+        printf("[eventfd]:%d inotify:%d [timerfd]:%d [signalfd]:%d [eventpoll]:%d\n",q->anon_inodeinfo[0],q->anon_inodeinfo[1],q->anon_inodeinfo[2],q->anon_inodeinfo[3],q->anon_inodeinfo[4]);
+        printf("pipe:%d null:%d file:%d \n\n",q->pipeinfo,q->nullinfo,q->fileinfo);
+
         q = q->next;
         i++;
     }
