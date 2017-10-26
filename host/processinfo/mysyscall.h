@@ -1,4 +1,9 @@
-
+/**
+* Copyright(c) 2017 dyf
+* record and modify syscall enter addr.
+* defind pipe transmit syscall format
+* interrupt to recover enter addr
+*/
 #ifndef MYSYSCALL_H
 #define MYSYSCALL_H
 
@@ -363,15 +368,19 @@ static struct syscall syscalls[NUMBER_OF_SYSCALLS] =
 int syscallnum[NUMBER_OF_SYSCALLS]= {0};
 static uint8_t trap = 0xCC;
 reg_t rdi, rax,cr3;
-int ec = 0;
+int trapnum = 0;
+int singstepnum = 0;
 int sys_num = -1;
+int pipenum;
+int writen;
 event_response_t singlestep_cb(vmi_instance_t vmi, vmi_event_t *event)
 {
     ///printf("enter one ");
 
     vmi_write_8_va(vmi, syscalls[sys_num].addr, 0, &trap);
+    ++singstepnum;
 
-    printf("%ld one step \n",rax);
+   /// printf("%ld one step \n",rax);
 
     return VMI_EVENT_RESPONSE_TOGGLE_SINGLESTEP;
 }
@@ -383,9 +392,17 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
     vmi_get_vcpureg(vmi, &rax, RAX, event->vcpu_id);
     vmi_get_vcpureg(vmi, &cr3, CR3, event->vcpu_id);
     vmi_pid_t pid = vmi_dtb_to_pid(vmi, cr3);
+    psyscall nowsyscall;
+    nowsyscall.pid = pid;
+    nowsyscall.sysnum = (unsigned int)rax;
+
+    writen = write(pipenum, &nowsyscall, sizeof(psyscall));
+    if(writen<1){
+        printf("pipe write error!\n");
+    }
 
 
-    printf("%d  syscall#=%u ec:%d \n", pid,(unsigned int)rax,ec);
+    ///printf("%d  syscall#=%u ec:%d \n", pid,(unsigned int)rax,ec);
 
 
 
@@ -397,9 +414,9 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
     event->interrupt_event.reinject = 0;
     ///printf("return\n");
 
-    ++ec;
+    ++trapnum;
 
     return VMI_EVENT_RESPONSE_TOGGLE_SINGLESTEP;
 }
 
-#endif
+#endif // MYSYSCALL_H

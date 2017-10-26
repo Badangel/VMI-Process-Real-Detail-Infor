@@ -1,3 +1,9 @@
+/**
+* Copyright(c) 2017 dyf
+* use queue to record each task_struct, and list them.
+* use TaskNode to collect a task_struct.
+*/
+
 #ifndef MYQUEUE_H_INCLUDED
 #define MYQUEUE_H_INCLUDED
 

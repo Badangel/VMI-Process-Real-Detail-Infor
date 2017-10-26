@@ -1,3 +1,8 @@
+/**
+* Copyright(c) 2017 dyf
+* use queue to record each task_struct, and list them.
+* use TaskNode to collect a task_struct.
+*/
 #include "myqueue.h"
 
 void initQueue(LinkQueue *queue)
@@ -33,6 +38,7 @@ void traversal(LinkQueue queue)
 {
     int i = 1;
     TaskNode* q = queue.front->next;
+    TaskNode* freeq;
     while(q != NULL){
         printf("queue %d %s id is: %d\n",i,q->tsname,q->tspid);
         printf("prio:%d parentid:%d grouplead:%d minflt:%ld majflt:%ld\n",q->tsprio,q->tsparent,q->tsgroupleader,q->tsminflt,q->tsmajflt);
@@ -40,8 +46,9 @@ void traversal(LinkQueue queue)
         printf("total:%d\nUNIX:%d NETLINK:%d TCP:%d UDP:%d TCPv6:%d\n",q->tsfdnum,q->socketinfo[0],q->socketinfo[1],q->socketinfo[2],q->socketinfo[3],q->socketinfo[4]);
         printf("[eventfd]:%d inotify:%d [timerfd]:%d [signalfd]:%d [eventpoll]:%d\n",q->anon_inodeinfo[0],q->anon_inodeinfo[1],q->anon_inodeinfo[2],q->anon_inodeinfo[3],q->anon_inodeinfo[4]);
         printf("pipe:%d null:%d file:%d \n\n",q->pipeinfo,q->nullinfo,q->fileinfo);
-
+        freeq = q;
         q = q->next;
+        free(freeq);
         i++;
     }
 }
