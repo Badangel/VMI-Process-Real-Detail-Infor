@@ -147,6 +147,7 @@ int main (int argc, char **argv)
     char buf[256];
     pid_t fpid;
 
+
     if( pipe(fdpipe)<0 )
     {
         perror("failed to pipe");
@@ -159,20 +160,30 @@ int main (int argc, char **argv)
     }
     else if(fpid > 0)
     {
-    printf("%d father start!\n",fpid);
+        printf("%d father start!\n",fpid);
 
 
 
         /* walk the task list */
+        int n = 5;
+        int readn;
+        int flags = fcntl(fdpipe[0], F_GETFL);//ÏÈ»ñÈ¡Ô­ÏÈµÄflags
+        fcntl(fdpipe[0],F_SETFL,flags | O_NONBLOCK);//ÉèÖ
+        psyscall getsyscall;
 
-        ///while(false)///test fork
-        do
+        while(n>0)
         {
+            int psnum = 0;
 
-            TaskNode *tasknodetmp = (TaskNode*)calloc(1,sizeof(TaskNode));
-            //printf("!!first!!minflt:%d ",tasknodetmp.minflt);
-            current_process = next_list_entry - tasks_offset;
-            get_task_info(vmi,current_process,tasknodetmp);
+            ///while(false)///test fork
+            do
+            {
+                psnum++;
+
+                TaskNode *tasknodetmp = (TaskNode*)calloc(1,sizeof(TaskNode));
+                //printf("!!first!!minflt:%d ",tasknodetmp.minflt);
+                current_process = next_list_entry - tasks_offset;
+                get_task_info(vmi,current_process,tasknodetmp);
 
 
 //        vmi_read_addr_va(vmi, current_process + nameidata_offset, 0, &nameida);
@@ -188,57 +199,94 @@ int main (int argc, char **argv)
 
 
 
-            //tasknodetmp.tsfdinfo = tmpfdinfo;
+                //tasknodetmp.tsfdinfo = tmpfdinfo;
 
 
-            pushQueue(&queue,tasknodetmp);
+                pushQueue(&queue,tasknodetmp);
 
 
 
-            if (procname)
+                if (procname)
+                {
+                    free(procname);
+                    procname = NULL;
+                }
+
+                /* follow the next pointer */
+
+                status = vmi_read_addr_va(vmi, next_list_entry, 0, &next_list_entry);
+                if (status == VMI_FAILURE)
+                {
+                    printf("Failed to read next pointer in loop at %"PRIx64"\n", next_list_entry);
+                    goto error_exit;
+                }
+
+            }
+            while(next_list_entry != list_head);
+
+
+            int sysclassnum = 10;
+            int pssystotal[psnum+1][sysclassnum+1];
+            int i = 0;
+            TaskNode* q = queue.front->next;
+            for(; i < psnum; i++)
             {
-                free(procname);
-                procname = NULL;
+                pssystotal[i][0] = q->tspid;
+                int j = 1;
+                for(; j<sysclassnum+1; j++)
+                {
+                    pssystotal[i][j] = 0;
+                }
+                q = q->next;
+            }
+            int j = 0;
+            for(; j<sysclassnum+1; j++)
+            {
+                pssystotal[psnum][j] = 0;
             }
 
-            /* follow the next pointer */
+            ///test fork
 
-            status = vmi_read_addr_va(vmi, next_list_entry, 0, &next_list_entry);
-            if (status == VMI_FAILURE)
-            {
-                printf("Failed to read next pointer in loop at %"PRIx64"\n", next_list_entry);
-                goto error_exit;
-            }
-
-        }while(next_list_entry != list_head);
-
-        traversal(queue);
-
-
-
-        ///test fork
-        int n = 20;
-        int readn;
-        int flags = fcntl(fdpipe[0], F_GETFL);//ÏÈ»ñÈ¡Ô­ÏÈµÄflags
-        fcntl(fdpipe[0],F_SETFL,flags | O_NONBLOCK);//ÉèÖ
-        psyscall getsyscall;
-        int getsysnum = 0;
-        while(n>0)
-        {
             n--;
             //printf("This is farther, write hello to pipe\n");
             //write(fd[1], "hello\n", 25);
             sleep(1);
+            int getsysnum = 0;
             do
             {
                 readn = read(fdpipe[0], &getsyscall, sizeof(psyscall));
+                i = 0;
+                for(; i < psnum; i++)
+                {
+                    if(pssystotal[i][0] == getsyscall.pid)
+                    {
+                        pssystotal[i][syscalls[getsyscall.sysnum].classify+1]++;
+                        pssystotal[psnum][syscalls[getsyscall.sysnum].classify+1]++;
+                        i = psnum;
+                    }
+                }
                 ++getsysnum;
                 ///printf("%d father get %d do syscall %d\n",readn, getsyscall.pid,getsyscall.sysnum);
 
             }
             while(readn>0);
-            printf("father get %d syscall sleep 1\n",getsysnum);
-            getsysnum = 0;
+
+            traversal(queue,pssystotal,psnum);
+            i = psnum;/// i = 0
+            for(; i < psnum+1; i++)
+            {
+                int j = 1;
+                printf("%d syscall:",pssystotal[i][0]);
+                for(; j<sysclassnum+1; j++)
+                {
+                    printf(" %d(%d)",pssystotal[i][j],j-1);
+                    pssystotal[i][j] = 0;
+                }
+                printf("\n");
+            }
+
+            printf("father get %d syscall sleep 1\n\n",getsysnum);
+            //getsysnum = 0;
         }
         printf("father exit \n");
 
@@ -269,8 +317,8 @@ int main (int argc, char **argv)
         addr_t sys_call_table_addr = 0xffffffff81216840;
         vmi_instance_t vmi;
         // Initialize the libvmi library.
-       if (VMI_FAILURE == vmi_init_complete(&vmi, name, VMI_INIT_DOMAINNAME | VMI_INIT_EVENTS , NULL,
-                                  VMI_CONFIG_GLOBAL_FILE_ENTRY, NULL, NULL))
+        if (VMI_FAILURE == vmi_init_complete(&vmi, name, VMI_INIT_DOMAINNAME | VMI_INIT_EVENTS , NULL,
+                                             VMI_CONFIG_GLOBAL_FILE_ENTRY, NULL, NULL))
         {
             printf("Failed to init LibVMI library.\n");
             return 1;
@@ -334,7 +382,7 @@ int main (int argc, char **argv)
             //fprintf(f3,"%s :%d\n",syscalls[i].name,syscallnum[i]);
             if(syscalls[i].addr!=0)
             {
-            ///printf("%d ok ",i );
+                ///printf("%d ok ",i );
                 vmi_write_8_va(vmi, syscalls[i].addr, 0, &(syscalls[i].pre));
             }
 

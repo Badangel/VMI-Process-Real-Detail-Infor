@@ -50,7 +50,7 @@ typedef struct{
 void initQueue(LinkQueue *queue);
 bool isEmpty(LinkQueue *queue);
 void pushQueue(LinkQueue *queue, TaskNode* tmptasknode);
-void traversal(LinkQueue queue);
+void traversal(LinkQueue queue,int sysnum[][11],int psnum);
 void popQueue(LinkQueue *queue);
 /*
 void initQueue(LinkQueue *queue)
