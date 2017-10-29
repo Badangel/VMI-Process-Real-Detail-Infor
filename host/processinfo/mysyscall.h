@@ -35,6 +35,7 @@ static void close_handler(int sig)
     interrupted = sig;
 }
 
+///(1)ps_control (2)file_rw (3)file_control (4)sys_control (5)mem_control (6)net_control (7)socket_control (8)user_control (9)ps_communcation
 static struct syscall syscalls[NUMBER_OF_SYSCALLS] =
 {
     {.num = 0, .addr = 0x0000000000000000, .name = "sys_read", .pre = 0x00, .classify = 2},//0xffffffff8120f4f0

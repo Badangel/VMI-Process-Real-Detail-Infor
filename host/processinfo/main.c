@@ -163,6 +163,12 @@ int main (int argc, char **argv)
     {
         printf("%d father start!\n",fpid);
 
+        init_db();
+        if (conn_db("localhost", "root", "309911", "vmidata") != 0)
+        {
+            return;
+        }
+
 
 
         /* walk the task list */
@@ -289,6 +295,7 @@ int main (int argc, char **argv)
             printf("father get %d syscall sleep 1\n\n",getsysnum);
             //getsysnum = 0;
         }
+        disconn_db();
         printf("father exit \n");
 
         //vmi_destroy(vmi);
