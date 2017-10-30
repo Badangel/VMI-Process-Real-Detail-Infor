@@ -11,7 +11,7 @@
 
 #include <unistd.h>
 #include <fcntl.h>
-
+#include <time.h>
 #include <libvmi/libvmi.h>
 #include <linux/kernel.h>
 #include <linux/sched.h>
@@ -181,6 +181,7 @@ int main (int argc, char **argv)
         while(n>0)
         {
             int psnum = 0;
+            ///vmi_pause_vm(vmi);
 
             ///while(false)///test fork
             do
@@ -230,6 +231,7 @@ int main (int argc, char **argv)
 
             }
             while(next_list_entry != list_head);
+            ///vmi_resume_vm(vmi);
 
 
             int sysclassnum = 10;
@@ -257,7 +259,7 @@ int main (int argc, char **argv)
             n--;
             //printf("This is farther, write hello to pipe\n");
             //write(fd[1], "hello\n", 25);
-            sleep(1);
+
             int getsysnum = 0;
             do
             {
@@ -292,7 +294,16 @@ int main (int argc, char **argv)
                 printf("\n");
             }
 
+
+            time_t now;
+            struct tm *timenow;
+            time(&now);
+            //timenow = localtime(&now);
+            printf("Local   time   is   %d\n",now);
+
+
             printf("father get %d syscall sleep 1\n\n",getsysnum);
+            sleep(1);
             //getsysnum = 0;
         }
         disconn_db();

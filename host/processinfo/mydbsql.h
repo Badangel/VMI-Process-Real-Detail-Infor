@@ -102,7 +102,7 @@ int exec_db(const char *SQL)
         printf("%s\n", mysql_error(connection));
         return -1;
     }
-    printf("query is ok, %u rows affected\n", (unsigned int)mysql_affected_rows(connection));
+    //printf("query is ok, %u rows affected\n", (unsigned int)mysql_affected_rows(connection));
     return 0;
 }
 
