@@ -54,8 +54,8 @@ void traversal(LinkQueue queue,int sysnum[][11],int psnum)
         printf("[eventfd]:%d inotify:%d [timerfd]:%d [signalfd]:%d [eventpoll]:%d ",q->anon_inodeinfo[0],q->anon_inodeinfo[1],q->anon_inodeinfo[2],q->anon_inodeinfo[3],q->anon_inodeinfo[4]);
         printf("pipe:%d null:%d file:%d\n",q->pipeinfo,q->nullinfo,q->fileinfo);
         */
-        if(q->tsparent != 2)///can't insert all ps,180+ ps need 6s,but parentid = 2 have no mean
-        {
+        ///if(q->tsparent >= 0)///can't insert all ps,180+ ps need 6s,but parentid = 2 have no mean
+        ///{
             int j = 1;
             int totalsyscall = 0;
             ///printf("%d syscall:",sysnum[i][0]);
@@ -69,7 +69,7 @@ void traversal(LinkQueue queue,int sysnum[][11],int psnum)
 
             exec_db(sql_insert);
             insertsqlnum++;
-        }
+        ///}
         ///printf("\n%s\n",sql_insert);
         freeq = q;
         q = q->next;

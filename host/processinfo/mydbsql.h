@@ -31,6 +31,7 @@ int conn_db(const char *hostname, const char *username, const char *password, co
         printf("%s\n", mysql_error(&mysql));
         return -1;
     }
+    mysql_autocommit(&mysql, 0);///close autocommit
 
     printf("success connect to mysql\n");
     return 0;
@@ -106,5 +107,16 @@ int exec_db(const char *SQL)
     return 0;
 }
 
+void comm_db()
+{
+    if(mysql_commit(connection) != 0){
+        mysql_rollback(connection);
+        printf("commit error, roolback!\n");
+    }
+    else{
+        printf("commit right!\n");
+    }
+
+}
 
 #endif // MYDBSQL_H_INCLUDED

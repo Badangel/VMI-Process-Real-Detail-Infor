@@ -281,6 +281,8 @@ int main (int argc, char **argv)
             while(readn>0);
 
             traversal(queue,pssystotal,psnum);
+            comm_db();
+
             i = psnum;/// i = 0
             for(; i < psnum+1; i++)
             {
