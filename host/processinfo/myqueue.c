@@ -37,7 +37,7 @@ void pushQueue(LinkQueue *queue, TaskNode* tmptasknode)
     //printf("front minflt:%d ",queue->front->minflt);
 }
 
-void traversal(LinkQueue queue,int sysnum[][11],int psnum)
+void traversal(MYSQL *mysql,LinkQueue queue,int sysnum[][11],int psnum)
 {
     int i = 0;
     TaskNode* q = queue.front->next;
@@ -67,7 +67,7 @@ void traversal(LinkQueue queue,int sysnum[][11],int psnum)
             }
             sprintf(sql_insert,"insert into psinfo(psid,psname,parentid,gleaderid, prio,minflt,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation)values('%d','%s','%d','%d', '%d','%ld','%ld','%d','%d','%lf','%lf','%d','%d', '%d','%d','%d','%d','%d','%d', '%d', '%d', '%d', '%d', '%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d');",q->tspid,q->tsname,q->tsparent,q->tsgroupleader,q->tsprio,q->tsminflt,q->tsmajflt,q->tsutime,q->tsstime,q->tsstart_time/60000000000.0,q->tsrealstart_time/60000000000.0,q->tsfdnum,q->socketinfo[0],q->socketinfo[1],q->socketinfo[2],q->socketinfo[3],q->socketinfo[4],q->anon_inodeinfo[0],q->anon_inodeinfo[1],q->anon_inodeinfo[2],q->anon_inodeinfo[3],q->anon_inodeinfo[4],q->pipeinfo,q->fileinfo,totalsyscall,sysnum[i][2],sysnum[i][3],sysnum[i][4],sysnum[i][5],sysnum[i][6],sysnum[i][7],sysnum[i][8],sysnum[i][9],sysnum[i][10]);
 
-            exec_db(sql_insert);
+            exec_db(mysql,sql_insert);
             insertsqlnum++;
         ///}
         ///printf("\n%s\n",sql_insert);

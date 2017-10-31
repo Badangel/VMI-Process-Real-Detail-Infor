@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <mysql/mysql.h>
 
 typedef struct TaskNode{
     uint32_t tspid;
@@ -50,7 +51,7 @@ typedef struct{
 void initQueue(LinkQueue *queue);
 bool isEmpty(LinkQueue *queue);
 void pushQueue(LinkQueue *queue, TaskNode* tmptasknode);
-void traversal(LinkQueue queue,int sysnum[][11],int psnum);
+void traversal(MYSQL *mysql,LinkQueue queue,int sysnum[][11],int psnum);
 void popQueue(LinkQueue *queue);
 /*
 void initQueue(LinkQueue *queue)

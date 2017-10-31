@@ -162,9 +162,10 @@ int main (int argc, char **argv)
     else if(fpid > 0)
     {
         printf("%d father start!\n",fpid);
+        MYSQL mysql;
 
-        init_db();
-        if (conn_db("localhost", "root", "309911", "vmidata") != 0)
+        init_db(&mysql);
+        if (conn_db(&mysql,"localhost", "root", "309911", "vmidata") != 0)
         {
             return;
         }
@@ -172,7 +173,7 @@ int main (int argc, char **argv)
 
 
         /* walk the task list */
-        int n = 5;
+        int n = 10;
         int readn;
         int flags = fcntl(fdpipe[0], F_GETFL);//ÏÈ»ñÈ¡Ô­ÏÈµÄflags
         fcntl(fdpipe[0],F_SETFL,flags | O_NONBLOCK);//ÉèÖ
@@ -181,7 +182,7 @@ int main (int argc, char **argv)
         while(n>0)
         {
             int psnum = 0;
-            ///vmi_pause_vm(vmi);
+            vmi_pause_vm(vmi);
 
             ///while(false)///test fork
             do
@@ -231,7 +232,7 @@ int main (int argc, char **argv)
 
             }
             while(next_list_entry != list_head);
-            ///vmi_resume_vm(vmi);
+            vmi_resume_vm(vmi);
 
 
             int sysclassnum = 10;
@@ -280,8 +281,8 @@ int main (int argc, char **argv)
             }
             while(readn>0);
 
-            traversal(queue,pssystotal,psnum);
-            comm_db();
+            traversal(&mysql,queue,pssystotal,psnum);
+            comm_db(&mysql);
 
             i = psnum;/// i = 0
             for(; i < psnum+1; i++)
@@ -308,7 +309,7 @@ int main (int argc, char **argv)
             sleep(1);
             //getsysnum = 0;
         }
-        disconn_db();
+        disconn_db(&mysql);
         printf("father exit \n");
 
         //vmi_destroy(vmi);

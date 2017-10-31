@@ -12,52 +12,51 @@
 #include <string.h>
 #include <mysql/mysql.h>
 
-MYSQL *connection = NULL;
-MYSQL mysql;
 
-void init_db()
+
+void init_db(MYSQL *mysql)
 {
-    mysql_init(&mysql);
+    mysql_init(mysql);
 }
-int conn_db(const char *hostname, const char *username, const char *password, const char *dbname)
+int conn_db(MYSQL *mysql,const char *hostname, const char *username, const char *password, const char *dbname)
 {
-    if (connection)
-        mysql_close(connection);
-    connection = mysql_real_connect(&mysql, hostname, username, password,
+    if (mysql != NULL)
+        mysql_close(mysql);
+    mysql = mysql_real_connect(mysql, hostname, username, password,
                                     dbname, 0, NULL, 0);///last three 0,0,0
 
-    if (connection == NULL)
+    if (mysql == NULL)
     {
-        printf("%s\n", mysql_error(&mysql));
+        printf("%s\n", mysql_error(mysql));
         return -1;
     }
-    mysql_autocommit(&mysql, 0);///close autocommit
+    mysql_autocommit(mysql, 0);///close autocommit
 
     printf("success connect to mysql\n");
     return 0;
 
 }
-void disconn_db()
+void disconn_db(MYSQL *mysql)
 {
-    if (connection)
+    if (mysql)
     {
-        mysql_close(connection);
-        connection = NULL;
+        mysql_close(mysql);
+        mysql = NULL;
     }
 }
-int open_db(const char *SQL)
+int open_db(MYSQL *mysql,const char *SQL)
 {
-    int state = mysql_query(connection, SQL);
+    int state = mysql_query(mysql, SQL);
     if (state != 0)
     {
-        printf("%s\n", mysql_error(connection));
+        printf("%s\n", mysql_error(mysql));
         return -1;
     }
 
-    MYSQL_RES *result = mysql_store_result(connection);
+    MYSQL_RES *result = mysql_store_result(mysql);
     if (result == (MYSQL_RES *) NULL)
     {
-        printf("%s\n", mysql_error(connection));
+        printf("%s\n", mysql_error(mysql));
         return -1;
     }
     else
@@ -90,27 +89,27 @@ int open_db(const char *SQL)
             }
             printf("\n");
         }
-        printf("query is ok, %u rows affected\n", (unsigned int)mysql_affected_rows(connection));
+        printf("query is ok, %u rows affected\n", (unsigned int)mysql_affected_rows(mysql));
         mysql_free_result(result);
     }
     return 0;
 }
-int exec_db(const char *SQL)
+int exec_db(MYSQL *mysql,const char *SQL)
 {
-    int state = mysql_query(connection, SQL);
+    int state = mysql_query(mysql, SQL);
     if (state != 0)
     {
-        printf("%s\n", mysql_error(connection));
+        printf("%s\n", mysql_error(mysql));
         return -1;
     }
     //printf("query is ok, %u rows affected\n", (unsigned int)mysql_affected_rows(connection));
     return 0;
 }
 
-void comm_db()
+void comm_db(MYSQL *mysql)
 {
-    if(mysql_commit(connection) != 0){
-        mysql_rollback(connection);
+    if(mysql_commit(mysql) != 0){
+        mysql_rollback(mysql);
         printf("commit error, roolback!\n");
     }
     else{

@@ -1,0 +1,2 @@
+sql insert one by one, 180+ need 6s, each need 0.4s, should use trancation commit to slove.
+get psinfo from mem, if open task when it run, may occur core dump, need pause and resume
