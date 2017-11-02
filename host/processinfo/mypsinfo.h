@@ -459,6 +459,7 @@ void get_task_info(vmi_instance_t vmi,addr_t current_process, TaskNode *tmptn)
 
     /* print out the process name */
     ///printf("\n[%5d] [%5d] %s (struct addr:%"PRIx64")\n   rparent:%d  parent:%d ", pid, tgid, procname, current_process, real_parent_pid, parent_pid);
+    ///printf("%d",pid);
 
 
     vmi_read_addr_va(vmi, current_process + group_leader_offset, 0, &group_leader);
@@ -467,8 +468,10 @@ void get_task_info(vmi_instance_t vmi,addr_t current_process, TaskNode *tmptn)
     ///printf("groupleader:%d ",group_leader_pid);
 
     /* show fs information */
+    ///printf("fb");
     vmi_read_addr_va(vmi, current_process + fs_offset, 0, &fs);
     get_fs_info(vmi, fs);
+    ///printf("fa");
 
     /* show start time */
     uint64_t starttime = 0;
@@ -519,7 +522,7 @@ void get_task_info(vmi_instance_t vmi,addr_t current_process, TaskNode *tmptn)
     vmi_read_addr_va(vmi, current_process + files_offset, 0, &files);
     if(VMI_FAILURE==vmi_read_addr_va(vmi, files + fdt_offset, 0, &fdt))
     {
-        printf("Failed to read addr!!!!!\n");
+        printf("%d %s Failed to read addr!!!!!\n",pid,procname);
     }
     vmi_read_addr_va(vmi, files + 40, 0, &fdtab);
     vmi_read_addr_va(vmi, files + 160, 0, &fd_array);
@@ -529,9 +532,11 @@ void get_task_info(vmi_instance_t vmi,addr_t current_process, TaskNode *tmptn)
     tmptn->tsfdnum = max_fds;
 
     // FdInfo tmpfdinfo;
+    ///printf("tfb");
 
     /* show files info about this task_struct */
     get_files_info(vmi,fd,max_fds,tmptn);
+    ///printf("tfa");
 }///end get_task_info
 
 #endif // MYPSINFO_H_INCLUDED

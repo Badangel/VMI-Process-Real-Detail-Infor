@@ -139,9 +139,7 @@ int main (int argc, char **argv)
 
     next_list_entry = list_head;
 
-    //task queue
-    LinkQueue queue;
-    initQueue(&queue);
+
 
 
     int fdpipe[2];
@@ -173,7 +171,7 @@ int main (int argc, char **argv)
 
 
         /* walk the task list */
-        int n = 10;
+        int n = 100;
         int readn;
         int flags = fcntl(fdpipe[0], F_GETFL);//ÏÈ»ñÈ¡Ô­ÏÈµÄflags
         fcntl(fdpipe[0],F_SETFL,flags | O_NONBLOCK);//ÉèÖ
@@ -182,7 +180,11 @@ int main (int argc, char **argv)
         while(n>0)
         {
             int psnum = 0;
-            vmi_pause_vm(vmi);
+
+            //task queue
+            LinkQueue queue;
+            initQueue(&queue);
+            ///vmi_pause_vm(vmi);
 
             ///while(false)///test fork
             do
@@ -192,6 +194,7 @@ int main (int argc, char **argv)
                 TaskNode *tasknodetmp = (TaskNode*)calloc(1,sizeof(TaskNode));
                 //printf("!!first!!minflt:%d ",tasknodetmp.minflt);
                 current_process = next_list_entry - tasks_offset;
+                ///printf(" %d-",psnum);
                 get_task_info(vmi,current_process,tasknodetmp);
 
 
@@ -209,6 +212,7 @@ int main (int argc, char **argv)
 
 
                 //tasknodetmp.tsfdinfo = tmpfdinfo;
+
 
 
                 pushQueue(&queue,tasknodetmp);
@@ -232,16 +236,20 @@ int main (int argc, char **argv)
 
             }
             while(next_list_entry != list_head);
-            vmi_resume_vm(vmi);
+            ///vmi_resume_vm(vmi);
+            ///printf("1:ok \n");
 
 
             int sysclassnum = 10;
             int pssystotal[psnum+1][sysclassnum+1];
             int i = 0;
             TaskNode* q = queue.front->next;
+
             for(; i < psnum; i++)
             {
+
                 pssystotal[i][0] = q->tspid;
+
                 int j = 1;
                 for(; j<sysclassnum+1; j++)
                 {
@@ -280,9 +288,11 @@ int main (int argc, char **argv)
 
             }
             while(readn>0);
+            printf("2:ok ");
 
             traversal(&mysql,queue,pssystotal,psnum);
             comm_db(&mysql);
+
 
             i = psnum;/// i = 0
             for(; i < psnum+1; i++)
@@ -302,7 +312,7 @@ int main (int argc, char **argv)
             struct tm *timenow;
             time(&now);
             //timenow = localtime(&now);
-            printf("Local   time   is   %d\n",now);
+            printf("Local   time   is   %ld\n",now);
 
 
             printf("father get %d syscall sleep 1\n\n",getsysnum);
