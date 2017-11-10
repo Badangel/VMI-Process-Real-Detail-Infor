@@ -39,6 +39,7 @@ def Noequalzero(vmnewstat,vmoldstat):
 def quit(signum,frame):
     print "you stop"
     sys.exit()
+    
 
 try:
     signal.signal(signal.SIGINT,quit)
