@@ -1,7 +1,7 @@
 from server import *
-from EXProcesslist import *
-from EXModulelist import *
-from EXCPUTime import *
+from ext_process_list import *
+from ext_module_list import *
+from ext_cputime import *
 import SocketServer
 import time,threading
 import DBHelper
@@ -194,7 +194,5 @@ try:
             continue
     print ('?????')
     time.sleep(12)
-except Exception,exc:
+except Exception:
             print "over"
-            
-            print exc

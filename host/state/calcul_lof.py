@@ -41,7 +41,7 @@ def getk_distance(matrix,datalen,k):
     print("kids:",kdis)
     return kdis
 
-#Calcilate reachable disdance of each point
+#Calculate reachable disdance of each point
 def getreach_distance(matrix,datalen,kdis):
     reachdis_matrix = [[0 for i in range(datalen)] for i in range(datalen)]
     for i in range(datalen):
@@ -57,7 +57,7 @@ def getreach_distance(matrix,datalen,kdis):
     return reachdis_matrix
 
 
-#Calcilate local reachable density of each point
+#Calculate local reachable density of each point
 def getlrd(reachdis_matrix,matrix,datalen,minpts):
     lrd = [0 for i in range(datalen)]
     for i in range(datalen):
@@ -81,7 +81,7 @@ def getlrd(reachdis_matrix,matrix,datalen,minpts):
     return lrd
 
                         
-#Calcilate LOF of each point
+#Calculate LOF of each point
 def getlof(data,k,minpts):
     datalen = len(data)
     dismatrix = getdisance(data,datalen)
@@ -117,7 +117,7 @@ sql = "select 100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,inter
 data = db.oncesql(sql)
 datalen = len(data) 
 print "len: ",datalen,len(data[0])
-getlof(data,K,MinPts)
+print len(getlof(data,K,MinPts))
 
 
 
