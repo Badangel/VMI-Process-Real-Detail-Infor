@@ -75,7 +75,7 @@ def getlrd(reachdis_matrix,matrix,datalen,minpts):
         while not lrdpq.empty():
             temp = lrdpq.get()
             lrd[i] = lrd[i] + reachdis_matrix[i][temp[1]]
-        lrd[i] = minpts/lrd[i]
+        lrd[i] = minpts/(lrd[i]+0.01)
 
     print("lrd:",lrd)
     return lrd
@@ -113,12 +113,20 @@ def getlof(data,k,minpts):
 K = 4
 MinPts = 4
 db = DBHelper.DBHelper()
-sql = "select 100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,read_total_in,writ_total_in,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,send_net_out,lsmod_out,ps_out from state"
-data = db.oncesql(sql)
+'''
+sqlstate = "select 100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,read_total_in,writ_total_in,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,send_net_out,lsmod_out,ps_out from state"
+data = db.oncesql(sqlstate)
 datalen = len(data) 
 print "len: ",datalen,len(data[0])
 print len(getlof(data,K,MinPts))
+'''
 
+sqlps = "select prio,minflt,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo limit 0,1500"
+
+psdata = db.oncesql(sqlps)
+print "psdata len:",len(psdata)
+pslof = getlof(psdata,K,MinPts)
+print pslof[1507:1699]
 
 
 	

@@ -1,4 +1,4 @@
-from server import *
+from sock_server import *
 from ext_process_list import *
 from ext_module_list import *
 from ext_cputime import *
@@ -44,7 +44,7 @@ def quit(signum,frame):
 try:
     signal.signal(signal.SIGINT,quit)
     signal.signal(signal.SIGTERM,quit) 
-    ser=serverwork('223.3.85.28',9999)
+    ser=ServerWork('223.3.85.28',9999)
     ##k=thread.start_new_thread(server_start(),ser)
     t = threading.Thread(target = ser.server_start,args =[],name='test')
     t.setDaemon(True)
