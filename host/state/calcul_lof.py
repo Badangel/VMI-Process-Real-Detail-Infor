@@ -2,9 +2,6 @@ import DBHelper
 import math
 import Queue
 
-
-  
-
 #Calculate the distance of each point
 def getdisance(data,datalen):
     #print data
@@ -110,7 +107,7 @@ def getlof(data,k,minpts):
     print"lof:",lof
     return lof
 
-if __name__ =='__main__'
+if __name__ =='__main__':
     K = 4
     MinPts = 4
     db = DBHelper.DBHelper()
