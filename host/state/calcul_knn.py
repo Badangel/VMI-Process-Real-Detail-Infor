@@ -78,10 +78,10 @@ def getopknn(data,kdis,datalen,k,onepoint):
     opknndis = [0 for i in range(datalen)]
     for i in range(datalen):
         for j in range(len(data[0])):
-            opknndis[i] = (data[i][j]-onepoint[0][j])*(data[i][j]-onepoint[0][j])
+            opknndis[i] = opknndis[i] + (data[i][j]-onepoint[j])*(data[i][j]-onepoint[j])
         opknndis[i] = math.sqrt(opknndis[i])
     
-    print "cal dis",opknndis
+    print "cal dis"#,opknndis
     pq = Queue.PriorityQueue(k)
     for i in range(datalen):
         if pq.full() == False:
@@ -94,7 +94,7 @@ def getopknn(data,kdis,datalen,k,onepoint):
                 pq.put(temp)
     print "cal k point"
     kdisp = 0
-    kdisk = 0.001
+    kdisk = 1
     while not pq.empty():
         temp = pq.get()
         kdisp = kdisp + temp[0]*-1
@@ -135,10 +135,12 @@ if __name__ == '__main__':
     sqlpsone = "select prio,minflt,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where id = 5949"
     psonedata = db.oncesql(sqlpsone)
     print "6138 select ok"
-    print getopknn(psdata,kdis,datalen,K,psonedata)
+    print getopknn(psdata,kdis,datalen,K,psonedata[0])
 
     sqlpsone = "select prio,minflt,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where id = 6265"
     psonedata = db.oncesql(sqlpsone)
     print "6265 select ok"
-    print getopknn(psdata,kdis,datalen,K,psonedata)
+    print getopknn(psdata,kdis,datalen,K,psonedata[0])
     #print knnp[1400:1450]
+
+  
