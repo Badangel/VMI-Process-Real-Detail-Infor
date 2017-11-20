@@ -35,7 +35,7 @@ def getk_distance(matrix,datalen,k):
                     else:
                         pq.put(kdis[i])
         kdis[i] = pq.get()*-1
-    print("kids:",kdis)
+    #print("kids:",kdis)
     return kdis
 
 #Calculate reachable disdance of each point
@@ -74,17 +74,19 @@ def getlrd(reachdis_matrix,matrix,datalen,minpts):
             lrd[i] = lrd[i] + reachdis_matrix[i][temp[1]]
         lrd[i] = minpts/(lrd[i]+0.001)
 
-    print("lrd:",lrd)
+    #print("lrd:",lrd)
     return lrd
 
                         
 #Calculate LOF of each point
-def getlof(data,k,minpts):
+def getlof(data,k,minpts,datalen,dismatrix,lrd):
+    '''
     datalen = len(data)
     dismatrix = getdisance(data,datalen)
     kdis = getk_distance(dismatrix,datalen,k)
     reach_mat = getreach_distance(dismatrix,datalen,kdis)
     lrd = getlrd(reach_mat,dismatrix,datalen,minpts)
+    '''
 
     lof = [0 for i in range(datalen)]
     for i in range(datalen):
@@ -107,6 +109,38 @@ def getlof(data,k,minpts):
     print"lof:",lof
     return lof
 
+#Calculate LOF of one point
+def getoplof(data,k,minpts,kdis,lrd,onepoint):
+    oplofdis = [0 for i in range(datalen)]
+    for i in range(datalen):
+        for j in range(len(data[0])):
+            oplofdis[i] = oplofdis[i] + (data[i][j]-onepoint[j])*(data[i][j]-onepoint[j])
+        oplofdis[i] = math.sqrt(oplofdis[i])
+    lofpq = Queue.PriorityQueue(minpts)
+    for j in range(datalen):
+        if lofpq.full() == False:
+            lofpq.put([oplofdis[j]*-1,j])
+        else:
+            temp = lofpq.get()
+            if oplofdis[j]*-1 > temp[0]:
+                lofpq.put([oplofdis[j]*-1,j])
+            else:
+                lofpq.put(temp)
+    opreadis = 0
+    klrd = 0
+    while not lofpq.empty():
+        temp = lofpq.get()
+        klrd = klrd + lrd[temp[1]]
+        if kdis[temp[1]] > oplofdis[temp[1]]:
+            opreadis = opreadis + kdis[temp[1]]
+        else:
+            opreadis = opreadis + oplofdis[temp[1]]
+    #oplrd = minpts/opreadis
+    oplof = (opreadis*klrd)/(minpts*minpts) #(klrd/k)/oplrd
+    return oplof
+
+
+
 if __name__ =='__main__':
     K = 4
     MinPts = 4
@@ -123,8 +157,15 @@ if __name__ =='__main__':
 
     psdata = db.oncesql(sqlps)
     print "psdata len:",len(psdata)
-    pslof = getlof(psdata,K,MinPts)
+    datalen = len(psdata)
+    dismatrix = getdisance(psdata,datalen)
+    kdis = getk_distance(dismatrix,datalen,K)
+    reach_mat = getreach_distance(dismatrix,datalen,kdis)
+    lrd = getlrd(reach_mat,dismatrix,datalen,MinPts)
+    pslof = getlof(psdata,K,MinPts,datalen,dismatrix,lrd)
     print pslof[0:190]
 
-
-	
+    sqlpsone = "select prio,minflt,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where id = 1477"
+    psonedata = db.oncesql(sqlpsone)
+    print "6138 select ok"
+    print getoplof(psdata,K,MinPts,kdis,lrd,psonedata[0])
