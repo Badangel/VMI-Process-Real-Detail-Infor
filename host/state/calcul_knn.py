@@ -67,7 +67,7 @@ def getknnpro(data,k):
             temp = pq.get()
             knnpro[i] = knnpro[i] + kdis[temp[1]]
             #print temp,
-        knnpro[i] = k*kdis[i]/(knnpro[i]+0.001)
+        knnpro[i] = k*kdis[i]/(knnpro[i]+1)
         #print " "
     #print("kids:",kdis)
     return knnpro

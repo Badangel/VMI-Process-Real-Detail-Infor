@@ -24,14 +24,6 @@
 #include "mydbsql.h"
 
 
-
-
-
-
-
-
-
-
 int main (int argc, char **argv)
 {
     vmi_instance_t vmi;
