@@ -2,8 +2,7 @@ import DBHelper
 import math
 import Queue
 import time
-from kdisfile import kdis
-from lrdfile import lrd
+
 
 #Calculate the distance of each point
 def getdisance(data,datalen):
@@ -141,6 +140,46 @@ def getoplof(data,k,minpts,kdis,lrd,onepoint):
     oplof = (opreadis*klrd)/(minpts*minpts) #(klrd/k)/oplrd
     return oplof
 
+def modifypsstate1(dataid):
+     changestate = "update psinfo set state = 1 where id =" + str(dataid)
+     db.oncesql(changestate)
+
+def modifypsstate0(dataid):
+     changestate = "update psinfo set state = 0 where id =" + str(dataid)
+     db.oncesql(changestate)
+    
+def modifypsstat(largeid):
+    sqlps = "select prio,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 1 and id < "+str(largeid)
+    psdata = db.oncesql(sqlps)
+    print "psdata len:",len(psdata)
+    datalen = len(psdata)
+
+    #calculate 2000 data offline and write to files
+    dismatrix = getdisance(psdata,datalen)
+    kdis = getk_distance(dismatrix,datalen,K)
+    reach_mat = getreach_distance(dismatrix,datalen,kdis)
+    lrd = getlrd(reach_mat,dismatrix,datalen,MinPts)
+    pslof = getlof(psdata,K,MinPts,datalen,dismatrix,lrd)
+
+    #delete minflt
+    sqlpsone = "select id,prio,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 0"
+    psonedata = db.oncesql(sqlpsone)
+    psonedata = list(psonedata)
+    
+    for a in range(0,len(psonedata)):
+        alof = getoplof(psdata,K,MinPts,kdis,lrd,psonedata[a][1:])
+        changestate = ""
+        if alof > 1.1 or alof < 0.9:
+            changestate = "update psinfo set state = 1 where id =" + str(psonedata[a][0])
+            print "add in",
+            db.oncesql(changestate)
+            print psonedata[a][0],alof
+        else:
+            changestate = "update psinfo set state = 2 where id =" + str(psonedata[a][0])
+            db.oncesql(changestate)
+            print "move out",psonedata[a][0],alof
+
+
 
 
 if __name__ =='__main__':
@@ -154,15 +193,14 @@ if __name__ =='__main__':
     print "len: ",datalen,len(data[0])
     print len(getlof(data,K,MinPts))
     '''
-
-#delete minflt
-    sqlps = "select prio,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo limit 0,2000"
-
+    
+    #delete minflt
+    sqlps = "select prio,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 1 and id < 5001"
     psdata = db.oncesql(sqlps)
     print "psdata len:",len(psdata)
     datalen = len(psdata)
+
     #calculate 2000 data offline and write to files
-    '''
     dismatrix = getdisance(psdata,datalen)
     kdis = getk_distance(dismatrix,datalen,K)
     reach_mat = getreach_distance(dismatrix,datalen,kdis)
@@ -181,12 +219,29 @@ if __name__ =='__main__':
     fileHandle.flush()
     '''
     #read offline data
+    from kdisfile import kdis
+    from lrdfile import lrd
+    '''
 
     #delete minflt
-    sqlpsone = "select prio,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where id > 1600 and id < 1710"
+    sqlpsone = "select id,prio,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where id > 5000 and id < 8001"
     psonedata = db.oncesql(sqlpsone)
-    print psonedata
+    psonedata = list(psonedata)
+    
     print "6138 select ok"
     print time.clock()
+    addnum = 0
     for a in range(0,len(psonedata)):
-        print a,getoplof(psdata,K,MinPts,kdis,lrd,psonedata[a]),time.clock()
+        alof = getoplof(psdata,K,MinPts,kdis,lrd,psonedata[a][1:])
+        changestate = ""
+        if alof > 1.1 or alof < 0.9:
+            changestate = "update psinfo set state = 1 where id =" + str(psonedata[a][0])
+            addnum = addnum + 1
+            print "add in",
+            db.oncesql(changestate)
+            print psonedata[a][0],alof,time.clock()
+        else:
+            changestate = "update psinfo set state = 2 where id =" + str(psonedata[a][0])
+            db.oncesql(changestate)
+            print "move out",psonedata[a][0],alof,time.clock()
+    print 'add:',addnum
