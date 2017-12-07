@@ -42,6 +42,15 @@ unsigned long static_prio_offset = 76;
 unsigned long normal_prio_offset = 80;
 unsigned long rt_priority_offset = 84;
 
+unsigned long mm_offset = 928;
+unsigned long pgd_offset = 64;
+unsigned long mm_users_offset = 72;
+unsigned long mm_count_offset = 76;
+unsigned long total_vm_offset = 176;
+unsigned long locked_vm_offset = 184;
+unsigned long stack_vm_offset = 216;
+unsigned long start_code_offset = 232;
+unsigned long end_code_offset = 240;
 
 unsigned long fd_offset = 8;
 unsigned long i_node_offset = 32;
@@ -112,12 +121,9 @@ vmi_pid_t parent_pid = 0;
 vmi_pid_t tgid = 0;
 vmi_pid_t group_leader_pid = 0;
 
-
 status_t status;
 
-
 addr_t fs = 1;
-
 
 addr_t files = 1;
 addr_t fdt = 1;
@@ -125,14 +131,37 @@ addr_t fdtab = 1;
 addr_t fd_array = 1;
 addr_t fd = 1;
 
-
-
-
 unsigned int max_fds = 0;
 char *filename = NULL;
 char *d_iname = NULL;
 char *parentname = NULL;
 
+/**
+ * This funtion get mm_struct info
+ */
+void get_mm_struct(vmi_instance_t vmi, addr_t currentps)
+{
+    addr_t currmm_structaddr = 1;
+  
+    int cmm_users;
+    int cmm_count;
+    uint64_t cpgd;
+    uint64_t ctotal_vm;
+    uint64_t clocked_cm;
+    uint64_t cstack_vm;
+    uint64_t cstart_code;
+    uint64_t cend_code;
+    vmi_read_addr_va(vmi,currentps+mm_offset,0,&currmm_structaddr);
+    vmi_read_32_va(vmi,currmm_structaddr+mm_users_offset,0,&cmm_users);
+    vmi_read_32_va(vmi,currmm_structaddr+mm_count_offset,0,&cmm_count);
+    vmi_read_64_va(vmi,currmm_structaddr+pgd_offset,0,&cpgd);
+    vmi_read_64_va(vmi,currmm_structaddr+total_vm_offset,0,&ctotal_vm);
+    vmi_read_64_va(vmi,currmm_structaddr+locked_vm_offset,0,&clocked_cm);
+    vmi_read_64_va(vmi,currmm_structaddr+stack_vm_offset,0,&cstack_vm);
+    vmi_read_64_va(vmi,currmm_structaddr+start_code_offset,0,&cstart_code);
+    vmi_read_64_va(vmi,currmm_structaddr+end_code_offset,0,&cend_code);
+    printf("mm_users:%d mm_count:%d pgd:%p total_vm:%ld locked_cm:%ld stack_vm:%ld start_code:%p end_code:%p\n\n",cmm_users,cmm_count,cpgd,ctotal_vm,clocked_cm,cstack_vm,cstart_code,cend_code);
+}
 
 /**
 *This funtion get the dentry qstr name.
@@ -461,6 +490,8 @@ void get_task_info(vmi_instance_t vmi,addr_t current_process, TaskNode *tmptn)
     ///printf("\n[%5d] [%5d] %s (struct addr:%"PRIx64")\n   rparent:%d  parent:%d ", pid, tgid, procname, current_process, real_parent_pid, parent_pid);
     ///printf("%d",pid);
 
+    /*only show mm_struct info not add in struct*/
+    get_mm_struct(vmi, current_process);
 
     vmi_read_addr_va(vmi, current_process + group_leader_offset, 0, &group_leader);
     vmi_read_32_va(vmi, group_leader + pid_offset, 0, (uint32_t*)&group_leader_pid);
