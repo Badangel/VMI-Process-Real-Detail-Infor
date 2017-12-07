@@ -12,7 +12,6 @@
 #include <net/sock.h>
 
 struct task_struct task;
-
 #define EMBEDDED_LEVELS 2
 struct nameidata {
 	struct path	path;
@@ -111,13 +110,26 @@ void show_mm(void)
 	//mm_struct offset
 	unsigned long mm_size = sizeof(mm);
 	unsigned long lpgd = (unsigned long)(&(mm.pgd))- p_mm ;
-	unsigned long laddr = (unsigned long)(&(mm.start_code)) - p_mm;
+	unsigned long mmusers = (unsigned long)(&(mm.mm_users)) - p_mm;
+	unsigned long mmcount = (unsigned long)(&(mm.mm_count)) - p_mm;
+	unsigned long scddr = (unsigned long)(&(mm.start_code)) - p_mm;
+	unsigned long seddr = (unsigned long)(&(mm.end_code)) - p_mm;
+	unsigned long topamap = (unsigned long)(&(mm.total_vm)) - p_mm;
+	unsigned long lockpa = (unsigned long)(&(mm.locked_vm)) - p_mm;
+	unsigned long stackpa = (unsigned long)(&(mm.stack_vm)) - p_mm;
 	
 	//mm_struct  show
 	printk("-----------mm_struct-----------");
 	printk("total_size: %d\n", mm_size);
-	printk("pgd_offset: %d\n", lpgd);
-	printk("startcode_offset: %d\n\n", laddr);
+	printk("mmusers_offset: %d\n", mmusers);
+	printk("mmcount_offset: %d\n", mmcount);
+	printk("start_code_offset: %d\n", scddr);
+	printk("end_code_offset: %d\n", seddr);
+	printk("stack_vm_offset: %d\n", stackpa);
+	printk("total_vm_offset: %d\n", topamap);
+	printk("locked_vm_offset: %d\n", lockpa);
+	printk("pgd_offset: %d\n\n", lpgd);
+	
 }
 
 void show_fopera(void)
@@ -218,6 +230,8 @@ void show_file(void)
 	unsigned long lf_count = (unsigned long)(&(f.f_count)) - p_f;
 	unsigned long lf_flags = (unsigned long)(&(f.f_flags)) - p_f;
 	unsigned long lprivate_data = (unsigned long)(&(f.private_data)) - p_f;
+        unsigned long lf_mode = (unsigned long)(&(f.f_mode)) - p_f;
+	unsigned long lf_pos_lock = (unsigned long)(&(f.f_pos_lock)) - p_f;
 
 	//file  show
 	printk("-----------file-----------");
@@ -227,7 +241,9 @@ void show_file(void)
 	printk("f_op_offset: %d\n", lf_op);
 	printk("f_flags_offset: %d\n", lf_flags);
 	printk("f_private_data_offset: %d\n", lprivate_data);
-	printk("f_count_offset: %d\n\n", lf_count);
+	printk("f_count_offset: %d\n", lf_count);
+	printk("f_mode_offset: %d\n", lf_mode);
+	printk("f_pos_lock_offset: %d\n\n", lf_pos_lock);
 }
 
 void show_socket(void)
@@ -312,6 +328,8 @@ void show_dentry(void)
 	struct vfsmount vfs;
 	struct inode ino;
 	struct nameidata nameida;
+	struct module mod;	
+	unsigned long p_mod = (unsigned long)&mod;
 	unsigned long p_fdir = (unsigned long)&dir;
 	unsigned long p_qstr = (unsigned long)&str;
 	unsigned long p_vfs = (unsigned long)&vfs;
@@ -378,6 +396,17 @@ void show_dentry(void)
 	printk("nameidata_inode_offset: %d\n", lnameidata_inode);
 	printk("nameidata_depth_offset: %d\n", lnameidata_depth);
 	printk("nameidate_name_offset: %d\n\n", lnameidate_name);
+
+	//module offset
+	unsigned long mod_size = sizeof(mod);
+	unsigned long lnum_syms = (unsigned long)(&(mod.num_syms)) - p_mod;
+	unsigned long lnum_kp = (unsigned long)(&(mod.num_kp)) - p_mod;
+
+	//module  show
+	printk("-----------module-----------");
+	printk("module_size: %d\n", mod_size);
+	printk("num_syms_offset: %d\n", lnum_syms);
+	printk("num_kp_offset: %d\n\n", lnum_kp);
 
 
 }
