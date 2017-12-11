@@ -22,6 +22,8 @@
 #include "mysyscall.h"
 #include "mypsinfo.h"
 #include "mydbsql.h"
+#include "acl.h"
+
 
 
 int main (int argc, char **argv)
@@ -159,14 +161,14 @@ int main (int argc, char **argv)
         {
             return;
         }
-
-
+        ///init the ACL list of ps
+        showACLList();
 
         /* walk the task list */
         int n = 100;
         int readn;
-        int flags = fcntl(fdpipe[0], F_GETFL);//ÏÈ»ñÈ¡Ô­ÏÈµÄflags
-        fcntl(fdpipe[0],F_SETFL,flags | O_NONBLOCK);//ÉèÖ
+        int flags = fcntl(fdpipe[0], F_GETFL);//get pipe flags
+        fcntl(fdpipe[0],F_SETFL,flags | O_NONBLOCK);//modify flags
         psyscall getsyscall;
 
         while(n>0)
