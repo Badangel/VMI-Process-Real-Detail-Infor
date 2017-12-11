@@ -1,4 +1,4 @@
-import DBHelper
+from state.DBHelper import DBHelper
 import math
 import Queue
 import time
@@ -9,11 +9,10 @@ def getdisance(data,datalen):
     #print data
     dismatrix = [[0 for i in range(datalen)] for i in range(datalen)]
     
-    for i in range(datalen-1):
+    for i in range(0,datalen-1):
         for j in range(i+1,datalen):
             dis = 0
-            for l in range(len(data[0])):
-                #print("i:",i," j:",j," k:",k)
+            for l in range(1,len(data[0])):
                 dis = dis + (data[i][l]-data[j][l])*(data[i][l]-data[j][l])
             dis = math.sqrt(dis)
             dismatrix[i][j] = dis
@@ -113,7 +112,7 @@ def getlof(data,k,minpts,datalen,dismatrix,lrd):
 def getoplof(data,k,minpts,kdis,lrd,onepoint):
     oplofdis = [0 for i in range(datalen)]
     for i in range(datalen):
-        for j in range(len(data[0])):
+        for j in range(1,len(data[0])):
             oplofdis[i] = oplofdis[i] + (data[i][j]-onepoint[j])*(data[i][j]-onepoint[j])
         oplofdis[i] = math.sqrt(oplofdis[i])
     lofpq = Queue.PriorityQueue(minpts)
@@ -149,7 +148,7 @@ def modifypsstate0(dataid):
      db.oncesql(changestate)
     
 def modifypsstat(largeid):
-    sqlps = "select prio,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 1 and id < "+str(largeid)
+    sqlps = "select id,prio,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 1 and id < "+str(largeid)
     psdata = db.oncesql(sqlps)
     print "psdata len:",len(psdata)
     datalen = len(psdata)
@@ -172,12 +171,13 @@ def modifypsstat(largeid):
         if alof > 1.1 or alof < 0.9:
             changestate = "update psinfo set state = 1 where id =" + str(psonedata[a][0])
             print "add in",
-            db.oncesql(changestate)
+            db.myupdate(changestate)
             print psonedata[a][0],alof
         else:
             changestate = "update psinfo set state = 2 where id =" + str(psonedata[a][0])
-            db.oncesql(changestate)
+            db.myupdate(changestate)
             print "move out",psonedata[a][0],alof
+    db.allcommit()
 
 
 
@@ -185,7 +185,7 @@ def modifypsstat(largeid):
 if __name__ =='__main__':
     K = 5
     MinPts = 5
-    db = DBHelper.DBHelper()
+    db = DBHelper()
     '''
     sqlstate = "select 100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,read_total_in,writ_total_in,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,send_net_out,lsmod_out,ps_out from state"
     data = db.oncesql(sqlstate)
@@ -195,10 +195,11 @@ if __name__ =='__main__':
     '''
     
     #delete minflt
-    sqlps = "select prio,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 1 and id < 5001"
+    sqlps = "select id,prio,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 1"
     psdata = db.oncesql(sqlps)
     print "psdata len:",len(psdata)
     datalen = len(psdata)
+  
 
     #calculate 2000 data offline and write to files
     dismatrix = getdisance(psdata,datalen)
@@ -207,13 +208,13 @@ if __name__ =='__main__':
     lrd = getlrd(reach_mat,dismatrix,datalen,MinPts)
     pslof = getlof(psdata,K,MinPts,datalen,dismatrix,lrd)
     
-    filekdis = open ('kdisfile.py', 'a') 
+    filekdis = open ('kdisfile.py', 'w') 
     filekdis.writelines('kdis = '+str(kdis))
-    filelrd = open ('lrdfile.py', 'a')
+    filelrd = open ('lrdfile.py', 'w')
     filelrd.writelines('lrd = '+str(lrd))
-    fileHandle = open ('test.txt', 'a') 
+    fileHandle = open ('test.txt', 'w') 
     for i in range(len(pslof)):
-        temp = str(i)+" "+str(pslof[i])+"\n"
+        temp = str(psdata[i][0])+" "+str(pslof[i])+"\n"
         fileHandle.write(temp)
         #print temp
     fileHandle.flush()
@@ -222,9 +223,9 @@ if __name__ =='__main__':
     from kdisfile import kdis
     from lrdfile import lrd
     '''
-
+    '''
     #delete minflt
-    sqlpsone = "select id,prio,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where id > 5000 and id < 8001"
+    sqlpsone = "select id,prio,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where id > 8000 and id < 13001"
     psonedata = db.oncesql(sqlpsone)
     psonedata = list(psonedata)
     
@@ -238,10 +239,15 @@ if __name__ =='__main__':
             changestate = "update psinfo set state = 1 where id =" + str(psonedata[a][0])
             addnum = addnum + 1
             print "add in",
-            db.oncesql(changestate)
+            db.myupdate(changestate)
+            #db.oncesql(changestate)
             print psonedata[a][0],alof,time.clock()
+        
         else:
             changestate = "update psinfo set state = 2 where id =" + str(psonedata[a][0])
             db.oncesql(changestate)
             print "move out",psonedata[a][0],alof,time.clock()
+
+    db.allcommit()
     print 'add:',addnum
+    '''

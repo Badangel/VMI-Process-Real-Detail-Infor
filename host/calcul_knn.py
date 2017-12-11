@@ -1,6 +1,6 @@
 import Queue
 import math
-import DBHelper
+import state.DBHelper
 
 
 #Calculate the distance of each point

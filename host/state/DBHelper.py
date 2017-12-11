@@ -40,3 +40,19 @@ class DBHelper:
         else:
             data = self.dosql(sql)
         return data
+    #excute update can choose commit or not
+    def myupdate(self,sql,isAutoCommit = False):
+        cursor = self.conn.cursor()
+        try:
+            res = cursor.execute(sql)
+        except:
+            self.conn.rollback()
+            print "mysql error"
+        finally:
+            if isAutoCommit == True:
+                self.conn.commit()
+        return res
+    
+    #do commit 
+    def allcommit(self):
+        self.conn.commit()
