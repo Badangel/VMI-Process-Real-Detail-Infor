@@ -1,12 +1,12 @@
 
 #include <stdio.h>
-#include <stdint.h>
+#include <string.h>
 #include "acl.h"
 #include "myList.h"
 
 void ACLoutput(const void* const p)
 {
-    ACLPs * pp= p;
+    const ACLPs * pp= p;
     printf("%s(%d)\n", pp->name, pp->id);
 }
 
@@ -16,10 +16,11 @@ void* getACLList(MyList * list)
     FILE *fp;
     fp = fopen("config/ACL.config","r");
     char tempname[50];
+    char *tm = tempname; 
     int temppsid;
     int over = 1;
     while(over){
-        fscanf(fp,"%s %d\n",&tempname,&temppsid);
+        int resread = fscanf(fp,"%s %d\n",tm,&temppsid);
         ///printf("%s-%d\n",tempname,temppsid);
         if(tempname[0] != '#'){
             if(tempname[0]=='@'){
@@ -34,7 +35,7 @@ void* getACLList(MyList * list)
             }
         }
         else{
-            fscanf(fp,"%*[^\n]");
+            resread = fscanf(fp,"%*[^\n]");
         }
 
     }
