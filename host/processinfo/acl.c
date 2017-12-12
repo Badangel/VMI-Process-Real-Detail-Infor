@@ -4,7 +4,7 @@
 #include "acl.h"
 #include "myList.h"
 
-void ACLoutput(const void* const p)
+void outputACL(const void* const p)
 {
     const ACLPs * pp= p;
     printf("%s(%d)\n", pp->name, pp->id);
@@ -37,11 +37,8 @@ void* getACLList(MyList * list)
         else{
             resread = fscanf(fp,"%*[^\n]");
         }
-
     }
-
     return list;
-
 }
 
 int compare2ps(void* a,void* b)
@@ -52,11 +49,22 @@ int compare2ps(void* a,void* b)
         return 1;
     else
         return 0;
+    return 0;
 }
 
-void showACLList(){
+int findACLps(MyList* list, char* name, int id)
+{
+    ACLPs newps;
+    strcpy(newps.name,name);
+    newps.id = id;
+    ACLPs* tmp = &newps;
+    return myListFindDataIndex(list,tmp);
+}
+
+void showACLList()
+{
     MyList * list= createMySearchList(compare2ps);
     getACLList(list);
-    myListOutput(list, ACLoutput );
+    myListOutput(list, outputACL );
    
 }

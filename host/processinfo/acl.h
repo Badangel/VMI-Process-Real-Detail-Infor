@@ -9,11 +9,13 @@ typedef struct aclps
     int id;
 }ACLPs;
 
-void ACLoutput(const void* const p);
+void outputACL(const void* const p);
 
-void* getACLList(MyList * list);
+void* getACLList(MyList* list);
 
-int compare2ps(void* a,void* b);
+int compare2ps(void* a, void* b);
+
+int findACLps(MyList* list, char* name, int id);
 
 void showACLList();
 

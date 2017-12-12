@@ -8,6 +8,7 @@
 #define MYPSINFO_H_INCLUDED
 
 #include <stdint.h>
+#include <string.h>
 #include <libvmi/libvmi.h>
 
 unsigned long pid_offset = 0, name_offset = 0;
@@ -160,7 +161,7 @@ void get_mm_struct(vmi_instance_t vmi, addr_t currentps)
     vmi_read_64_va(vmi,currmm_structaddr+stack_vm_offset,0,&cstack_vm);
     vmi_read_64_va(vmi,currmm_structaddr+start_code_offset,0,&cstart_code);
     vmi_read_64_va(vmi,currmm_structaddr+end_code_offset,0,&cend_code);
-    printf("mm_users:%d mm_count:%d pgd:%p total_vm:%ld locked_cm:%ld stack_vm:%ld start_code:%p end_code:%p\n\n",cmm_users,cmm_count,cpgd,ctotal_vm,clocked_cm,cstack_vm,cstart_code,cend_code);
+    printf("mm_users:%d mm_count:%d pgd:%p total_vm:%ld locked_cm:%ld stack_vm:%ld start_code:%p end_code:%p\n",cmm_users,cmm_count,(void*)cpgd,ctotal_vm,clocked_cm,cstack_vm,(void*)cstart_code,(void*)cend_code);
 }
 
 /**
@@ -282,8 +283,8 @@ void get_files_info(vmi_instance_t vmi,addr_t fdaddr,unsigned int max_file, Task
                 vmi_read_addr_va(vmi, private_date + socket_sk_offset, 0, &sk);
                 vmi_read_32_va(vmi, sk + sk_daddr_offset, 0, &daddr);
                 vmi_read_32_va(vmi, sk + sk_rcv_saddr_offset, 0, &rcv_saddr);
-                unsigned char *rcvIp = &rcv_saddr;
-                unsigned char *dIp = &daddr;
+                unsigned char* rcvIp = (unsigned char*)&rcv_saddr;
+                unsigned char* dIp = (unsigned char*)&daddr;
                 vmi_read_16_va(vmi, sk + sk_num_offset, 0, &sk_num);
                 vmi_read_16_va(vmi, sk + sk_dport_offset, 0, &sk_dport);
                 // printf("local:%x(num:%x)  source:%x(port:%x)",rcv_saddr,sk_num,daddr,sk_dport);
@@ -298,8 +299,8 @@ void get_files_info(vmi_instance_t vmi,addr_t fdaddr,unsigned int max_file, Task
                 vmi_read_addr_va(vmi, private_date + socket_sk_offset, 0, &sk);
                 vmi_read_64_va(vmi, sk + sk_v6_daddr_offet, 0, &v6_daddr);
                 vmi_read_64_va(vmi, sk + sk_v6_rcv_saddr_offet, 0, &v6_rcv_saddr);
-                unsigned char *v6dIp = &v6_daddr;
-                unsigned char *v6rcvIp = &v6_rcv_saddr;
+                unsigned char* v6dIp = (unsigned char*)&v6_daddr;
+                unsigned char* v6rcvIp = (unsigned char*)&v6_rcv_saddr;
 
                 vmi_read_16_va(vmi, sk + sk_num_offset, 0, &sk_num);
                 vmi_read_16_va(vmi, sk + sk_dport_offset, 0, &sk_dport);

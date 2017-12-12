@@ -162,7 +162,10 @@ int main (int argc, char **argv)
             return;
         }
         ///init the ACL list of ps
-        showACLList();
+        MyList * acl_list= createMySearchList(compare2ps);
+        getACLList(acl_list);
+        myListOutput(acl_list, outputACL);
+      
 
         /* walk the task list */
         int n = 100;
@@ -184,6 +187,7 @@ int main (int argc, char **argv)
             do
             {
                 psnum++;
+                 printf("\n");
 
                 TaskNode *tasknodetmp = (TaskNode*)calloc(1,sizeof(TaskNode));
                 //printf("!!first!!minflt:%d ",tasknodetmp.minflt);
@@ -203,15 +207,18 @@ int main (int argc, char **argv)
 //            printf("nameidata is NULL!\n");
 //        }
 
-
-
                 //tasknodetmp.tsfdinfo = tmpfdinfo;
 
+                /* modify the state,if the ps in the ACL or not*/
+                tasknodetmp->state = 0;
+                if(findACLps(acl_list,tasknodetmp->tsname,tasknodetmp->tspid) > -1){
+                    tasknodetmp->state = 2;
+                    printf("ACL: ");
+                }
+                printf("%s %d\n",tasknodetmp->tsname,tasknodetmp->tspid);
 
-
+                /*push the ps into the list*/
                 pushQueue(&queue,tasknodetmp);
-
-
 
                 if (procname)
                 {
@@ -220,7 +227,6 @@ int main (int argc, char **argv)
                 }
 
                 /* follow the next pointer */
-
                 status = vmi_read_addr_va(vmi, next_list_entry, 0, &next_list_entry);
                 if (status == VMI_FAILURE)
                 {
@@ -233,7 +239,6 @@ int main (int argc, char **argv)
             ///vmi_resume_vm(vmi);
             ///printf("1:ok \n");
 
-
             int sysclassnum = 10;
             int pssystotal[psnum+1][sysclassnum+1];
             int i = 0;
@@ -241,7 +246,6 @@ int main (int argc, char **argv)
 
             for(; i < psnum; i++)
             {
-
                 pssystotal[i][0] = q->tspid;
 
                 int j = 1;

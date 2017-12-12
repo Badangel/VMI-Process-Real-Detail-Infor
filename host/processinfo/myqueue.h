@@ -37,6 +37,7 @@ typedef struct TaskNode{
     unsigned long tsmajflt;
 
     char tsname[255];
+    int state;
     struct TaskNode* next;
 
 }TaskNode;
@@ -44,7 +45,6 @@ typedef struct TaskNode{
 typedef struct{
     TaskNode* front;
     TaskNode* rear;
-
 }LinkQueue;
 
 
