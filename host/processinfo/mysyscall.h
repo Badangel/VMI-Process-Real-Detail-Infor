@@ -11,6 +11,7 @@
 #include <signal.h>
 #include <libvmi/libvmi.h>
 #include <libvmi/events.h>
+#include "myqueue.h"
 #define NUMBER_OF_SYSCALLS 326
 
 typedef struct persyscall{
@@ -421,4 +422,20 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
     return VMI_EVENT_RESPONSE_TOGGLE_SINGLESTEP;
 }
 
+void combineSyscallAndPs(LinkQueue queue,int sysnum[][11],int psnum){
+    int i = 0;
+    TaskNode* q = queue.front->next;
+    while(q != NULL)
+    {
+        int j = 1;
+        int totalsyscall = 0;
+        for(; j<11; j++)
+        {
+            q->syscallnum[j-1] = sysnum[i][j];
+            totalsyscall+=sysnum[i][j];
+        }
+        q->syscallnum[10] = totalsyscall;
+        i++;
+    }
+}
 #endif // MYSYSCALL_H

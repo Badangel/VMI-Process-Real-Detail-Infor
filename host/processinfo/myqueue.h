@@ -36,6 +36,8 @@ typedef struct TaskNode{
     unsigned long tsminflt;
     unsigned long tsmajflt;
 
+    int syscallnum[11];
+
     char tsname[255];
     int state;
     struct TaskNode* next;
@@ -49,9 +51,17 @@ typedef struct{
 
 
 void initQueue(LinkQueue *queue);
+
 bool isEmpty(LinkQueue *queue);
+
 void pushQueue(LinkQueue *queue, TaskNode* tmptasknode);
-void traversal(MYSQL *mysql,LinkQueue queue,int sysnum[][11],int psnum);
+
+int compare2TaskNode(TaskNode* p,TaskNode* q);
+
+int findSamePointinQueue(TaskNode* q,LinkQueue pre_queue);
+
+void traversal(MYSQL *mysql,LinkQueue queue,LinkQueue pre_queue);
+
 void popQueue(LinkQueue *queue);
 /*
 void initQueue(LinkQueue *queue)

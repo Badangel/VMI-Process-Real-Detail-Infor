@@ -179,6 +179,8 @@ int main (int argc, char **argv)
             int psnum = 0;
 
             //task queue
+            LinkQueue pre_queue;
+            initQueue(&pre_queue);
             LinkQueue queue;
             initQueue(&queue);
             ///vmi_pause_vm(vmi);
@@ -284,11 +286,12 @@ int main (int argc, char **argv)
                 ++getsysnum;
                 ///printf("%d father get %d do syscall %d\n",readn, getsyscall.pid,getsyscall.sysnum);
 
-            }
-            while(readn>0);
-            printf("2:ok ");
+            }while(readn>0);
 
-            traversal(&mysql,queue,pssystotal,psnum);
+            printf("2:ok ");
+            combineSyscallAndPs(queue,pssystotal,psnum);
+
+            traversal(&mysql,queue,pre_queue);
             comm_db(&mysql);
 
 

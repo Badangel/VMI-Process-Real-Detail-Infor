@@ -37,9 +37,47 @@ void pushQueue(LinkQueue *queue, TaskNode* tmptasknode)
     //printf("front minflt:%d ",queue->front->minflt);
 }
 
-void traversal(MYSQL *mysql,LinkQueue queue,int sysnum[][11],int psnum)
-{
+int compare2TaskNode(TaskNode* p,TaskNode* q){
+    if(p->pipeinfo != q->pipeinfo||p->nullinfo != q->nullinfo||p->numinfo != q->numinfo||p->fileinfo != q->fileinfo){
+        return 0;
+    }
+    if(p->tsminflt != q->tsminflt||p->tsmajflt != q->tsmajflt||p->tsutime != q->tsutime||p->tsstime != q->tsstime){
+        return 0;
+    }
+    if(p->tsparent != q->tsparent||p->tsgroupleader != q->tsgroupleader||p->tsprio != q->tsprio){
+        return 0;
+    }
     int i = 0;
+    for(; i<6; i++){
+        if(p->socketinfo[i] != q->socketinfo[i]||p->anon_inodeinfo[i] != q->anon_inodeinfo[i]||p->syscallnum[i] != q->syscallnum[i]){
+            return 0;
+        }
+    }
+    for(; i<11; i++){
+        if(p->syscallnum[i] != q->syscallnum[i]){
+            return 0;
+        }
+    }
+    return 1;
+}
+
+/* find the value same point in a queue, if find it return 1, else return 0 */
+int findSamePointinQueue(TaskNode* p,LinkQueue pre_queue){
+    TaskNode* q = pre_queue.front->next;
+    while(q != NULL)
+    {
+        if(p->tspid == q->tspid && strcmp(p->tsname,q->tsname) == 0){
+            return compare2TaskNode(p,q);
+        }
+        if(p->tspid < q->tspid){
+            return 0;
+        }
+    }
+    return 0;
+}
+
+void traversal(MYSQL *mysql,LinkQueue queue,LinkQueue pre_queue)
+{
     TaskNode* q = queue.front->next;
     TaskNode* freeq;
     char sql_insert[1024];
@@ -56,26 +94,21 @@ void traversal(MYSQL *mysql,LinkQueue queue,int sysnum[][11],int psnum)
         */
         ///if(q->tsparent >= 0)///can't insert all ps,180+ ps need 6s,but parentid = 2 have no mean
         ///{
-            int j = 1;
-            int totalsyscall = 0;
-            ///printf("%d syscall:",sysnum[i][0]);
-            for(; j<11; j++)
-            {
-                ///  printf(" %d(%d)",sysnum[i][j],j-1);
-                totalsyscall+=sysnum[i][j];
-                //sysnum[i][j] = 0;
-            }
-            sprintf(sql_insert,"insert into psinfo(psid,psname,parentid,gleaderid, prio,minflt,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation,state)values('%d','%s','%d','%d', '%d','%ld','%ld','%d','%d','%lf','%lf','%d','%d', '%d','%d','%d','%d','%d','%d', '%d', '%d', '%d', '%d', '%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d');",q->tspid,q->tsname,q->tsparent,q->tsgroupleader,q->tsprio,q->tsminflt,q->tsmajflt,q->tsutime,q->tsstime,q->tsstart_time/60000000000.0,q->tsrealstart_time/60000000000.0,q->tsfdnum,q->socketinfo[0],q->socketinfo[1],q->socketinfo[2],q->socketinfo[3],q->socketinfo[4],q->anon_inodeinfo[0],q->anon_inodeinfo[1],q->anon_inodeinfo[2],q->anon_inodeinfo[3],q->anon_inodeinfo[4],q->pipeinfo,q->fileinfo,totalsyscall,sysnum[i][2],sysnum[i][3],sysnum[i][4],sysnum[i][5],sysnum[i][6],sysnum[i][7],sysnum[i][8],sysnum[i][9],sysnum[i][10],q->state);
+        if(q->state != 2&&!findSamePointinQueue(q,pre_queue)){
+            /*classfity 0 syscall not insert*/
+            sprintf(sql_insert,"insert into psinfo(psid,psname,parentid,gleaderid, prio,minflt,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation,state)values('%d','%s','%d','%d', '%d','%ld','%ld','%d','%d','%lf','%lf','%d','%d', '%d','%d','%d','%d','%d','%d', '%d', '%d', '%d', '%d', '%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d');",q->tspid,q->tsname,q->tsparent,q->tsgroupleader,q->tsprio,q->tsminflt,q->tsmajflt,q->tsutime,q->tsstime,q->tsstart_time/60000000000.0,q->tsrealstart_time/60000000000.0,q->tsfdnum,q->socketinfo[0],q->socketinfo[1],q->socketinfo[2],q->socketinfo[3],q->socketinfo[4],q->anon_inodeinfo[0],q->anon_inodeinfo[1],q->anon_inodeinfo[2],q->anon_inodeinfo[3],q->anon_inodeinfo[4],q->pipeinfo,q->fileinfo,q->syscallnum[10],q->syscallnum[1],q->syscallnum[2],q->syscallnum[3],q->syscallnum[4],q->syscallnum[5],q->syscallnum[6],q->syscallnum[7],q->syscallnum[8],q->syscallnum[9],q->state);
 
             exec_db(mysql,sql_insert);
             insertsqlnum++;
+        }
         ///}
         ///printf("\n%s\n",sql_insert);
-        freeq = q;
+        ///freeq = q;
         q = q->next;
-        free(freeq);
-        i++;
+        
+        ///free(freeq);
     }
+    pre_queue = queue;
     printf("insert sql num: %d\n",insertsqlnum);
 }
 
