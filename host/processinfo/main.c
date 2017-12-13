@@ -173,23 +173,25 @@ int main (int argc, char **argv)
         int flags = fcntl(fdpipe[0], F_GETFL);//get pipe flags
         fcntl(fdpipe[0],F_SETFL,flags | O_NONBLOCK);//modify flags
         psyscall getsyscall;
+        LinkQueue pre_queue;
+        initQueue(&pre_queue);
+        LinkQueue queue;
+        
 
         while(n>0)
         {
             int psnum = 0;
 
             //task queue
-            LinkQueue pre_queue;
-            initQueue(&pre_queue);
-            LinkQueue queue;
             initQueue(&queue);
+            
             ///vmi_pause_vm(vmi);
 
             ///while(false)///test fork
             do
             {
                 psnum++;
-                 printf("\n");
+                printf("\n");
 
                 TaskNode *tasknodetmp = (TaskNode*)calloc(1,sizeof(TaskNode));
                 //printf("!!first!!minflt:%d ",tasknodetmp.minflt);
@@ -217,7 +219,7 @@ int main (int argc, char **argv)
                     tasknodetmp->state = 2;
                     printf("ACL: ");
                 }
-                printf("%s %d\n",tasknodetmp->tsname,tasknodetmp->tspid);
+                printf("%d:%s %d\n",psnum,tasknodetmp->tsname,tasknodetmp->tspid);
 
                 /*push the ps into the list*/
                 pushQueue(&queue,tasknodetmp);
@@ -264,7 +266,6 @@ int main (int argc, char **argv)
             }
 
             ///test fork
-
             n--;
             //printf("This is farther, write hello to pipe\n");
             //write(fd[1], "hello\n", 25);
@@ -286,9 +287,10 @@ int main (int argc, char **argv)
                 ++getsysnum;
                 ///printf("%d father get %d do syscall %d\n",readn, getsyscall.pid,getsyscall.sysnum);
 
-            }while(readn>0);
+            }
+            while(readn>0);
 
-            printf("2:ok ");
+            ///printf("2:ok \n");
             combineSyscallAndPs(queue,pssystotal,psnum);
 
             traversal(&mysql,queue,pre_queue);

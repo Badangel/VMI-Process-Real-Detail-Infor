@@ -436,6 +436,7 @@ void combineSyscallAndPs(LinkQueue queue,int sysnum[][11],int psnum){
         }
         q->syscallnum[10] = totalsyscall;
         i++;
+        q = q->next;
     }
 }
 #endif // MYSYSCALL_H

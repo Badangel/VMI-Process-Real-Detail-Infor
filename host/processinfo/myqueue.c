@@ -72,6 +72,7 @@ int findSamePointinQueue(TaskNode* p,LinkQueue pre_queue){
         if(p->tspid < q->tspid){
             return 0;
         }
+        q = q->next;
     }
     return 0;
 }
@@ -108,7 +109,7 @@ void traversal(MYSQL *mysql,LinkQueue queue,LinkQueue pre_queue)
         
         ///free(freeq);
     }
-    pre_queue = queue;
+    pre_queue.front->next = queue.front->next;
     printf("insert sql num: %d\n",insertsqlnum);
 }
 
