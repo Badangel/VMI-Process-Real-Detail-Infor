@@ -77,6 +77,30 @@ int findSamePointinQueue(TaskNode* p,LinkQueue *pre_queue){
     return 0;
 }
 
+void popQueue(LinkQueue *queue)
+{
+    TaskNode* q = NULL;
+    if(!isEmpty(queue))
+    {
+        q = queue->front->next;
+        queue->front->next = q->next;
+        if(queue->rear ==q)
+        {
+            queue->rear = queue->front;
+        }
+        free(q);
+    }
+}
+
+void freeQueue(LinkQueue* queue){
+    TaskNode* q = NULL;
+    while(!isEmpty(queue))
+    {
+        q = queue->front->next;
+        free(q);
+    }
+}
+
 void traversal(MYSQL *mysql,LinkQueue *queue,LinkQueue *pre_queue)
 {
     TaskNode* q = queue->front->next;
@@ -109,22 +133,9 @@ void traversal(MYSQL *mysql,LinkQueue *queue,LinkQueue *pre_queue)
         
         ///free(freeq);
     }
-   /// myfreeQueue(pre_queue);
+    freeQueue(pre_queue);
     pre_queue->front->next = queue->front->next;
     printf("insert sql num: %d\n",insertsqlnum);
 }
 
-void popQueue(LinkQueue *queue)
-{
-    TaskNode* q = NULL;
-    if(!isEmpty(queue))
-    {
-        q = queue->front->next;
-        queue->front->next = q->next;
-        if(queue->rear ==q)
-        {
-            queue->rear = queue->front;
-        }
-        free(q);
-    }
-}
+

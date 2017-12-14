@@ -60,9 +60,13 @@ int compare2TaskNode(TaskNode* p,TaskNode* q);
 
 int findSamePointinQueue(TaskNode* q,LinkQueue* pre_queue);
 
+void popQueue(LinkQueue *queue);
+
+void freeQueue(LinkQueue* queue);
+
 void traversal(MYSQL *mysql,LinkQueue* queue,LinkQueue* pre_queue);
 
-void popQueue(LinkQueue *queue);
+
 /*
 void initQueue(LinkQueue *queue)
 {
