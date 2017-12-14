@@ -164,7 +164,7 @@ int main (int argc, char **argv)
         ///init the ACL list of ps
         MyList * acl_list= createMySearchList(compare2ps);
         getACLList(acl_list);
-        myListOutput(acl_list, outputACL);
+        ///myListOutput(acl_list, outputACL);
       
 
         /* walk the task list */
@@ -173,9 +173,9 @@ int main (int argc, char **argv)
         int flags = fcntl(fdpipe[0], F_GETFL);//get pipe flags
         fcntl(fdpipe[0],F_SETFL,flags | O_NONBLOCK);//modify flags
         psyscall getsyscall;
-        LinkQueue pre_queue;
-        initQueue(&pre_queue);
-        LinkQueue queue;
+        LinkQueue* pre_queue = malloc(sizeof(LinkQueue*));
+        initQueue(pre_queue);
+        LinkQueue* queue = malloc(sizeof(LinkQueue*));
         
 
         while(n>0)
@@ -183,7 +183,7 @@ int main (int argc, char **argv)
             int psnum = 0;
 
             //task queue
-            initQueue(&queue);
+            initQueue(queue);
             
             ///vmi_pause_vm(vmi);
 
@@ -222,7 +222,7 @@ int main (int argc, char **argv)
                 printf("%d:%s %d\n",psnum,tasknodetmp->tsname,tasknodetmp->tspid);
 
                 /*push the ps into the list*/
-                pushQueue(&queue,tasknodetmp);
+                pushQueue(queue,tasknodetmp);
 
                 if (procname)
                 {
@@ -246,7 +246,7 @@ int main (int argc, char **argv)
             int sysclassnum = 10;
             int pssystotal[psnum+1][sysclassnum+1];
             int i = 0;
-            TaskNode* q = queue.front->next;
+            TaskNode* q = queue->front->next;
 
             for(; i < psnum; i++)
             {

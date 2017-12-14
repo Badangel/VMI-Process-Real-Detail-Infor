@@ -62,8 +62,8 @@ int compare2TaskNode(TaskNode* p,TaskNode* q){
 }
 
 /* find the value same point in a queue, if find it return 1, else return 0 */
-int findSamePointinQueue(TaskNode* p,LinkQueue pre_queue){
-    TaskNode* q = pre_queue.front->next;
+int findSamePointinQueue(TaskNode* p,LinkQueue *pre_queue){
+    TaskNode* q = pre_queue->front->next;
     while(q != NULL)
     {
         if(p->tspid == q->tspid && strcmp(p->tsname,q->tsname) == 0){
@@ -77,9 +77,9 @@ int findSamePointinQueue(TaskNode* p,LinkQueue pre_queue){
     return 0;
 }
 
-void traversal(MYSQL *mysql,LinkQueue queue,LinkQueue pre_queue)
+void traversal(MYSQL *mysql,LinkQueue *queue,LinkQueue *pre_queue)
 {
-    TaskNode* q = queue.front->next;
+    TaskNode* q = queue->front->next;
     TaskNode* freeq;
     char sql_insert[1024];
     int insertsqlnum = 0;
@@ -109,7 +109,8 @@ void traversal(MYSQL *mysql,LinkQueue queue,LinkQueue pre_queue)
         
         ///free(freeq);
     }
-    pre_queue.front->next = queue.front->next;
+   /// myfreeQueue(pre_queue);
+    pre_queue->front->next = queue->front->next;
     printf("insert sql num: %d\n",insertsqlnum);
 }
 

@@ -422,9 +422,9 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
     return VMI_EVENT_RESPONSE_TOGGLE_SINGLESTEP;
 }
 
-void combineSyscallAndPs(LinkQueue queue,int sysnum[][11],int psnum){
+void combineSyscallAndPs(LinkQueue* queue,int sysnum[][11],int psnum){
     int i = 0;
-    TaskNode* q = queue.front->next;
+    TaskNode* q = queue->front->next;
     while(q != NULL)
     {
         int j = 1;
