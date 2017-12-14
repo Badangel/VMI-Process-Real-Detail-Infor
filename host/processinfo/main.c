@@ -198,6 +198,7 @@ int main (int argc, char **argv)
                 current_process = next_list_entry - tasks_offset;
                 ///printf(" %d-",psnum);
                 get_task_info(vmi,current_process,tasknodetmp);
+                tasknodetmp->tslayer = -1;
 
 
 //        vmi_read_addr_va(vmi, current_process + nameidata_offset, 0, &nameida);
@@ -292,6 +293,8 @@ int main (int argc, char **argv)
 
             ///printf("2:ok \n");
             combineSyscallAndPs(queue,pssystotal,psnum);
+
+            setParentLayer(queue);
 
             traversal(&mysql,queue,pre_queue);
             comm_db(&mysql);

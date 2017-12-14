@@ -27,6 +27,7 @@ typedef struct TaskNode{
     int fileinfo;
 
     uint32_t tsparent;
+    int tslayer;
     uint32_t tsgroupleader;
     int tsprio;
     unsigned int tsutime;
@@ -65,6 +66,10 @@ void popQueue(LinkQueue *queue);
 void freeQueue(LinkQueue* queue);
 
 void traversal(MYSQL *mysql,LinkQueue* queue,LinkQueue* pre_queue);
+
+int getParentLayer(int parentid,LinkQueue* queue);
+
+void setParentLayer(LinkQueue* queue);
 
 
 /*

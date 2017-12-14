@@ -138,4 +138,43 @@ void traversal(MYSQL *mysql,LinkQueue *queue,LinkQueue *pre_queue)
     printf("insert sql num: %d\n",insertsqlnum);
 }
 
+int getParentLayer(int parentid,LinkQueue* queue)
+{
+    TaskNode* q = queue->front->next;
+    while(q != NULL)
+    {
+        if(q->tspid == parentid){
+            if(q->tslayer > -1){
+                return q->tslayer;
+            }
+            else
+            {
+                if(q->tsparent == q->tspid){
+                    q->tslayer = 0;
+                    return 0;
+                }
+                else{
+                    q->tslayer = getParentLayer(q->tsparent,queue)+1;
+                    return q->tslayer;
+                }
+            }
+        }
+        q = q->next;
+    }
+}
 
+void setParentLayer(LinkQueue* queue)
+{
+    TaskNode* q = queue->front->next;
+    while(q != NULL)
+    {
+        if(q->tsparent == q->tspid){
+            q->tslayer = 0;
+        }
+        else{
+            q->tslayer = getParentLayer(q->tsparent,queue)+1;
+        }
+        printf("%d parent:%d layer:%d\n",q->tspid,q->tsparent,q->tslayer);
+        q = q->next;
+    }
+}
