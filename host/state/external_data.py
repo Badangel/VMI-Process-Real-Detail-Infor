@@ -141,8 +141,8 @@ if __name__ =='__main__':
                 outdstat = statmonitor_popen.stdout.readlines()
                 
                 vmnowstat = re.compile('\s([0-9.]+?)\s').findall(outdstat[2])
-                net0now = re.compile('\s([0-9.]+?)bytes\s').findall(outdstat[3])
-                net1now = re.compile('\s([0-9.]+?)bytes\s').findall(outdstat[4])
+                net0now = re.compile('\s([0-9.]+?)[bp]+[a-z]+?\s').findall(outdstat[3])
+                net1now = re.compile('\s([0-9.]+?)[bp]+[a-z]+?\s').findall(outdstat[4])
                 #cpuoutuse = float(vmoutstat[1])*100
                 if len(vmoutstat) == 0:
                     vmoutstat = copy.deepcopy(vmnowstat)
@@ -164,9 +164,14 @@ if __name__ =='__main__':
                 read_disk_out = (int(vmoutstat[14]) - int(vmoutlaststat[14]))/2.0
                 write_disk_out = (int(vmoutstat[15]) - int(vmoutlaststat[15]))/2.0
 
-                recv_net_out = (int(net0now[1])+int(net1now[1])-int(net1old[1])-int(net0old[1]))/1024.0
-                send_net_out = (int(net0now[0])-int(net0old[0]))/1024.0
-                #print recv_net_out,recv_net_out1,send_net_out,send_net_out1
+                recv_net_out = (int(net0now[2])+int(net1now[2])-int(net1old[2])-int(net0old[2]))/1024.0
+                recv_netp_out = int(net0now[3])+int(net1now[3])-int(net1old[3])-int(net0old[3]) 
+                send_net_out = (int(net1now[0])-int(net1old[0])+int(net0now[0])-int(net0old[0]))/1024.0
+                send_netp_out = int(net1now[1])-int(net1old[1])+int(net0now[1])-int(net0old[1])
+                print net0now
+                print net1now
+                print recv_net_out,recv_netp_out,send_net_out,send_netp_out
+
                 net0old = net0now
                 net1old = net1now
                 time.sleep(0.4)
@@ -203,7 +208,7 @@ if __name__ =='__main__':
                 #print "insert into state(domid,domname,usr_cpu_in,sys_cpu_in ,idl_cpu_in,wai_cpu_in,hiq_cpu_in ,siq_cpu_in,read_disk_in , write_disk_in ,recv_net_in ,send_net_in ,usd_mem_in , buff_mem_in ,cach_mem_in ,free_mem_in ,usd_swap_in ,free_swap_in ,pagein_in ,pageout_in ,interrupts1_in , interrupts2_in ,interrupts3_in ,loadavg1_in ,loadavg5_in ,loadavg15_in ,int_sys_in , csw_sys_in ,read_total_in , writ_total_in , run_procs_in ,blk_procs_in ,new_procs_in ,ps_root_in  ,ps_other_in ,lsmod0_in ,lsmod1_in ,lsmod2_in ,lsmodother_in ,use_cpu_out ,read_disk_out , write_disk_out ,recv_net_out ,send_net_out , lsmod_out ,ps_out ) values('%d','%s','%d','%d' ,'%d','%d','%d' ,'%d','%f' , '%f' ,'%f' ,'%f' ,'%f' , '%f' ,'%f' ,'%f' ,'%f' ,'%f' ,'%f' ,'%f' ,'%d' , '%d' ,'%d' ,'%f' ,'%f' ,'%f' ,'%f' , '%f' ,'%f' , '%f' , '%f' ,'%f' ,'%f' ,'%d'  ,'%d' ,'%d' ,'%d' ,'%d' ,'%d' ,'%d' ,'%f' , '%f' ,'%f' ,'%f' , '%d' ,'%d')"%(0,'ubuntu1604',int(vmstat[0]),int(vmstat[1]) ,int(vmstat[2]),int(vmstat[3]),int(vmstat[4]) ,int(vmstat[5]),stof(vmstat[6]) , stof(vmstat[7])  ,stof(vmstat[20])  ,stof(vmstat[21])  ,stof(vmstat[16])  , stof(vmstat[17])  ,stof(vmstat[18])  ,stof(vmstat[19])  ,stof(vmstat[27])  ,stof(vmstat[28])  ,stof(vmstat[8])  ,stof(vmstat[9])  ,int(vmstat[10]) , int(vmstat[11]) ,int(vmstat[12]) ,float(vmstat[13]) ,float(vmstat[14]) ,float(vmstat[15]) ,stof(vmstat[29])  , stof(vmstat[30])  ,float(vmstat[25]) , float(vmstat[26]) , float(vmstat[22]) ,float(vmstat[23]) ,float(vmstat[24]) ,ps_root  ,ps_other ,module0_num ,module1_num ,module2_num ,moduleo_num ,use_cpu_out ,read_disk_out , write_disk_out ,recv_net_out ,send_net_out , lsmod_out ,ps_out )
                 #sql = "insert into state(domid,domname,usr_cpu_in,sys_cpu_in ,idl_cpu_in,wai_cpu_in,hiq_cpu_in ,siq_cpu_in,read_disk_in , write_disk_in ,recv_net_in ,send_net_in ,usep_mem_in,usd_mem_in , buff_mem_in ,cach_mem_in ,free_mem_in ,usep_swap_in,usd_swap_in ,free_swap_in ,pagein_in ,pageout_in ,interrupts1_in , interrupts2_in ,interrupts3_in ,loadavg1_in ,loadavg5_in ,loadavg15_in ,int_sys_in , csw_sys_in ,read_total_in , writ_total_in , run_procs_in ,blk_procs_in ,new_procs_in ,ps_root_in  ,ps_other_in ,lsmod0_in ,lsmod1_in ,lsmod2_in ,lsmodother_in ,use_cpu_out ,read_disk_out , write_disk_out ,recv_net_out ,send_net_out , lsmod_out ,ps_out,stat ) values('%d','%s','%d','%d' ,'%d','%d','%d' ,'%d','%f' , '%f' ,'%f' ,'%f' ,'%f' , '%f' ,'%f' ,'%f' ,'%f' ,'%f' ,'%f' ,'%f' ,'%d' , '%d' ,'%d' ,'%f' ,'%f' ,'%f' ,'%f' , '%f' ,'%f' , '%f' , '%f' ,'%f' ,'%f' ,'%d'  ,'%d' ,'%d' ,'%d' ,'%d' ,'%d' ,'%d' ,'%f' , '%f' ,'%f' ,'%f' , '%d' ,'%d','%d')"%(0,'ubuntu1604',int(vmstat[0]),int(vmstat[1]) ,int(vmstat[2]),int(vmstat[3]),int(vmstat[4]) ,int(vmstat[5]),stof(vmstat[6]) , stof(vmstat[7])  ,stof(vmstat[20])  ,stof(vmstat[21])  ,stof(vmstat[16])  , stof(vmstat[17])  ,stof(vmstat[18])  ,stof(vmstat[19])  ,stof(vmstat[27])  ,stof(vmstat[28])  ,stof(vmstat[8])  ,stof(vmstat[9])  ,int(vmstat[10]) , int(vmstat[11]) ,int(vmstat[12]) ,float(vmstat[13]) ,float(vmstat[14]) ,float(vmstat[15]) ,stof(vmstat[29])  , stof(vmstat[30])  ,float(vmstat[25]) , float(vmstat[26]) , float(vmstat[22]) ,float(vmstat[23]) ,float(vmstat[24]) ,ps_root  ,ps_other ,module0_num ,module1_num ,module2_num ,moduleo_num ,use_cpu_out ,read_disk_out , write_disk_out ,recv_net_out ,send_net_out , lsmod_out ,ps_out ,1)
                 sql = "insert into state(domid,domname,usr_cpu_in,sys_cpu_in ,idl_cpu_in,wai_cpu_in,hiq_cpu_in ,siq_cpu_in,read_disk_in , write_disk_in ,recv_net_in ,send_net_in ,usep_mem_in,usd_mem_in , buff_mem_in ,cach_mem_in ,free_mem_in ,usep_swap_in,usd_swap_in ,free_swap_in ,pagein_in ,pageout_in ,interrupts1_in , interrupts2_in ,interrupts3_in ,loadavg1_in ,loadavg5_in ,loadavg15_in ,int_sys_in , csw_sys_in ,read_total_in , writ_total_in , run_procs_in ,blk_procs_in ,new_procs_in ,ps_root_in  ,ps_other_in ,lsmod0_in ,lsmod1_in ,lsmod2_in ,lsmodother_in ,use_cpu_out ,read_disk_out , write_disk_out ,recv_net_out ,send_net_out , lsmod_out ,ps_out,stat ) values('%d','%s','%d','%d' ,'%d','%d','%d' ,'%d','%f' , '%f' ,'%f' ,'%f','%d' ,'%f' , '%f' ,'%f' ,'%f' ,'%d','%f' ,'%f' ,'%f' ,'%f' ,'%d' , '%d' ,'%d' ,'%f' ,'%f' ,'%f' ,'%f' , '%f' ,'%f' , '%f' , '%f' ,'%f' ,'%f' ,'%d'  ,'%d' ,'%d' ,'%d' ,'%d' ,'%d' ,'%d' ,'%f' , '%f' ,'%f' ,'%f' , '%d' ,'%d','%d')"%(0,'ubuntu1604',int(vmstat[0]),int(vmstat[1]) ,int(vmstat[2]),int(vmstat[3]),int(vmstat[4]) ,int(vmstat[5]),stof(vmstat[6]) , stof(vmstat[7]) ,stof(vmstat[20])  ,stof(vmstat[21]),100*stof(vmstat[16])/(stof(vmstat[16])+stof(vmstat[17])+stof(vmstat[18])+stof(vmstat[19])) ,stof(vmstat[16])  , stof(vmstat[17])  ,stof(vmstat[18])  ,stof(vmstat[19])  ,100*stof(vmstat[27])/(stof(vmstat[27])+stof(vmstat[28])),stof(vmstat[27])  ,stof(vmstat[28])  ,stof(vmstat[8])  ,stof(vmstat[9])  ,int(vmstat[10]) , int(vmstat[11]) ,int(vmstat[12]) ,float(vmstat[13]) ,float(vmstat[14]) ,float(vmstat[15]) ,stof(vmstat[29])  , stof(vmstat[30])  ,float(vmstat[25]) , float(vmstat[26]) , float(vmstat[22]) ,float(vmstat[23]) ,float(vmstat[24]) ,ps_root  ,ps_other ,module_num[0] ,module_num[1] ,module_num[2] ,module_num[3] ,use_cpu_out ,read_disk_out , write_disk_out ,recv_net_out ,send_net_out , lsmod_out ,ps_out ,1)
-                data = db.oncesql(sql)
+                #data = db.oncesql(sql)
             except IndexError:
                 print "list out range"
                 continue
