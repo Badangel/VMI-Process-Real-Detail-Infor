@@ -57,7 +57,8 @@ class ServerWork(object):
         self.port =port
         self.server=SocketServer.ThreadingTCPServer((self.host,self.port),MyHandler)
 
-    def server_start(self):        
+    def server_start(self):
+        print "server start!!!"        
         self.server.serve_forever()
         
     def server_stop(self):

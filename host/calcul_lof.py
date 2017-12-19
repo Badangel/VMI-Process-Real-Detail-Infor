@@ -1,8 +1,9 @@
 from state.DBHelper import DBHelper
 import math
 import Queue
-import time
-
+import time,threading
+from state.external_data import exdamain
+from state.external_data import startServer
 
 #Calculate the distance of each point
 def getdisance(data,datalen):
@@ -109,7 +110,7 @@ def getlof(data,k,minpts,datalen,dismatrix,lrd):
     return lof
 
 #Calculate LOF of one point
-def getoplof(data,k,minpts,kdis,lrd,onepoint):
+def getoplof(data,k,minpts,datalen,kdis,lrd,onepoint):
     oplofdis = [0 for i in range(datalen)]
     for i in range(datalen):
         for j in range(1,len(data[0])):
@@ -166,7 +167,7 @@ def modifypsstat(largeid):
     psonedata = list(psonedata)
     
     for a in range(0,len(psonedata)):
-        alof = getoplof(psdata,K,MinPts,kdis,lrd,psonedata[a][1:])
+        alof = getoplof(psdata,K,MinPts,datalen,kdis,lrd,psonedata[a][1:])
         changestate = ""
         if alof > 1.1 or alof < 0.9:
             changestate = "update psinfo set state = 1 where id =" + str(psonedata[a][0])
@@ -180,14 +181,69 @@ def modifypsstat(largeid):
     db.allcommit()
 
 
+def trainState(data,datalen,K,MinPts):
+    dismatrix = getdisance(data,datalen)
+    kdis = getk_distance(dismatrix,datalen,K)
+    reach_mat = getreach_distance(dismatrix,datalen,kdis)
+    lrd = getlrd(reach_mat,dismatrix,datalen,MinPts)
+    print "train over!!"
+    return kdis,lrd
+
+def detectState():
+    K = 5
+    MinPts = 5
+    selectdb = DBHelper()
+    sqlstate = "select 100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,read_total_in,writ_total_in,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,ps_out from state where stat = 1"
+    statedata = selectdb.oncesql(sqlstate)
+    datalen = len(statedata)
+    kdis,lrd = trainState(statedata,datalen,K,MinPts)
+
+    startServer()
+
+    t1 = threading.Thread(target = exdamain,args =[],name='getstate')
+    t1.setDaemon(True)
+    t1.start()
+
+    sqlstate1 = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,read_total_in,writ_total_in,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,ps_out from state where stat = 0"
+    i = 0
+    while True:
+        i = i + 1
+        del selectdb
+        selectdb = DBHelper()
+        statedatanew = selectdb.oncesql(sqlstate1)
+        statedatanew = list(statedatanew)
+        datanewlen = len(statedatanew)
+        if datanewlen == 0:
+            time.sleep(1)
+            print "sleep 1!!",i
+            continue
+        else:
+            print 'start time:',time.clock()
+            addnum = 0
+            for a in range(0,datanewlen):
+                alof = getoplof(statedata,K,MinPts,datalen,kdis,lrd,statedatanew[a][1:])
+                changestate = ""
+                if alof > 1.1 or alof < 0.9:
+                    changestate = "update state set stat = 1 where id =" + str(statedatanew[a][0])
+                    addnum = addnum + 1
+                    print "add in",
+                    selectdb.myupdate(changestate)
+                    #db.oncesql(changestate)
+                    print statedatanew[a][0],alof,time.clock()
+                
+                else:
+                    changestate = "update state set stat = 2 where id =" + str(statedatanew[a][0])
+                    selectdb.oncesql(changestate)
+                    print "move out",statedatanew[a][0],alof,time.clock()
+            selectdb.allcommit()
 
 
-if __name__ =='__main__':
+def detectPsinfo():
     K = 5
     MinPts = 5
     db = DBHelper()
     '''
-    sqlstate = "select 100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,read_total_in,writ_total_in,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,send_net_out,lsmod_out,ps_out from state"
+    sqlstate = "select 100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,read_total_in,writ_total_in,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,ps_out from state"
     data = db.oncesql(sqlstate)
     datalen = len(data) 
     print "len: ",datalen,len(data[0])
@@ -251,3 +307,7 @@ if __name__ =='__main__':
     db.allcommit()
     print 'add:',addnum
     '''
+
+if __name__ =='__main__':
+    detectState()
+    

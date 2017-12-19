@@ -475,7 +475,6 @@ void get_task_info(vmi_instance_t vmi,addr_t current_process, TaskNode *tmptn)
     tmptn->tspid = pid;
     tmptn->tsparent = real_parent_pid;
 
-
     procname = vmi_read_str_va(vmi, current_process + name_offset, 0);
     strcpy(tmptn->tsname,procname);
 
