@@ -204,13 +204,11 @@ def detectState():
     t1.setDaemon(True)
     t1.start()
 
-    sqlstate1 = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,read_total_in,writ_total_in,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,ps_out from state where stat = 0"
+    sqlstate = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,read_total_in,writ_total_in,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,ps_out from state where stat = 0"
     i = 0
     while True:
-        i = i + 1
-        del selectdb
-        selectdb = DBHelper()
-        statedatanew = selectdb.oncesql(sqlstate1)
+        i = i + 1       
+        statedatanew = selectdb.oncesql(sqlstate)
         statedatanew = list(statedatanew)
         datanewlen = len(statedatanew)
         if datanewlen == 0:

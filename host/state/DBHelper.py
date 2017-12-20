@@ -30,6 +30,7 @@ class DBHelper:
         cursor = self.conn.cursor()
         cursor.execute(sql)
         data = cursor.fetchall()
+        self.conn.commit()
         return data
 
     #do query or excute once
