@@ -22,7 +22,7 @@ class DBHelper:
             print "mysql error"
         finally:
             self.conn.commit()
-            print "add one data"
+            #print "commit one data"
             return res
 
     #query ,return data list

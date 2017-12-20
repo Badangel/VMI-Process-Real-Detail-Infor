@@ -113,7 +113,7 @@ def getlof(data,k,minpts,datalen,dismatrix,lrd):
 def getoplof(data,k,minpts,datalen,kdis,lrd,onepoint):
     oplofdis = [0 for i in range(datalen)]
     for i in range(datalen):
-        for j in range(1,len(data[0])):
+        for j in range(0,len(onepoint)):
             oplofdis[i] = oplofdis[i] + (data[i][j]-onepoint[j])*(data[i][j]-onepoint[j])
         oplofdis[i] = math.sqrt(oplofdis[i])
     lofpq = Queue.PriorityQueue(minpts)
@@ -181,7 +181,7 @@ def modifypsstat(largeid):
     db.allcommit()
 
 
-def trainState(data,datalen,K,MinPts):
+def trainNormaiData(data,datalen,K,MinPts):
     dismatrix = getdisance(data,datalen)
     kdis = getk_distance(dismatrix,datalen,K)
     reach_mat = getreach_distance(dismatrix,datalen,kdis)
@@ -193,10 +193,10 @@ def detectState():
     K = 5
     MinPts = 5
     selectdb = DBHelper()
-    sqlstate = "select 100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,read_total_in,writ_total_in,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,ps_out from state where stat = 1"
+    sqlstate = "select 100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,read_total_in,writ_total_in,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,ps_out from state where id < 680 and stat = 1"
     statedata = selectdb.oncesql(sqlstate)
     datalen = len(statedata)
-    kdis,lrd = trainState(statedata,datalen,K,MinPts)
+    kdis,lrd = trainNormaiData(statedata,datalen,K,MinPts)
 
     startServer()
 
@@ -240,32 +240,24 @@ def detectPsinfo():
     K = 5
     MinPts = 5
     db = DBHelper()
-    '''
-    sqlstate = "select 100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,read_total_in,writ_total_in,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,ps_out from state"
-    data = db.oncesql(sqlstate)
-    datalen = len(data) 
-    print "len: ",datalen,len(data[0])
-    print len(getlof(data,K,MinPts))
-    '''
-    
+    print time.clock()
     #delete minflt
-    sqlps = "select id,prio,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 1"
+    sqlps = "select prio,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 1 and id < 24001"
     psdata = db.oncesql(sqlps)
     print "psdata len:",len(psdata)
     datalen = len(psdata)
-  
 
-    #calculate 2000 data offline and write to files
-    dismatrix = getdisance(psdata,datalen)
-    kdis = getk_distance(dismatrix,datalen,K)
-    reach_mat = getreach_distance(dismatrix,datalen,kdis)
-    lrd = getlrd(reach_mat,dismatrix,datalen,MinPts)
-    pslof = getlof(psdata,K,MinPts,datalen,dismatrix,lrd)
-    
+    kdis,lrd = trainNormaiData(psdata,datalen,K,MinPts)
+    '''
     filekdis = open ('kdisfile.py', 'w') 
     filekdis.writelines('kdis = '+str(kdis))
     filelrd = open ('lrdfile.py', 'w')
     filelrd.writelines('lrd = '+str(lrd))
+    '''
+    '''
+    ## write all data lof into file need id!!!
+    dismatrix = getdisance(psdata,datalen)
+    pslof = getlof(psdata,K,MinPts,datalen,dismatrix,lrd)
     fileHandle = open ('test.txt', 'w') 
     for i in range(len(pslof)):
         temp = str(psdata[i][0])+" "+str(pslof[i])+"\n"
@@ -273,39 +265,45 @@ def detectPsinfo():
         #print temp
     fileHandle.flush()
     '''
+    '''
     #read offline data
     from kdisfile import kdis
     from lrdfile import lrd
     '''
-    '''
-    #delete minflt
-    sqlpsone = "select id,prio,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where id > 8000 and id < 13001"
-    psonedata = db.oncesql(sqlpsone)
-    psonedata = list(psonedata)
-    
-    print "6138 select ok"
     print time.clock()
-    addnum = 0
-    for a in range(0,len(psonedata)):
-        alof = getoplof(psdata,K,MinPts,kdis,lrd,psonedata[a][1:])
-        changestate = ""
-        if alof > 1.1 or alof < 0.9:
-            changestate = "update psinfo set state = 1 where id =" + str(psonedata[a][0])
-            addnum = addnum + 1
-            print "add in",
-            db.myupdate(changestate)
-            #db.oncesql(changestate)
-            print psonedata[a][0],alof,time.clock()
-        
-        else:
-            changestate = "update psinfo set state = 2 where id =" + str(psonedata[a][0])
-            db.oncesql(changestate)
-            print "move out",psonedata[a][0],alof,time.clock()
+    #delete minflt
+    sqlpsone = "select id,prio,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 0"
+    i = 0
+    while True:
+        i = i+1
+        psonedata = db.oncesql(sqlpsone)
+        psonedata = list(psonedata)
+        datanewlen = len(psonedata)
+        print "len:",datanewlen
+        if datanewlen == 0:
+            time.sleep(1)
+            print "sleep 1!!",i
+            continue      
+        print time.clock()
+        addnum = 0
+        for a in range(0,datanewlen):
+            alof = getoplof(psdata,K,MinPts,datalen,kdis,lrd,psonedata[a][1:])
+            if alof > 1.1 or alof < 0.9:
+                changestate = "update psinfo set state = 1 where id =" + str(psonedata[a][0])
+                addnum = addnum + 1
+                db.myupdate(changestate)
+                #db.oncesql(changestate)
+                print "add in",psonedata[a][0],alof,time.clock()
+            
+            else:
+                changestate = "update psinfo set state = 2 where id =" + str(psonedata[a][0])
+                db.oncesql(changestate)
+                print "move out",psonedata[a][0],alof,time.clock()
 
-    db.allcommit()
-    print 'add:',addnum
-    '''
+        db.allcommit()
+        print 'add:',addnum
+    
 
 if __name__ =='__main__':
-    detectState()
+    detectPsinfo()
     
