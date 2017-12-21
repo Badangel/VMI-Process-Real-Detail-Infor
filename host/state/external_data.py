@@ -131,6 +131,16 @@ def exdamain():
         net1old = []
         vmi = pyvmi.init_complete(vmname)
 
+        file_module = open('module', 'r+')
+        file_module.truncate()
+        file_module.close()
+        file_dstat = open('d_stat', 'r+')
+        file_dstat.truncate()
+        file_dstat.close()
+        file_ps = open('ps', 'r+')
+        file_ps.truncate()
+        file_ps.close()
+
         while True:
             try:
                 print i

@@ -81,14 +81,13 @@ def getlrd(reachdis_matrix,matrix,datalen,minpts):
 
                         
 #Calculate LOF of each point
-def getlof(data,k,minpts,datalen,dismatrix,lrd):
-    '''
+def getlof(data,k,minpts):
     datalen = len(data)
+    print "inlen:",datalen
     dismatrix = getdisance(data,datalen)
     kdis = getk_distance(dismatrix,datalen,k)
     reach_mat = getreach_distance(dismatrix,datalen,kdis)
     lrd = getlrd(reach_mat,dismatrix,datalen,minpts)
-    '''
 
     lof = [0 for i in range(datalen)]
     for i in range(datalen):
@@ -149,6 +148,7 @@ def modifypsstate0(dataid):
      db.oncesql(changestate)
     
 def modifypsstat(largeid):
+    db = DBHelper()
     sqlps = "select id,prio,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 1 and id < "+str(largeid)
     psdata = db.oncesql(sqlps)
     print "psdata len:",len(psdata)
@@ -159,7 +159,6 @@ def modifypsstat(largeid):
     kdis = getk_distance(dismatrix,datalen,K)
     reach_mat = getreach_distance(dismatrix,datalen,kdis)
     lrd = getlrd(reach_mat,dismatrix,datalen,MinPts)
-    pslof = getlof(psdata,K,MinPts,datalen,dismatrix,lrd)
 
     #delete minflt
     sqlpsone = "select id,prio,majflt,utime,stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 0"
@@ -257,7 +256,7 @@ def detectPsinfo():
     '''
     ## write all data lof into file need id!!!
     dismatrix = getdisance(psdata,datalen)
-    pslof = getlof(psdata,K,MinPts,datalen,dismatrix,lrd)
+    pslof = getlof(psdata,K,MinPts)
     fileHandle = open ('test.txt', 'w') 
     for i in range(len(pslof)):
         temp = str(psdata[i][0])+" "+str(pslof[i])+"\n"
@@ -302,8 +301,23 @@ def detectPsinfo():
 
         db.allcommit()
         print 'add:',addnum
-    
+
+def detectAllState1():
+    selectdb = DBHelper()
+    sqlstate = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,read_total_in,writ_total_in,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,ps_out from state where stat = 1"
+    statedata = selectdb.oncesql(sqlstate)
+    statedata = list(statedata)
+    print "len:",len(statedata),len(statedata[0])
+    newdata = [x[1:] for x in statedata]
+    newid = [x[0]for x in statedata]
+    print len(newdata),len(newdata[0])
+    statelof = getlof(newdata,5,5)
+    print "lof len:",len(statelof)
+    for  a in range(0,len(statedata)):
+        print a,newid[a],statelof[a]      
 
 if __name__ =='__main__':
-    detectPsinfo()
+    detectState()
+    
+
     
