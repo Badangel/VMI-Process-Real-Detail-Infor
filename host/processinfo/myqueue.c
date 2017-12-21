@@ -161,6 +161,8 @@ int getParentLayer(int parentid,LinkQueue* queue)
         }
         q = q->next;
     }
+    //** if can't find father make it layer 50*/
+    return 49;
 }
 
 void setParentLayer(LinkQueue* queue)
