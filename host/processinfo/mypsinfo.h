@@ -38,6 +38,8 @@ unsigned long min_flt_offset = 1424;
 unsigned long maj_flt_offset = 1432;
 unsigned long utime_offset = 1328;
 unsigned long stime_offset = 1336;
+unsigned long gtime_offset = 1360;
+unsigned long ioac_offset = 1840;
 unsigned long prio_offset = 72;
 unsigned long static_prio_offset = 76;
 unsigned long normal_prio_offset = 80;
@@ -140,16 +142,16 @@ char *parentname = NULL;
 /**
  * This funtion get mm_struct info
  */
-void get_mm_struct(vmi_instance_t vmi, addr_t currentps)
+void get_mm_struct(vmi_instance_t vmi, addr_t currentps, TaskNode *tmptn)
 {
     addr_t currmm_structaddr = 1;
   
-    int cmm_users;
-    int cmm_count;
+    unsigned long cmm_users;
+    unsigned long cmm_count;
     uint64_t cpgd;
-    uint64_t ctotal_vm;
+    unsigned long ctotal_vm;
     uint64_t clocked_cm;
-    uint64_t cstack_vm;
+    unsigned long cstack_vm;
     uint64_t cstart_code;
     uint64_t cend_code;
     vmi_read_addr_va(vmi,currentps+mm_offset,0,&currmm_structaddr);
@@ -161,6 +163,10 @@ void get_mm_struct(vmi_instance_t vmi, addr_t currentps)
     vmi_read_64_va(vmi,currmm_structaddr+stack_vm_offset,0,&cstack_vm);
     vmi_read_64_va(vmi,currmm_structaddr+start_code_offset,0,&cstart_code);
     vmi_read_64_va(vmi,currmm_structaddr+end_code_offset,0,&cend_code);
+    tmptn->tsmm_users = cmm_users;
+    tmptn->tsmm_count = cmm_count;
+    tmptn->tstotal_vm = ctotal_vm;
+    tmptn->tsstack_vm = cstack_vm;
     printf("mm_users:%d mm_count:%d pgd:%p total_vm:%ld locked_cm:%ld stack_vm:%ld start_code:%p end_code:%p\n",cmm_users,cmm_count,(void*)cpgd,ctotal_vm,clocked_cm,cstack_vm,(void*)cstart_code,(void*)cend_code);
 }
 
@@ -487,11 +493,11 @@ void get_task_info(vmi_instance_t vmi,addr_t current_process, TaskNode *tmptn)
     */
 
     /* print out the process name */
-    ///printf("\n[%5d] [%5d] %s (struct addr:%"PRIx64")\n   rparent:%d  parent:%d ", pid, tgid, procname, current_process, real_parent_pid, parent_pid);
+    printf("\n[%5d] [%5d] %s (struct addr:%"PRIx64")\n   rparent:%d  parent:%d ", pid, tgid, procname, current_process, real_parent_pid, parent_pid);
     ///printf("%d",pid);
 
     /*only show mm_struct info not add in struct*/
-    get_mm_struct(vmi, current_process);
+    get_mm_struct(vmi, current_process,tmptn);
 
     vmi_read_addr_va(vmi, current_process + group_leader_offset, 0, &group_leader);
     vmi_read_32_va(vmi, group_leader + pid_offset, 0, (uint32_t*)&group_leader_pid);
@@ -520,7 +526,9 @@ void get_task_info(vmi_instance_t vmi,addr_t current_process, TaskNode *tmptn)
     unsigned long majflt = 0;
     vmi_read_64_va(vmi, current_process + maj_flt_offset, 0, &majflt);
     tmptn->tsminflt = minflt;
+    tmptn->tsinc_minflt = minflt;
     tmptn->tsmajflt = majflt;
+    tmptn->tsinc_majflt = majflt;
     ///printf("minflt:%lu majflt:%lu \n", minflt, majflt);
 
     /* show task prio */
@@ -532,7 +540,7 @@ void get_task_info(vmi_instance_t vmi,addr_t current_process, TaskNode *tmptn)
     vmi_read_32_va(vmi, current_process + normal_prio_offset, 0, &normal_prio);
     vmi_read_32_va(vmi, current_process + rt_priority_offset, 0, &rt_priority);
     tmptn->tsprio = prio;
-    ///printf("prio:%d static_prio:%d normal_prio:%d rt_priority:%u \n", prio, static_prio, normal_prio, rt_priority);
+    printf("prio:%d static_prio:%d normal_prio:%d rt_priority:%u \n", prio, static_prio, normal_prio, rt_priority);
 
 
     /* show utime,stime,gtime */
@@ -545,10 +553,36 @@ void get_task_info(vmi_instance_t vmi,addr_t current_process, TaskNode *tmptn)
     vmi_read_64_va(vmi, current_process + stime_offset, 0, &stime);
     vmi_read_64_va(vmi, current_process + stime_offset+8, 0, &utimescaled);
     vmi_read_64_va(vmi, current_process + stime_offset+16, 0, &stimescaled);
-    vmi_read_64_va(vmi, current_process + stime_offset + 24, 0, &gtime);
+    vmi_read_64_va(vmi, current_process + gtime_offset, 0, &gtime);
     tmptn->tsutime = utime;
     tmptn->tsstime = stime;
-    ///printf("utime:%lu stime:%lu utimescaled:%lu stimescaled:%lu gtime:%lu\n", utime, stime, utimescaled, stimescaled, gtime);
+    tmptn->tsinc_utime = utime;
+    tmptn->tsinc_stime = stime;
+    printf("utime:%lu stime:%lu utimescaled:%lu stimescaled:%lu gtime:%lu\n", utime, stime, utimescaled, stimescaled, gtime);
+
+    /*get task_io_accounting info*/
+    uint64_t rchar = 0;
+    uint64_t wchar = 0;
+    uint64_t syscr = 0;
+    uint64_t syscw = 0;
+    uint64_t read_bytes = 0;
+	uint64_t write_bytes = 0;
+	uint64_t cancelled_write_bytes = 0;
+    vmi_read_64_va(vmi, current_process + ioac_offset , 0, &rchar);
+    vmi_read_64_va(vmi, current_process + ioac_offset + 8, 0, &wchar);
+    vmi_read_64_va(vmi, current_process + ioac_offset + 16, 0, &syscr);
+    vmi_read_64_va(vmi, current_process + ioac_offset + 24, 0, &syscw);
+    vmi_read_64_va(vmi, current_process + ioac_offset + 32, 0, &read_bytes);
+    vmi_read_64_va(vmi, current_process + ioac_offset + 40, 0, &write_bytes);
+    vmi_read_64_va(vmi, current_process + ioac_offset + 48, 0, &cancelled_write_bytes);
+    tmptn->tsrchar = rchar;
+    tmptn->tswchar = wchar;
+    tmptn->tssyscr = syscr;
+    tmptn->tssyscw = syscw;
+    tmptn->tsread_bytes = read_bytes;
+    tmptn->tswrite_bytes = write_bytes;
+    tmptn->tscancelled_write_bytes = cancelled_write_bytes;
+    printf("rchar:%lu wchar:%lu syscr:%lu syscw:%lu read_bytes:%lu write_bytes:%lu cancelled_write_bytes:%lu\n", rchar, wchar, syscr, syscw, read_bytes, write_bytes, cancelled_write_bytes);
 
     vmi_read_addr_va(vmi, current_process + files_offset, 0, &files);
     if(VMI_FAILURE==vmi_read_addr_va(vmi, files + fdt_offset, 0, &fdt))

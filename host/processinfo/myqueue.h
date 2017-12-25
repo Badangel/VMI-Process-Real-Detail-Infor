@@ -32,10 +32,36 @@ typedef struct TaskNode{
     int tsprio;
     unsigned int tsutime;
     unsigned int tsstime;
+    unsigned int tsinc_utime;
+    unsigned int tsinc_stime;
+
     uint64_t tsstart_time;
     uint64_t tsrealstart_time;
     unsigned long tsminflt;
     unsigned long tsmajflt;
+    unsigned long tsinc_minflt;
+    unsigned long tsinc_majflt;
+
+    uint64_t tsrchar;
+    uint64_t tswchar;
+    uint64_t tssyscr;
+    uint64_t tssyscw;
+    uint64_t tsread_bytes;
+	uint64_t tswrite_bytes;
+	uint64_t tscancelled_write_bytes;
+
+    uint64_t tsinc_rchar;
+    uint64_t tsinc_wchar;
+    uint64_t tsinc_syscr;
+    uint64_t tsinc_syscw;
+    uint64_t tsinc_read_bytes;
+	uint64_t tsinc_write_bytes;
+	uint64_t tsinc_cancelled_write_bytes;
+
+    unsigned long tsmm_users;
+    unsigned long tsmm_count;
+    unsigned long tstotal_vm;
+    unsigned long tsstack_vm;
 
     int syscallnum[11];
 

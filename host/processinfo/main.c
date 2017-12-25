@@ -214,10 +214,14 @@ int main (int argc, char **argv)
 
                 //tasknodetmp.tsfdinfo = tmpfdinfo;
 
-                /* modify the state,if the ps in the ACL or not*/
+                /* modify the state,if the ps in the ACL or not
+                0 have not detect
+                1 normal
+                2 anomaly
+                3 ACL*/
                 tasknodetmp->state = 0;
                 if(findACLps(acl_list,tasknodetmp->tsname,tasknodetmp->tspid) > -1){
-                    tasknodetmp->state = 2;
+                    tasknodetmp->state = 3;
                     printf("ACL: ");
                 }
                 printf("%d:%s %d\n",psnum,tasknodetmp->tsname,tasknodetmp->tspid);

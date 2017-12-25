@@ -68,6 +68,7 @@ void show_task(void)
 	unsigned long lparent = (unsigned long)(&(task.parent)) - p;
 	unsigned long lbio_list = (unsigned long)(&(task.bio_list)) - p;
 	unsigned long lsplice_pipe = (unsigned long)(&(task.splice_pipe)) - p;
+	unsigned long lioac = (unsigned long)(&(task.ioac)) - p;
 
 	//task_struct show
 	printk("-----------task_struct-----------");
@@ -97,6 +98,7 @@ void show_task(void)
 	printk("task_parent_offset: %d\n", lparent);
 	printk("bio_list_offset: %d\n", lbio_list);
 	printk("splice_pipe_offset: %d\n", lsplice_pipe);
+	printk("ioac_offset: %d\n", lioac);
 	printk("delays_offset: %d\n\n", ldelays);
 
 	
