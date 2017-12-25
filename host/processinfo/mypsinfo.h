@@ -155,8 +155,8 @@ void get_mm_struct(vmi_instance_t vmi, addr_t currentps, TaskNode *tmptn)
     uint64_t cstart_code;
     uint64_t cend_code;
     vmi_read_addr_va(vmi,currentps+mm_offset,0,&currmm_structaddr);
-    vmi_read_32_va(vmi,currmm_structaddr+mm_users_offset,0,&cmm_users);
-    vmi_read_32_va(vmi,currmm_structaddr+mm_count_offset,0,&cmm_count);
+    vmi_read_64_va(vmi,currmm_structaddr+mm_users_offset,0,&cmm_users);
+    vmi_read_64_va(vmi,currmm_structaddr+mm_count_offset,0,&cmm_count);
     vmi_read_64_va(vmi,currmm_structaddr+pgd_offset,0,&cpgd);
     vmi_read_64_va(vmi,currmm_structaddr+total_vm_offset,0,&ctotal_vm);
     vmi_read_64_va(vmi,currmm_structaddr+locked_vm_offset,0,&clocked_cm);
@@ -167,7 +167,7 @@ void get_mm_struct(vmi_instance_t vmi, addr_t currentps, TaskNode *tmptn)
     tmptn->tsmm_count = cmm_count;
     tmptn->tstotal_vm = ctotal_vm;
     tmptn->tsstack_vm = cstack_vm;
-    printf("mm_users:%d mm_count:%d pgd:%p total_vm:%ld locked_cm:%ld stack_vm:%ld start_code:%p end_code:%p\n",cmm_users,cmm_count,(void*)cpgd,ctotal_vm,clocked_cm,cstack_vm,(void*)cstart_code,(void*)cend_code);
+    printf("mm_users:%ld mm_count:%ld pgd:%p total_vm:%ld locked_cm:%ld stack_vm:%ld start_code:%p end_code:%p\n",cmm_users,cmm_count,(void*)cpgd,ctotal_vm,clocked_cm,cstack_vm,(void*)cstart_code,(void*)cend_code);
 }
 
 /**
