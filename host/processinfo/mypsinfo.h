@@ -170,6 +170,10 @@ void get_mm_struct(vmi_instance_t vmi, addr_t currentps, TaskNode *tmptn)
     }
     tmptn->tstotal_vm = ctotal_vm;
     tmptn->tsstack_vm = cstack_vm;
+    /**stack_vm to large may no data or system space*/
+    if(cstack_vm > 5000){
+     tmptn->tsstack_vm = 0;   
+    }
     printf("mm_users:%d mm_count:%d pgd:%p total_vm:%ld locked_cm:%ld stack_vm:%ld start_code:%p end_code:%p\n",cmm_users,cmm_count,(void*)cpgd,ctotal_vm,clocked_cm,cstack_vm,(void*)cstart_code,(void*)cend_code);
 }
 

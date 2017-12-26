@@ -149,7 +149,7 @@ def modifypsstate0(dataid):
     
 def modifypsstat(largeid):
     db = DBHelper()
-    sqlps = "select id,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 1 and id < "+str(largeid)
+    sqlps = "select id,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 1 and id < "+str(largeid)
     psdata = db.oncesql(sqlps)
     print "psdata len:",len(psdata)
     datalen = len(psdata)
@@ -161,7 +161,7 @@ def modifypsstat(largeid):
     lrd = getlrd(reach_mat,dismatrix,datalen,MinPts)
 
     #delete minflt
-    sqlpsone = "select id,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 0"
+    sqlpsone = "select id,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 0"
     psonedata = db.oncesql(sqlpsone)
     psonedata = list(psonedata)
     
@@ -240,7 +240,7 @@ def detectPsinfo():
     MinPts = 5
     db = DBHelper()
     print time.clock()
-    sqlps = "select layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 1 and id < 24001"
+    sqlps = "select layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 1 "
     psdata = db.oncesql(sqlps)
     print "psdata len:",len(psdata)
     datalen = len(psdata)
@@ -270,7 +270,7 @@ def detectPsinfo():
     '''
     print time.clock()
     #delete minflt
-    sqlpsone = "select id,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 0"
+    sqlpsone = "select id,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 0"
     i = 0
     while True:
         i = i+1
@@ -317,7 +317,7 @@ def detectAllState1():
 
 def detectAllPsinfo1():
     selectdb = DBHelper()
-    sqlps = "select id,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 1"
+    sqlps = "select id,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 1"
     psdata = selectdb.oncesql(sqlps)
     psdata = list(psdata)
     print "len:",len(psdata),len(psdata[0])
@@ -330,7 +330,7 @@ def detectAllPsinfo1():
         print a,newid[a],pslof[a] 
 
 if __name__ =='__main__':
-    detectAllPsinfo1()
+    detectPsinfo()
     
 
     

@@ -176,7 +176,12 @@ int main (int argc, char **argv)
         LinkQueue* pre_queue = malloc(sizeof(LinkQueue*));
         initQueue(pre_queue);
         LinkQueue* queue = malloc(sizeof(LinkQueue*));
-        
+
+        /**the time enter traveral
+         * 1 only insert change 
+         * 2 insert the first all process and change
+        */
+        int frenum = 1;
 
         while(n>0)
         {
@@ -300,7 +305,10 @@ int main (int argc, char **argv)
 
             setParentLayer(queue);
 
-            traversal(&mysql,queue,pre_queue);
+            traversal(&mysql,queue,pre_queue,frenum);
+            if(frenum > 0){
+                frenum--;
+            }
             comm_db(&mysql);
 
 
