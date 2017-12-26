@@ -58,8 +58,8 @@ typedef struct TaskNode{
 	uint64_t tsinc_write_bytes;
 	uint64_t tsinc_cancelled_write_bytes;
 
-    unsigned long tsmm_users;
-    unsigned long tsmm_count;
+    uint32_t tsmm_users;
+    uint32_t tsmm_count;
     unsigned long tstotal_vm;
     unsigned long tsstack_vm;
 

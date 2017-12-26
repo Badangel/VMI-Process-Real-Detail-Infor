@@ -47,6 +47,9 @@ int compare2TaskNode(TaskNode* p,TaskNode* q){
     if(p->tsparent != q->tsparent||p->tsgroupleader != q->tsgroupleader||p->tsprio != q->tsprio){
         return 0;
     }
+    if(p->tsinc_rchar != q->tsinc_rchar||p->tsinc_wchar != q->tsinc_wchar||p->tsinc_syscr != q->tsinc_syscr||p->tsinc_syscw != q->tsinc_syscw||p->tsinc_read_bytes != q->tsinc_read_bytes||p->tsinc_write_bytes != q->tsinc_write_bytes||p->tsinc_cancelled_write_bytes != q->tsinc_cancelled_write_bytes){
+        return 0;
+    }
     int i = 0;
     for(; i<6; i++){
         if(p->socketinfo[i] != q->socketinfo[i]||p->anon_inodeinfo[i] != q->anon_inodeinfo[i]||p->syscallnum[i] != q->syscallnum[i]){
@@ -118,7 +121,8 @@ void traversal(MYSQL *mysql,LinkQueue *queue,LinkQueue *pre_queue)
     TaskNode* freeq;
     char sql_insert[1024];
     int insertsqlnum = 0;
-    while(q != NULL&&!isEmpty(pre_queue))
+    bool prequeue_state = isEmpty(pre_queue);
+    while(q != NULL&&!prequeue_state)
     {
         /*
         printf("queue %d %s id is: %d\n",i,q->tsname,q->tspid);
@@ -132,10 +136,9 @@ void traversal(MYSQL *mysql,LinkQueue *queue,LinkQueue *pre_queue)
         ///{
         if(q->state != 3&&!findSamePointinQueue(q,pre_queue)){
             /*classfity 0 syscall not insert*/
-            sprintf(sql_insert,"insert into psinfo(psid,psname,parentid,layer,gleaderid, prio,inc_minflt,inc_majflt,inc_utime,inc_stime,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation,state)values('%d','%s','%d','%d','%d', '%d','%ld','%ld','%d','%d','%lf','%lf','%d','%d', '%d','%d','%d','%d','%d','%d', '%d', '%d', '%d', '%d', '%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d');",q->tspid,q->tsname,q->tsparent,q->tslayer,q->tsgroupleader,q->tsprio,q->tsinc_minflt,q->tsinc_majflt,q->tsinc_utime,q->tsinc_stime,q->tsstart_time/60000000000.0,q->tsrealstart_time/60000000000.0,q->tsfdnum,q->socketinfo[0],q->socketinfo[1],q->socketinfo[2],q->socketinfo[3],q->socketinfo[4],q->anon_inodeinfo[0],q->anon_inodeinfo[1],q->anon_inodeinfo[2],q->anon_inodeinfo[3],q->anon_inodeinfo[4],q->pipeinfo,q->fileinfo,q->syscallnum[10],q->syscallnum[1],q->syscallnum[2],q->syscallnum[3],q->syscallnum[4],q->syscallnum[5],q->syscallnum[6],q->syscallnum[7],q->syscallnum[8],q->syscallnum[9],q->state);
-
-            ///exec_db(mysql,sql_insert);
-            insertsqlnum++;
+            sprintf(sql_insert,"insert into psinfo(psid,psname,parentid,layer,gleaderid, prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,total_vm,stack_vm,inc_rchar,inc_wchar,inc_syscr,inc_syscw,inc_read_bytes,inc_write_bytes,inc_cancelled_write_bytes,start_time,realstart_time,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation,state)values('%d','%s','%d','%d','%d', '%d','%ld','%ld','%d','%d','%d','%d','%ld','%ld','%ld','%ld','%ld','%ld','%ld','%ld','%ld','%lf','%lf','%d','%d', '%d','%d','%d','%d','%d','%d', '%d', '%d', '%d', '%d', '%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d','%d');",q->tspid,q->tsname,q->tsparent,q->tslayer,q->tsgroupleader,q->tsprio,q->tsinc_minflt,q->tsinc_majflt,q->tsinc_utime,q->tsinc_stime,q->tsmm_users,q->tsmm_count,q->tstotal_vm,q->tsstack_vm,q->tsinc_rchar,q->tsinc_wchar,q->tsinc_syscr,q->tsinc_syscw,q->tsinc_read_bytes,q->tsinc_write_bytes,q->tsinc_cancelled_write_bytes,q->tsstart_time/60000000000.0,q->tsrealstart_time/60000000000.0,q->tsfdnum,q->socketinfo[0],q->socketinfo[1],q->socketinfo[2],q->socketinfo[3],q->socketinfo[4],q->anon_inodeinfo[0],q->anon_inodeinfo[1],q->anon_inodeinfo[2],q->anon_inodeinfo[3],q->anon_inodeinfo[4],q->pipeinfo,q->fileinfo,q->syscallnum[10],q->syscallnum[1],q->syscallnum[2],q->syscallnum[3],q->syscallnum[4],q->syscallnum[5],q->syscallnum[6],q->syscallnum[7],q->syscallnum[8],q->syscallnum[9],q->state);
+            exec_db(mysql,sql_insert);
+            insertsqlnum++;  
         }
         ///}
         ///printf("\n%s\n",sql_insert);
@@ -144,8 +147,9 @@ void traversal(MYSQL *mysql,LinkQueue *queue,LinkQueue *pre_queue)
         
         ///free(freeq);
     }
-    freeQueue(pre_queue);
+    ///freeQueue(pre_queue);
     pre_queue->front->next = queue->front->next;
+    pre_queue->rear = queue->rear;
     printf("insert sql num: %d\n",insertsqlnum);
 }
 
