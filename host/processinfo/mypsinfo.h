@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <libvmi/libvmi.h>
+#include "vminit.h"
 
 unsigned long pid_offset = 0, name_offset = 0;
 
@@ -610,5 +611,29 @@ void get_task_info(vmi_instance_t vmi,addr_t current_process, TaskNode *tmptn)
     get_files_info(vmi,fd,max_fds,tmptn);
     ///printf("tfa");
 }///end get_task_info
+
+void setoffset(VmiInfo* vmiinfo,char* key, unsigned long value)
+{
+    int i = 0;
+    for(;i<vmiinfo->offset_len;i++){
+        if(0 == strcmp((vmiinfo->vmoffset[i]).key,key)){
+            vmiinfo->vmoffset[i].value = value;
+            return;
+        }
+    }
+    printf("no offset %s",key);
+}
+
+int getoffset(VmiInfo* vmiinfo,char* key)
+{
+    int i = 0;
+    for(;i<vmiinfo->offset_len;i++){
+        if(0 == strcmp((vmiinfo->vmoffset[i]).key,key)){
+            return vmiinfo->vmoffset[i].value;
+        }
+    }
+    printf("no offset %s",key);
+    return -1;
+}
 
 #endif // MYPSINFO_H_INCLUDED

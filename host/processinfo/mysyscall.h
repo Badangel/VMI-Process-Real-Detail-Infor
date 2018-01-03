@@ -39,7 +39,6 @@ typedef struct syscallone{
 }SyscallOne;
 
 
-
 /* Signal handler */
 static struct sigaction act;
 static int interrupted = 0;

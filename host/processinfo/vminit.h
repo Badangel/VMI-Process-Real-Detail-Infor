@@ -8,16 +8,24 @@
 #include <stdio.h>
 #include "mysyscall.h"
 
+#define NUMBER_OF_OFFSET 57
+
+typedef struct offsetkv{
+    char key[30];
+    unsigned long value;
+}OffSet;
+
 typedef struct vmiinfo{
     vmi_instance_t vmi;
     char version[50];
     int syscall_len;
     SyscallOne* syscallall;
+    OffSet vmoffset[NUMBER_OF_OFFSET];
     int offset_len;
 }VmiInfo;
 
 
-int readsyscallconf(VmiInfo* vmiinfo)
+int read_syscall_conf(VmiInfo* vmiinfo)
 {
     FILE *fp;
     char vmversion[100] = "config/";
@@ -49,4 +57,28 @@ int readsyscallconf(VmiInfo* vmiinfo)
     */
     return 1;
 }
+
+int read_offset_conf(VmiInfo* vmiinfo)
+{
+    vmiinfo->offset_len = 0;
+    FILE *fp;
+    char vmversion[100] = "config/";
+    strcat(vmversion,vmiinfo->version);
+    strcat(vmversion,"_offset.conf");
+    printf("%s\n",vmversion);
+    fp = fopen(vmversion,"r");
+    if(NULL == fp){
+        printf("open %s fail\n",vmversion);
+        return 0;
+    }
+    char key[30];
+    unsigned long value = 0;
+    while(EOF != fscanf(fp,"%s = %ld%*[^\n]",key,&value)){
+        strcpy(vmiinfo->vmoffset[vmiinfo->offset_len].key,key);
+        vmiinfo->vmoffset[vmiinfo->offset_len].value = value;
+        vmiinfo->offset_len++;
+    }
+    return 1;
+}
+
 #endif

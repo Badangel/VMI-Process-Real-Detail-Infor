@@ -130,6 +130,17 @@ int main (int argc, char **argv)
     }
     vmi_resume_vm(vmi);
 
+    
+    VmiInfo* vmivm = (VmiInfo*)malloc(sizeof(VmiInfo));
+    vmivm->vmi = vmi;
+    strcpy(vmivm->version,"4.4.57");
+    // Initialize the vm offset.
+    if(0 == read_offset_conf(vmivm))
+    {
+        printf("Failed to init vm offset.\n");
+        return 1;
+    }
+
 
 
     next_list_entry = list_head;
@@ -379,7 +390,7 @@ int main (int argc, char **argv)
         VmiInfo* vmivm = (VmiInfo*)malloc(sizeof(VmiInfo));
         vmivm->vmi = vmi;
         strcpy(vmivm->version,"4.4.57");
-        if(0 == readsyscallconf(vmivm))
+        if(0 == read_syscall_conf(vmivm))
         {
             printf("Failed to init vm syscall.\n");
             return 1;
