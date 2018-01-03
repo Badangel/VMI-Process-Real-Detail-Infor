@@ -21,6 +21,7 @@
 #include "myqueue.h"
 #include "mysyscall.h"
 #include "mypsinfo.h"
+#include "vminit.h"
 #include "mydbsql.h"
 #include "acl.h"
 
@@ -196,7 +197,7 @@ int main (int argc, char **argv)
             do
             {
                 psnum++;
-                printf("\n");
+                ///printf("\n");
 
                 TaskNode *tasknodetmp = (TaskNode*)calloc(1,sizeof(TaskNode));
                 //printf("!!first!!minflt:%d ",tasknodetmp.minflt);
@@ -227,9 +228,9 @@ int main (int argc, char **argv)
                 tasknodetmp->state = 0;
                 if(findACLps(acl_list,tasknodetmp->tsname,tasknodetmp->tspid) > -1){
                     tasknodetmp->state = 3;
-                    printf("ACL: ");
+                    ///printf("ACL: ");
                 }
-                printf("%d:%s %d\n",psnum,tasknodetmp->tsname,tasknodetmp->tspid);
+                ///printf("%d:%s %d\n",psnum,tasknodetmp->tsname,tasknodetmp->tspid);
 
                 /*push the ps into the list*/
                 pushQueue(queue,tasknodetmp);
@@ -371,6 +372,16 @@ int main (int argc, char **argv)
                                              VMI_CONFIG_GLOBAL_FILE_ENTRY, NULL, NULL))
         {
             printf("Failed to init LibVMI library.\n");
+            return 1;
+        }
+
+        // Initialize the vm syscall.
+        VmiInfo* vmivm = (VmiInfo*)malloc(sizeof(VmiInfo));
+        vmivm->vmi = vmi;
+        strcpy(vmivm->version,"4.4.57");
+        if(0 == readsyscallconf(vmivm))
+        {
+            printf("Failed to init vm syscall.\n");
             return 1;
         }
 

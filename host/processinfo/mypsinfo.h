@@ -174,7 +174,7 @@ void get_mm_struct(vmi_instance_t vmi, addr_t currentps, TaskNode *tmptn)
     if(cstack_vm > 5000){
      tmptn->tsstack_vm = 0;   
     }
-    printf("mm_users:%d mm_count:%d pgd:%p total_vm:%ld locked_cm:%ld stack_vm:%ld start_code:%p end_code:%p\n",cmm_users,cmm_count,(void*)cpgd,ctotal_vm,clocked_cm,cstack_vm,(void*)cstart_code,(void*)cend_code);
+    ///printf("mm_users:%d mm_count:%d pgd:%p total_vm:%ld locked_cm:%ld stack_vm:%ld start_code:%p end_code:%p\n",cmm_users,cmm_count,(void*)cpgd,ctotal_vm,clocked_cm,cstack_vm,(void*)cstart_code,(void*)cend_code);
 }
 
 /**
@@ -374,7 +374,7 @@ char* get_qstr_name(vmi_instance_t vmi,char *name,addr_t qstr_addr)
     //qstr_d_name[0] = '';
     char c = 1;
     //while(c != NULL && filetype != 0)
-    printf("??");
+    ///printf("??");
     while(c != '\0')
     {
         vmi_read_8_va(vmi, qstr_addr, 0, &c);
@@ -500,7 +500,7 @@ void get_task_info(vmi_instance_t vmi,addr_t current_process, TaskNode *tmptn)
     */
 
     /* print out the process name */
-    printf("\n[%5d] [%5d] %s (struct addr:%"PRIx64")\n   rparent:%d  parent:%d ", pid, tgid, procname, current_process, real_parent_pid, parent_pid);
+    ///printf("\n[%5d] [%5d] %s (struct addr:%"PRIx64")\n   rparent:%d  parent:%d ", pid, tgid, procname, current_process, real_parent_pid, parent_pid);
     ///printf("%d",pid);
 
     /*only show mm_struct info not add in struct*/
@@ -547,7 +547,7 @@ void get_task_info(vmi_instance_t vmi,addr_t current_process, TaskNode *tmptn)
     vmi_read_32_va(vmi, current_process + normal_prio_offset, 0, &normal_prio);
     vmi_read_32_va(vmi, current_process + rt_priority_offset, 0, &rt_priority);
     tmptn->tsprio = prio;
-    printf("prio:%d static_prio:%d normal_prio:%d rt_priority:%u \n", prio, static_prio, normal_prio, rt_priority);
+    ///printf("prio:%d static_prio:%d normal_prio:%d rt_priority:%u \n", prio, static_prio, normal_prio, rt_priority);
 
 
     /* show utime,stime,gtime */
@@ -565,7 +565,7 @@ void get_task_info(vmi_instance_t vmi,addr_t current_process, TaskNode *tmptn)
     tmptn->tsstime = stime;
     tmptn->tsinc_utime = utime;
     tmptn->tsinc_stime = stime;
-    printf("utime:%lu stime:%lu utimescaled:%lu stimescaled:%lu gtime:%lu\n", utime, stime, utimescaled, stimescaled, gtime);
+    ///printf("utime:%lu stime:%lu utimescaled:%lu stimescaled:%lu gtime:%lu\n", utime, stime, utimescaled, stimescaled, gtime);
 
     /*get task_io_accounting info*/
     uint64_t rchar = 0;
@@ -589,7 +589,7 @@ void get_task_info(vmi_instance_t vmi,addr_t current_process, TaskNode *tmptn)
     tmptn->tsread_bytes = read_bytes;
     tmptn->tswrite_bytes = write_bytes;
     tmptn->tscancelled_write_bytes = cancelled_write_bytes;
-    printf("rchar:%lu wchar:%lu syscr:%lu syscw:%lu read_bytes:%lu write_bytes:%lu cancelled_write_bytes:%lu\n", rchar, wchar, syscr, syscw, read_bytes, write_bytes, cancelled_write_bytes);
+    ///printf("rchar:%lu wchar:%lu syscr:%lu syscw:%lu read_bytes:%lu write_bytes:%lu cancelled_write_bytes:%lu\n", rchar, wchar, syscr, syscw, read_bytes, write_bytes, cancelled_write_bytes);
 
     vmi_read_addr_va(vmi, current_process + files_offset, 0, &files);
     if(VMI_FAILURE==vmi_read_addr_va(vmi, files + fdt_offset, 0, &fdt))

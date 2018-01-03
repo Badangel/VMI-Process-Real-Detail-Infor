@@ -1,4 +1,9 @@
 
+/**
+* Copyright(c) 2017 dyf
+* implement access control list of process
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include "acl.h"
@@ -31,7 +36,7 @@ void* getACLList(MyList * list)
                 strcpy(data->name,tempname);
                 data->id = temppsid;
                 myListInsertDataAtLast(list, data);
-                printf("%s [%d]\n",data->name,data->id);
+                ///printf("%s [%d]\n",data->name,data->id);
             }
         }
         else{

@@ -1,3 +1,7 @@
+/**
+* Copyright(c) 2017 dyf
+* head file access control list of process
+*/
 #ifndef ACL_H_INCLUDED
 #define ACL_H_INCLUDED
 

@@ -19,14 +19,26 @@ typedef struct persyscall{
     uint32_t pid;
 }psyscall;
 
+
 struct syscall
 {
     int num;
     uint64_t addr;
-    const char* name;
+    char name[30];
     uint8_t pre;
     int classify;
 };
+
+
+typedef struct syscallone{
+    int num;
+    uint64_t addr;
+    char name[30];
+    uint8_t pre;
+    int classify;
+}SyscallOne;
+
+
 
 /* Signal handler */
 static struct sigaction act;
