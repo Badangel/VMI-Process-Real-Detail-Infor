@@ -4,7 +4,7 @@
 */
 #ifndef ACL_H_INCLUDED
 #define ACL_H_INCLUDED
-
+#include "vminit.h"
 #include "myList.h"
 
 typedef struct aclps
@@ -15,12 +15,12 @@ typedef struct aclps
 
 void outputACL(const void* const p);
 
-void* getACLList(MyList* list);
+void* getACLList(VmiInfo* vmivm, MyList* list);
 
 int compare2ps(void* a, void* b);
 
 int findACLps(MyList* list, char* name, int id);
 
-void showACLList();
+void showACLList(VmiInfo* vmivm);
 
 #endif

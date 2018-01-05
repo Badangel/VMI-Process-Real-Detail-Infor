@@ -21,7 +21,7 @@
 #include "myqueue.h"
 #include "mysyscall.h"
 #include "mypsinfo.h"
-#include "vminit.h"
+//#include "vminit.h"
 #include "mydbsql.h"
 #include "acl.h"
 
@@ -133,6 +133,7 @@ int main (int argc, char **argv)
     
     VmiInfo* vmivm = (VmiInfo*)malloc(sizeof(VmiInfo));
     vmivm->vmi = vmi;
+    strcpy(vmivm->vmname,name);
     strcpy(vmivm->version,"4.4.57");
     // Initialize the vm offset.
     if(0 == read_offset_conf(vmivm))
@@ -182,7 +183,7 @@ int main (int argc, char **argv)
         }
         ///init the ACL list of ps
         MyList * acl_list= createMySearchList(compare2ps);
-        getACLList(acl_list);
+        getACLList(vmivm,acl_list);
         ///myListOutput(acl_list, outputACL);
       
 
@@ -381,7 +382,6 @@ int main (int argc, char **argv)
         uint64_t beforemodify;
         int i;
         static uint8_t trap = 0xCC;
-        static uint8_t backup_byte;
         reg_t sysenter_ip = 0;
         addr_t phys_sysenter_ip = 0;
         addr_t sys_call_table_addr = 0xffffffff81216840;
@@ -394,13 +394,11 @@ int main (int argc, char **argv)
             printf("Failed to init LibVMI library.\n");
             return 1;
         }
-        
-
-       
 
 
         vmi_pause_vm(vmi);
 
+        uint8_t backup_byte = 0;
         for(i = 0; i < NUMBER_OF_SYSCALLS; i++)
         {
             if(syscalls[i].addr!=0)
@@ -408,7 +406,9 @@ int main (int argc, char **argv)
                 //printf("syscall num %d",i);
                 vmi_read_8_va(vmi, syscalls[i].addr, 0, &backup_byte);
                 vmi_write_8_va(vmi, syscalls[i].addr, 0, &trap);
+                
                 syscalls[i].pre = backup_byte;
+                printf("!!%d addr:%lx backup_byte:%x right:%x\n",i,syscalls[i].addr,backup_byte,syscalls[i].pre);
             }
             else
             {

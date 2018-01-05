@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "acl.h"
-#include "myList.h"
+
 
 void outputACL(const void* const p)
 {
@@ -15,11 +15,15 @@ void outputACL(const void* const p)
     printf("%s(%d)\n", pp->name, pp->id);
 }
 
-void* getACLList(MyList * list)
+void* getACLList(VmiInfo* vmivm, MyList * list)
 {
 
     FILE *fp;
-    fp = fopen("config/ACL.config","r");
+    char filepath[100];
+    strcpy(filepath,"config/");
+    strcat(filepath,vmivm->vmname);
+    strcat(filepath,"_ACL.conf");
+    fp = fopen(filepath,"r");
     char tempname[50];
     char *tm = tempname; 
     int temppsid;
@@ -66,10 +70,10 @@ int findACLps(MyList* list, char* name, int id)
     return myListFindDataIndex(list,tmp);
 }
 
-void showACLList()
+void showACLList(VmiInfo* vmivm)
 {
     MyList * list= createMySearchList(compare2ps);
-    getACLList(list);
+    getACLList(vmivm,list);
     myListOutput(list, outputACL );
    
 }

@@ -102,8 +102,9 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_vmiprocessinfo_OBJECTS = main.$(OBJEXT) myqueue.$(OBJEXT) \
-	myList.$(OBJEXT) acl.$(OBJEXT)
+am_vmiprocessinfo_OBJECTS = myqueue.$(OBJEXT) myList.$(OBJEXT) \
+	acl.$(OBJEXT) vminit.$(OBJEXT) mysyscall.$(OBJEXT) \
+	mypsinfo.$(OBJEXT) main.$(OBJEXT)
 vmiprocessinfo_OBJECTS = $(am_vmiprocessinfo_OBJECTS)
 vmiprocessinfo_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
@@ -184,12 +185,12 @@ distuninstallcheck_listfiles = find . -type f -print
 am__distuninstallcheck_listfiles = $(distuninstallcheck_listfiles) \
   | sed 's|^\./|$(prefix)/|' | grep -v '$(infodir)/dir$$'
 distcleancheck_listfiles = find . -type f -print
-ACLOCAL = ${SHELL} /home/vmi/Downloads/code/psAddACL1211/missing aclocal-1.15
+ACLOCAL = ${SHELL} /home/vmi/Downloads/code/VmiXen/host/processinfo/missing aclocal-1.15
 AMTAR = $${TAR-tar}
 AM_DEFAULT_VERBOSITY = 1
-AUTOCONF = ${SHELL} /home/vmi/Downloads/code/psAddACL1211/missing autoconf
-AUTOHEADER = ${SHELL} /home/vmi/Downloads/code/psAddACL1211/missing autoheader
-AUTOMAKE = ${SHELL} /home/vmi/Downloads/code/psAddACL1211/missing automake-1.15
+AUTOCONF = ${SHELL} /home/vmi/Downloads/code/VmiXen/host/processinfo/missing autoconf
+AUTOHEADER = ${SHELL} /home/vmi/Downloads/code/VmiXen/host/processinfo/missing autoheader
+AUTOMAKE = ${SHELL} /home/vmi/Downloads/code/VmiXen/host/processinfo/missing automake-1.15
 AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
@@ -214,7 +215,7 @@ LDFLAGS =
 LIBOBJS = 
 LIBS = -lmysqlclient -lvmi -lm 
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /home/vmi/Downloads/code/psAddACL1211/missing makeinfo
+MAKEINFO = ${SHELL} /home/vmi/Downloads/code/VmiXen/host/processinfo/missing makeinfo
 MKDIR_P = /bin/mkdir -p
 OBJEXT = o
 PACKAGE = vmipsinfo
@@ -229,10 +230,10 @@ SET_MAKE =
 SHELL = /bin/bash
 STRIP = 
 VERSION = 2.0
-abs_builddir = /home/vmi/Downloads/code/psAddACL1211
-abs_srcdir = /home/vmi/Downloads/code/psAddACL1211
-abs_top_builddir = /home/vmi/Downloads/code/psAddACL1211
-abs_top_srcdir = /home/vmi/Downloads/code/psAddACL1211
+abs_builddir = /home/vmi/Downloads/code/VmiXen/host/processinfo
+abs_srcdir = /home/vmi/Downloads/code/VmiXen/host/processinfo
+abs_top_builddir = /home/vmi/Downloads/code/VmiXen/host/processinfo
+abs_top_srcdir = /home/vmi/Downloads/code/VmiXen/host/processinfo
 ac_ct_CC = gcc
 am__include = include
 am__leading_dot = .
@@ -251,7 +252,7 @@ host_alias =
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /home/vmi/Downloads/code/psAddACL1211/install-sh
+install_sh = ${SHELL} /home/vmi/Downloads/code/VmiXen/host/processinfo/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -275,7 +276,7 @@ top_srcdir = .
 AUTOMAKE_OPTIONS = foreign
 AM_LDFLAGS = -L$(top_builddir)/libvmi/.libs/
 LDADD = -lvmi -lm $(LIBS) $(GLIB_LIBS)
-vmiprocessinfo_SOURCES = main.c myqueue.c myList.c acl.c
+vmiprocessinfo_SOURCES = myqueue.c myList.c acl.c vminit.c mysyscall.c mypsinfo.c main.c
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -385,7 +386,10 @@ distclean-compile:
 include ./$(DEPDIR)/acl.Po
 include ./$(DEPDIR)/main.Po
 include ./$(DEPDIR)/myList.Po
+include ./$(DEPDIR)/mypsinfo.Po
 include ./$(DEPDIR)/myqueue.Po
+include ./$(DEPDIR)/mysyscall.Po
+include ./$(DEPDIR)/vminit.Po
 
 .c.o:
 	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
