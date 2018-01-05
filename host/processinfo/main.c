@@ -141,6 +141,13 @@ int main (int argc, char **argv)
         return 1;
     }
 
+     // Initialize the vm syscall.
+    if(0 == read_syscall_conf(vmivm))
+    {
+        printf("Failed to init vm syscall.\n");
+        return 1;
+    }
+
 
 
     next_list_entry = list_head;
@@ -358,6 +365,7 @@ int main (int argc, char **argv)
     else
     {
         printf("%d child start!!\n",fpid);
+       
         pid_t ppid = getppid();
         pipenum = fdpipe[1];
 
@@ -377,24 +385,18 @@ int main (int argc, char **argv)
         reg_t sysenter_ip = 0;
         addr_t phys_sysenter_ip = 0;
         addr_t sys_call_table_addr = 0xffffffff81216840;
-        vmi_instance_t vmi;
+        ///vmi_instance_t vmi;
         // Initialize the libvmi library.
+        
         if (VMI_FAILURE == vmi_init_complete(&vmi, name, VMI_INIT_DOMAINNAME | VMI_INIT_EVENTS , NULL,
                                              VMI_CONFIG_GLOBAL_FILE_ENTRY, NULL, NULL))
         {
             printf("Failed to init LibVMI library.\n");
             return 1;
         }
+        
 
-        // Initialize the vm syscall.
-        VmiInfo* vmivm = (VmiInfo*)malloc(sizeof(VmiInfo));
-        vmivm->vmi = vmi;
-        strcpy(vmivm->version,"4.4.57");
-        if(0 == read_syscall_conf(vmivm))
-        {
-            printf("Failed to init vm syscall.\n");
-            return 1;
-        }
+       
 
 
         vmi_pause_vm(vmi);

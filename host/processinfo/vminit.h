@@ -41,7 +41,7 @@ int read_syscall_conf(VmiInfo* vmiinfo)
     SyscallOne* syscallinfo = (SyscallOne*)malloc((vmiinfo->syscall_len+1)*sizeof(SyscallOne));
 
     int i = 0;
-    printf("ready enter:%d\n",vmiinfo->syscall_len);
+    ///printf("ready enter:%d\n",vmiinfo->syscall_len);
     while(i-1 < vmiinfo->syscall_len){
         numofread = fscanf(fp,"%d %lx %s %d%*[^\n]",&(syscallinfo[i].num),&(syscallinfo[i].addr),syscallinfo[i].name,&syscallinfo[i].classify);
         syscallinfo[i].pre = 0x00;
@@ -65,7 +65,7 @@ int read_offset_conf(VmiInfo* vmiinfo)
     char vmversion[100] = "config/";
     strcat(vmversion,vmiinfo->version);
     strcat(vmversion,"_offset.conf");
-    printf("%s\n",vmversion);
+    ///printf("%s\n",vmversion);
     fp = fopen(vmversion,"r");
     if(NULL == fp){
         printf("open %s fail\n",vmversion);
