@@ -23,6 +23,7 @@ typedef struct syscallone
     uint64_t addr;
     char name[30];
     uint8_t pre;
+    ///(1)ps_control (2)file_rw (3)file_control (4)sys_control (5)mem_control (6)net_control (7)socket_control (8)user_control (9)ps_communcation
     int classify;
 }SyscallOne;
 

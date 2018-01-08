@@ -12,7 +12,11 @@
 #include <libvmi/libvmi.h>
 #include <libvmi/events.h>
 #include "myqueue.h"
+#include "vminit.h"
 
+#define MAX_VM 10
+VmiInfo* globalvm[MAX_VM];
+int vm_num;
 
 #define NUMBER_OF_SYSCALLS 326
 
@@ -22,33 +26,19 @@ typedef struct persyscall{
 }psyscall;
 
 
-typedef struct syscall
-{
-    int num;
-    uint64_t addr;
-    char name[30];
-    uint8_t pre;
-    int classify;
-}Syscall;
-
-
-
 /* Signal handler */
 static struct sigaction act;
 static int interrupted = 0;
 void close_handler(int sig);
 
-///(1)ps_control (2)file_rw (3)file_control (4)sys_control (5)mem_control (6)net_control (7)socket_control (8)user_control (9)ps_communcation
-extern Syscall syscalls[NUMBER_OF_SYSCALLS];
-
-extern int syscallnum[NUMBER_OF_SYSCALLS];
-extern uint8_t trap;
-extern reg_t rdi, rax,cr3;
-extern int trapnum;
-extern int singstepnum;
-extern int sys_num;
-extern int pipenum;
-extern int writen;
+int syscallnum[NUMBER_OF_SYSCALLS];
+uint8_t trap;
+reg_t rdi, rax,cr3;
+int trapnum;//will delete
+int singstepnum;//will delete
+int sys_num;
+int pipenum;
+///extern int writen;
 
 event_response_t singlestep_cb(vmi_instance_t vmi, vmi_event_t *event);
 

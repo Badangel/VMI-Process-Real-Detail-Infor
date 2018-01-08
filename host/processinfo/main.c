@@ -25,10 +25,11 @@
 #include "mydbsql.h"
 #include "acl.h"
 
-
-
 int main (int argc, char **argv)
 {
+    extern int vm_num;
+    vm_num = 0;
+    extern VmiInfo* globalvm[];
     vmi_instance_t vmi;
     addr_t list_head = 0, next_list_entry = 0;
     unsigned long tasks_offset = 0;
@@ -309,8 +310,8 @@ int main (int argc, char **argv)
                 {
                     if(pssystotal[i][0] == getsyscall.pid)
                     {
-                        pssystotal[i][syscalls[getsyscall.sysnum].classify+1]++;
-                        pssystotal[psnum][syscalls[getsyscall.sysnum].classify+1]++;
+                        pssystotal[i][vmivm->syscallall[getsyscall.sysnum].classify+1]++;
+                        pssystotal[psnum][vmivm->syscallall[getsyscall.sysnum].classify+1]++;
                         i = psnum;
                     }
                 }
@@ -368,6 +369,7 @@ int main (int argc, char **argv)
         printf("%d child start!!\n",fpid);
        
         pid_t ppid = getppid();
+        extern int pipenum;
         pipenum = fdpipe[1];
 
         /* Signal handler to catch CTRL+C, etc.. */
@@ -394,21 +396,22 @@ int main (int argc, char **argv)
             printf("Failed to init LibVMI library.\n");
             return 1;
         }
-
+        vmivm->vmi = vmi;
 
         vmi_pause_vm(vmi);
 
-        uint8_t backup_byte = 0;
-        for(i = 0; i < NUMBER_OF_SYSCALLS; i++)
+        uint64_t backup_byte = 0;
+        extern int syscallnum[];
+        for(i = 0; i < vmivm->syscall_len; i++)
         {
-            if(syscalls[i].addr!=0)
+            if(vmivm->syscallall[i].addr!=0)
             {
                 //printf("syscall num %d",i);
-                vmi_read_8_va(vmi, syscalls[i].addr, 0, &backup_byte);
-                vmi_write_8_va(vmi, syscalls[i].addr, 0, &trap);
-                
-                syscalls[i].pre = backup_byte;
-                printf("!!%d addr:%lx backup_byte:%x right:%x\n",i,syscalls[i].addr,backup_byte,syscalls[i].pre);
+                vmi_read_8_va(vmi, vmivm->syscallall[i].addr, 0, &(vmivm->syscallall[i].pre));
+                vmi_read_64_va(vmi, vmivm->syscallall[i].addr, 0, &backup_byte);
+                vmi_write_8_va(vmi, vmivm->syscallall[i].addr, 0, &trap);
+            
+                printf("!!%d addr:%lx backup_byte:%lx right:%x\n",i,vmivm->syscallall[i].addr,backup_byte,vmivm->syscallall[i].pre);
             }
             else
             {
@@ -418,6 +421,9 @@ int main (int argc, char **argv)
 
         }
         // printf("CR0 set over\n");
+        
+        globalvm[vm_num] = vmivm;
+        
         vmi_event_t trap_event, singlestep_event;
         SETUP_INTERRUPT_EVENT(&trap_event, 0, trap_cb);
         SETUP_SINGLESTEP_EVENT(&singlestep_event, 1, singlestep_cb, 0);
@@ -435,7 +441,7 @@ int main (int argc, char **argv)
         vmi_read_64_va(vmi, sys_call_table_addr, 0, &aftermodify);
         vmi_get_vcpureg(vmi, &sysenter_ip, SYSENTER_EIP, 0);
         printf("vcpu 0 MSR_SYSENTER_IP == %llx\n", (unsigned long long)sysenter_ip);
-        printf("sys_call_table_entry_addr == %x\n", backup_byte);
+        printf("sys_call_table_entry_addr == %lx\n", backup_byte);
         printf("afte modify sys_call_table_entry_addr == %lx\n", aftermodify);
         int n1 = 5000;
 
@@ -450,19 +456,21 @@ int main (int argc, char **argv)
 
         }
 
-        for(i = 0; i < NUMBER_OF_SYSCALLS; i++)
+        for(i = 0; i < vmivm->syscall_len; i++)
         {
             ///printf("%s :%d\n",syscalls[i].name,syscallnum[i]);
             //fprintf(f3,"%s :%d\n",syscalls[i].name,syscallnum[i]);
-            if(syscalls[i].addr!=0)
+            if(vmivm->syscallall[i].addr!=0)
             {
                 ///printf("%d ok ",i );
-                vmi_write_8_va(vmi, syscalls[i].addr, 0, &(syscalls[i].pre));
+                vmi_write_8_va(vmi, vmivm->syscallall[i].addr, 0, &(vmivm->syscallall[i].pre));
             }
 
         }
         //vmi_resume_vm(vmi);
         vmi_destroy(vmi);
+        extern int trapnum;
+        extern int singstepnum;
         printf("trap:%d , singstep:%d\n",trapnum,singstepnum);
 
 
