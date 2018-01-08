@@ -31,11 +31,13 @@ typedef struct vmiinfo
 {
     vmi_instance_t vmi;
     char vmname[50];
+    unsigned long vmid;
     char version[50];
     int syscall_len;
     SyscallOne* syscallall;
     OffSet vmoffset[NUMBER_OF_OFFSET];
     int offset_len;
+    reg_t syscall;
 }VmiInfo;
 
 int read_syscall_conf(VmiInfo* vmiinfo);
