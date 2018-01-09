@@ -62,3 +62,16 @@ int read_offset_conf(VmiInfo* vmiinfo)
     return 1;
 }
 
+VmiInfo* get_vmiinfo_vmi(vmi_instance_t vmi)
+{
+    unsigned long vmid = vmi_get_vmid(vmi);
+    int i = 0;
+    for(;i < MAX_VM; i++)
+    {
+        if(globalvm[i]->vmid == vmid){
+            return globalvm[i];
+        }
+    }
+    printf("can't find vm for id: %ld",vmid);
+    return NULL;
+}

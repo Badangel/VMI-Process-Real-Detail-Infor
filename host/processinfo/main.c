@@ -135,6 +135,7 @@ int main (int argc, char **argv)
     vmivm->vmi = vmi;
     strcpy(vmivm->vmname,name);
     strcpy(vmivm->version,"4.4.57");
+    vmivm->vmid = vmi_get_vmid(vmi);
     // Initialize the vm offset.
     if(0 == read_offset_conf(vmivm))
     {

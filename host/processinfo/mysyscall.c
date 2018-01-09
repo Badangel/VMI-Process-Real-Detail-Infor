@@ -27,7 +27,7 @@ int writen = -1;
 event_response_t singlestep_cb(vmi_instance_t vmi, vmi_event_t *event)
 {
    /// printf("enter one cb %d %x\n ",sys_num,trap);
-    VmiInfo* vmivm = globalvm[vm_num];
+    VmiInfo* vmivm = get_vmiinfo_vmi(vmi);
     //printf("modify vmiinfo:%s \n",vmivm->version);
     //vmi_write_8_va(vmi, vmivm->syscallall[sys_num].addr, 0, &trap);
     vmi_write_8_va(vmi, vmivm->syscallall[vmivm->syscall].addr, 0, &trap);
@@ -42,7 +42,7 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
 {
     ///printf("enter trap cb---");
 
-    VmiInfo* vmivm = globalvm[vm_num];
+    VmiInfo* vmivm = get_vmiinfo_vmi(vmi);
     ///printf("vmi addr:%lx\n",&vmi);
     vmi_get_vcpureg(vmi, &rax, RAX, event->vcpu_id);
     vmi_get_vcpureg(vmi, &cr3, CR3, event->vcpu_id);

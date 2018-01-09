@@ -48,4 +48,6 @@ int read_syscall_conf(VmiInfo* vmiinfo);
 
 int read_offset_conf(VmiInfo* vmiinfo);
 
+VmiInfo* get_vmiinfo_vmi(vmi_instance_t vmi);
+
 #endif
