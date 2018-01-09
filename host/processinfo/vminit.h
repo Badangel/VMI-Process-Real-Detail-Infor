@@ -44,6 +44,8 @@ typedef struct vmiinfo
 VmiInfo* globalvm[MAX_VM];
 int vm_num;
 
+int read_version_conf(VmiInfo* vmiinfo);
+
 int read_syscall_conf(VmiInfo* vmiinfo);
 
 int read_offset_conf(VmiInfo* vmiinfo);

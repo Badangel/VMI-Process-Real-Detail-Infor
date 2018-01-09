@@ -24,6 +24,11 @@ void* getACLList(VmiInfo* vmivm, MyList * list)
     strcat(filepath,vmivm->vmname);
     strcat(filepath,"_ACL.conf");
     fp = fopen(filepath,"r");
+    if(fp == NULL)
+    {
+        printf("open %s failed!\n",filepath);
+        return NULL;
+    }
     char tempname[50];
     char *tm = tempname; 
     int temppsid;

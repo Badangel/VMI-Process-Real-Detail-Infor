@@ -134,7 +134,12 @@ int main (int argc, char **argv)
     VmiInfo* vmivm = (VmiInfo*)malloc(sizeof(VmiInfo));
     vmivm->vmi = vmi;
     strcpy(vmivm->vmname,name);
-    strcpy(vmivm->version,"4.4.57");
+    // Initialize the vm version.
+    if(0 == read_version_conf(vmivm))
+    {
+        printf("Failed to init vm version.\n");
+        return 1;
+    }
     vmivm->vmid = vmi_get_vmid(vmi);
     // Initialize the vm offset.
     if(0 == read_offset_conf(vmivm))
@@ -150,17 +155,11 @@ int main (int argc, char **argv)
         return 1;
     }
 
-
-
     next_list_entry = list_head;
-
-
-
 
     int fdpipe[2];
     char buf[256];
     pid_t fpid;
-
 
     if( pipe(fdpipe)<0 )
     {

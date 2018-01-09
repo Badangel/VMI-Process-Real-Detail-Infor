@@ -6,6 +6,25 @@
 #include "vminit.h"
 #include <stdio.h>
 
+int read_version_conf(VmiInfo* vmiinfo)
+{
+    FILE *fp;
+    char vmname[100] = "config/";
+    strcat(vmname,vmiinfo->vmname);
+    strcat(vmname,".conf");
+    fp = fopen(vmname,"r");
+    if(NULL == fp){
+        printf("open %s fail\n",vmname);
+        return 0;
+    }
+    if(EOF == fscanf(fp,"version = %s",vmiinfo->version))
+    {
+        printf("can't find version of %s\n",vmiinfo->vmname);
+        return 0;
+    }
+    return 1;
+}
+
 int read_syscall_conf(VmiInfo* vmiinfo)
 {
     FILE *fp;
