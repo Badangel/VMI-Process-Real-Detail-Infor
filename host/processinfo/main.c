@@ -21,7 +21,7 @@
 #include "myqueue.h"
 #include "mysyscall.h"
 #include "mypsinfo.h"
-//#include "vminit.h"
+#include "vminit.h"
 #include "mydbsql.h"
 #include "acl.h"
 

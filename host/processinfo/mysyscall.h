@@ -14,9 +14,8 @@
 #include "myqueue.h"
 #include "vminit.h"
 
-#define MAX_VM 10
-VmiInfo* globalvm[MAX_VM];
-int vm_num;
+extern VmiInfo* globalvm[];
+extern int vm_num;
 
 #define NUMBER_OF_SYSCALLS 326
 

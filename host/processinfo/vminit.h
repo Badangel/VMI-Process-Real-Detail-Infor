@@ -40,6 +40,10 @@ typedef struct vmiinfo
     reg_t syscall;
 }VmiInfo;
 
+#define MAX_VM 10
+VmiInfo* globalvm[MAX_VM];
+int vm_num;
+
 int read_syscall_conf(VmiInfo* vmiinfo);
 
 int read_offset_conf(VmiInfo* vmiinfo);
