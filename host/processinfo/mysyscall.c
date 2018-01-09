@@ -8,7 +8,6 @@
 #include <signal.h>
 #include "mysyscall.h"
 
-
 /* Signal handler */
 void close_handler(int sig)
 {
@@ -59,13 +58,13 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
 
     //sys_num = rax;
     vmivm->syscall = rax;
-    syscallnum[sys_num]++;
+    syscallnum[vmivm->syscall]++;
 
     ///printf("modify vmiinfo:%s \n",vmivm->version);
     uint8_t temp = 0x0f;
 
-    ///printf("%s %d syscall#=%u right:%x\n",vmivm->version, pid,(unsigned int)rax,vmivm->syscallall[sys_num].pre);
-    vmi_write_8_va(vmi, vmivm->syscallall[sys_num].addr, 0, &(vmivm->syscallall[sys_num].pre));
+    ///printf("%s %d syscall#=%u right:%x\n",vmivm->version, pid,(unsigned int)rax,vmivm->syscallall[vmivm->syscall].pre);
+    vmi_write_8_va(vmi, vmivm->syscallall[vmivm->syscall].addr, 0, &(vmivm->syscallall[vmivm->syscall].pre));
 
 
     event->interrupt_event.reinject = 0;

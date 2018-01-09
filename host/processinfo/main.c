@@ -28,7 +28,6 @@
 int main (int argc, char **argv)
 {
     extern int vm_num;
-    vm_num = 0;
     extern VmiInfo* globalvm[];
     vmi_instance_t vmi;
     addr_t list_head = 0, next_list_entry = 0;
@@ -434,6 +433,7 @@ int main (int argc, char **argv)
 //    printf("cr0:%x",cr0);
         int a;
         // scanf("%d",&a);
+        printf("270 right:%x\n",vmivm->syscallall[270].pre);
 
         vmi_resume_vm(vmi);
 
