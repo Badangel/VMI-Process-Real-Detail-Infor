@@ -57,31 +57,10 @@ int main (int argc, char **argv)
     if (VMI_OS_LINUX == vmi_get_ostype(vmi))
     {
         tasks_offset = vmi_get_offset(vmi, "linux_tasks");
-        name_offset = vmi_get_offset(vmi, "linux_name");
-        pid_offset = vmi_get_offset(vmi, "linux_pid");
+        //unsigned long name_offset = vmi_get_offset(vmi, "linux_name");
+        //unsigned long pid_offset = vmi_get_offset(vmi, "linux_pid");
     }
-    else if (VMI_OS_WINDOWS == vmi_get_ostype(vmi))
-    {
-        tasks_offset = vmi_get_offset(vmi, "win_tasks");
-        name_offset = vmi_get_offset(vmi, "win_pname");
-        pid_offset = vmi_get_offset(vmi, "win_pid");
-    }
-
-    if (0 == tasks_offset)
-    {
-        printf("Failed to find win_tasks\n");
-        goto error_exit;
-    }
-    if (0 == pid_offset)
-    {
-        printf("Failed to find win_pid\n");
-        goto error_exit;
-    }
-    if (0 == name_offset)
-    {
-        printf("Failed to find win_pname\n");
-        goto error_exit;
-    }
+    
 
     /* pause the vm for consistent memory access */
     if (vmi_pause_vm(vmi) != VMI_SUCCESS)
@@ -222,7 +201,7 @@ int main (int argc, char **argv)
                 //printf("!!first!!minflt:%d ",tasknodetmp.minflt);
                 current_process = next_list_entry - tasks_offset;
                 ///printf(" %d-",psnum);
-                get_task_info(vmi,current_process,tasknodetmp);
+                get_task_info(vmivm,current_process,tasknodetmp);
                 tasknodetmp->tslayer = -1;
 
 
