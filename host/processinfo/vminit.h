@@ -25,6 +25,7 @@ typedef struct syscallone
     uint8_t pre;
     ///(1)ps_control (2)file_rw (3)file_control (4)sys_control (5)mem_control (6)net_control (7)socket_control (8)user_control (9)ps_communcation
     int classify;
+    int sign;
 }SyscallOne;
 
 typedef struct vmiinfo
@@ -36,8 +37,8 @@ typedef struct vmiinfo
     int syscall_len;
     SyscallOne* syscallall;
     //OffSet vmoffset[NUMBER_OF_OFFSET];
-    unsigned long vmoffset[NUMBER_OF_OFFSET];
     int offset_len;
+    unsigned long vmoffset[NUMBER_OF_OFFSET];
     reg_t syscall;
 }VmiInfo;
 

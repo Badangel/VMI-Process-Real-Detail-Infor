@@ -382,25 +382,27 @@ int main (int argc, char **argv)
         extern int syscallnum[];
         for(i = 0; i < vmivm->syscall_len; i++)
         {
-            if(vmivm->syscallall[i].addr!=0)
+            if(vmivm->syscallall[i].addr != 0)
             {
                 //printf("syscall num %d",i);
                 vmi_read_8_va(vmi, vmivm->syscallall[i].addr, 0, &(vmivm->syscallall[i].pre));
                 vmi_read_64_va(vmi, vmivm->syscallall[i].addr, 0, &backup_byte);
-                vmi_write_8_va(vmi, vmivm->syscallall[i].addr, 0, &trap);
-            
+                if(vmivm->syscallall[i].sign == 1){
+                    vmi_write_8_va(vmi, vmivm->syscallall[i].addr, 0, &trap);
+                }
+                else{
+                    printf("no change ");
+                }
                 printf("!!%d addr:%lx backup_byte:%lx right:%x\n",i,vmivm->syscallall[i].addr,backup_byte,vmivm->syscallall[i].pre);
             }
             else
             {
-                printf("syscall:%d no change\n",i);
+                printf("syscall:%d no addr\n",i);
                 syscallnum[i] = -1;
             }
 
         }
         // printf("CR0 set over\n");
-        
-        globalvm[vm_num] = vmivm;
         
         vmi_event_t trap_event, singlestep_event;
         SETUP_INTERRUPT_EVENT(&trap_event, 0, trap_cb);
@@ -410,9 +412,8 @@ int main (int argc, char **argv)
         reg_t cr0;
 //    vmi_get_vcpureg(vmi, &cr0, CR0, 0);
 //    printf("cr0:%x",cr0);
-        int a;
-        // scanf("%d",&a);
-        printf("270 right:%x\n",vmivm->syscallall[270].pre);
+       
+        globalvm[vm_num] = vmivm;
 
         vmi_resume_vm(vmi);
 
