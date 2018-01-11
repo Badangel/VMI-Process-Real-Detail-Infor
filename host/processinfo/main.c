@@ -33,7 +33,7 @@ int main (int argc, char **argv)
     addr_t list_head = 0, next_list_entry = 0;
     unsigned long tasks_offset = 0;
     addr_t current_process = 0;
-
+    status_t status;
 
     /* this is the VM or file that we are looking at */
     if (argc != 2)
@@ -232,12 +232,6 @@ int main (int argc, char **argv)
 
                 /*push the ps into the list*/
                 pushQueue(queue,tasknodetmp);
-
-                if (procname)
-                {
-                    free(procname);
-                    procname = NULL;
-                }
 
                 /* follow the next pointer */
                 status = vmi_read_addr_va(vmi, next_list_entry, 0, &next_list_entry);

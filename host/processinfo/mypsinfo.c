@@ -54,8 +54,6 @@ vmi_pid_t parent_pid = 0;
 vmi_pid_t tgid = 0;
 vmi_pid_t group_leader_pid = 0;
 
-status_t status;
-
 addr_t fs = 1;
 
 addr_t files = 1;
@@ -150,7 +148,7 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
         if (file != 0)
         {
             tmp->tsfdnum = tmp->tsfdnum + 1;
-            ///printf("%3d",i);
+            printf("%3d",i);
             int filetype = 50;
             //vmi_read_addr_va(vmiinfo->vmi, file + 16, 0, &f_path);
             vmi_read_addr_va(vmiinfo->vmi, file + vmiinfo->vmoffset[path_offset] + vmiinfo->vmoffset[dentry_offset], 0, &dentry1);
@@ -187,7 +185,7 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
             if (vfsname[0] != '/')
             {
                 filetype = 0;
-                ///printf("vn:%s ",vfsname);
+                printf("vn:%s ",vfsname);
             }
             else
             {
@@ -199,7 +197,7 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
             char filename[255] = "";
             //strcat(filename,get_dentry_name(vmiinfo,dentry1));
             get_dentry_name(vmiinfo, filename, dentry1);
-            ///printf("fs:%s",filename);
+            printf("fs:%s",filename);
 
             if (strcmp(vfsname, "pipe:") == 0)
                 tmp->pipeinfo = tmp->pipeinfo + 1;
@@ -273,16 +271,16 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
                 // a=1;
                 char parentname[255] = "";
                 get_dentry_name(vmiinfo, parentname, d_parent);
-                ///printf("%s",parentname);
+                printf("%s",parentname);
                 if (strcmp(parentname, "/") == 0)
                 {
                     filetype = 0;
                 }
 
-                ///printf("  ");
+                printf("  ");
                 vmi_read_addr_va(vmiinfo->vmi, d_parent + vmiinfo->vmoffset[parent_offset], 0, &d_parent);
             }
-            ///printf("||%d \n",n);
+            printf("||%d \n",n);
 
             ////////////////////////////////////////////////////
             /*small with dentry qstr name.
@@ -428,7 +426,7 @@ void get_task_info(VmiInfo* vmiinfo, addr_t current_process, TaskNode *tmptn)
     */
 
     /* print out the process name */
-    ///printf("\n[%5d] [%5d] %s (struct addr:%lx)\n   rparent:%d  parent:%d ", pid, tgid, procname, current_process, real_parent_pid, parent_pid);
+    printf("\n[%5d] [%5d] %s (struct addr:%lx)\n   rparent:%d  parent:%d ", pid, tgid, procname, current_process, real_parent_pid, parent_pid);
     ///printf("%d",pid);
 
     /*only show mm_struct info not add in struct*/
@@ -535,6 +533,12 @@ void get_task_info(VmiInfo* vmiinfo, addr_t current_process, TaskNode *tmptn)
 
     /* show files info about this task_struct */
     get_files_info(vmiinfo, fd, max_fds, tmptn);
+
+    if(procname)
+    {
+        free(procname);
+        procname = NULL;
+    }
     ///printf("tfa\n");
 } ///end get_task_info
 /*

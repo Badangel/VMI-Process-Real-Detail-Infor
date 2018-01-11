@@ -14,6 +14,7 @@
 #include "myqueue.h"
 #include "vminit.h"
 
+/*
 extern addr_t file;
 
 extern addr_t i_node;
@@ -76,7 +77,7 @@ extern unsigned int max_fds;
 extern char *filename;
 extern char *d_iname;
 extern char *parentname;
-
+*/
 
 /**
  * This funtion get mm_struct info
