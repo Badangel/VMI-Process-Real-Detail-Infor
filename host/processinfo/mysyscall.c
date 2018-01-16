@@ -63,6 +63,9 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
     testerror = 1;
     */
     ///printf("vmi addr:%lx\n",&vmi);
+
+
+
     vmi_get_vcpureg(vmi, &rax, RAX, event->vcpu_id);
     vmi_get_vcpureg(vmi, &cr3, CR3, event->vcpu_id);
     vmi_pid_t pid = vmi_dtb_to_pid(vmi, cr3);
@@ -70,6 +73,44 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
     nowsyscall.pid = pid;
     nowsyscall.sysnum = (unsigned int)rax;
 
+    if(rax == 2){
+        FILE *pf = fopen("log/file.log","a");
+        uint64_t rbx = 0;
+        uint64_t rcx = 0;
+        uint64_t rdx = 0;
+        uint64_t rdi = 0;
+        uint64_t rsi = 0;
+        uint64_t r8 = 0;
+        uint64_t r9 = 0;
+        uint64_t r10 = 0;
+        vmi_get_vcpureg(vmi, &rbx, RBX, event->vcpu_id);
+        vmi_get_vcpureg(vmi, &rcx, RCX, event->vcpu_id);
+        vmi_get_vcpureg(vmi, &rdx, RDX, event->vcpu_id);
+        vmi_get_vcpureg(vmi, &rdi, RDI, event->vcpu_id);
+        vmi_get_vcpureg(vmi, &rsi, RSI, event->vcpu_id);
+        vmi_get_vcpureg(vmi, &r8, R8, event->vcpu_id);
+        vmi_get_vcpureg(vmi, &r9, R9, event->vcpu_id);
+        vmi_get_vcpureg(vmi, &r10, R10, event->vcpu_id);
+        
+        char file_name[255] = "";
+        char c = 33;
+        addr_t filenameadd = rbx;
+        int n = 50;
+        while (c != '\0'&&(c<127&&c>32)&&n>0)
+        {
+            n--;
+            vmi_read_8_va(vmi, filenameadd, pid, &c);
+            filenameadd = filenameadd + 1;
+            printf("%c",c);
+            char c_rmp[2] = {c};
+            strcat(file_name, c_rmp);
+        }
+        printf("\n");
+        fprintf(pf,"%d open rbx:%lx rcv:%lx rdx:%lx rsi:%lx rdi:%lx r8:%lx r9:%lx r10:%lx\n",pid,rbx,rcx,rdx,rsi,rdi,r8,r9,r10);
+        fprintf(pf,"%d open rbx:%ld rcv:%ld rdx:%ld rsi:%ld rdi:%ld r8:%ld r9:%ld r10:%ld\n\n",pid,rbx,rcx,rdx,rsi,rdi,r8,r9,r10);
+        
+        fclose(pf);
+    }
     writen = write(pipenum, &nowsyscall, sizeof(psyscall));
     if(writen<1){
         printf("pipe write error!\n");

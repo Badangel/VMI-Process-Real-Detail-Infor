@@ -167,7 +167,7 @@ int main (int argc, char **argv)
       
 
         /* walk the task list */
-        int n = 100;
+        int n = 1000;
         int readn;
         int flags = fcntl(fdpipe[0], F_GETFL);//get pipe flags
         fcntl(fdpipe[0],F_SETFL,flags | O_NONBLOCK);//modify flags
@@ -432,8 +432,7 @@ int main (int argc, char **argv)
 
         for(i = 0; i < vmivm->syscall_len; i++)
         {
-            ///printf("%s :%d\n",syscalls[i].name,syscallnum[i]);
-            //fprintf(f3,"%s :%d\n",syscalls[i].name,syscallnum[i]);
+            ///printf("%s :%d\n",vmivm->syscallall[i].name,syscallnum[i]);
             if(vmivm->syscallall[i].addr!=0)
             {
                 ///printf("%d ok ",i );
