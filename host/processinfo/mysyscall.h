@@ -45,4 +45,6 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event);
 
 void combineSyscallAndPs(LinkQueue* queue,int sysnum[][11],int psnum);
 
+void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid);
+
 #endif // MYSYSCALL_H
