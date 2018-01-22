@@ -128,6 +128,7 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid)
             char file_name2[255] = "";
             char c = 1;
             addr_t filenameadd2 = rdi;
+            ///printf("%lx\n",rdi);
             int wr = 0;
             while (c != '\0' && (c < 127 && c > 0))
             {
@@ -157,6 +158,9 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid)
             }
         }
         break;
+    case 43:
+        fprintf(pf, "%d connect \n", pid);
+        break;
     case 59:
         vmi_get_vcpureg(vmivm->vmi, &rdx, RDX, 0);
         vmi_get_vcpureg(vmivm->vmi, &rdi, RDI, 0);
@@ -164,6 +168,7 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid)
         
         char c = 1;
         addr_t  filenameadd2= rdi;
+        ///printf("%lx\n",rdi);
         char rdifile[255] = "";
         int wr = 0;
         while (c != '\0' && (c < 127 && c > 0))

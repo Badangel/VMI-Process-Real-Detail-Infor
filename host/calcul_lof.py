@@ -102,10 +102,13 @@ def getlof(data,k,minpts):
                         lofpq.put([dismatrix[i][j]*-1,j])
                     else:
                         lofpq.put(temp)
+        print i,"(",
         while not lofpq.empty():
             temp = lofpq.get()
+            print temp[1],
             lof[i] = lof[i] + lrd[temp[1]]
         lof[i] = (lof[i]/minpts)/lrd[i]
+        print ")"
     return lof
 
 #Calculate LOF of one point
@@ -130,6 +133,7 @@ def getoplof(data,k,minpts,datalen,kdis,lrd,onepoint):
     while not lofpq.empty():
         temp = lofpq.get()
         #print temp,lrd[temp[1]],' ',kdis[temp[1]],oplofdis[temp[1]]
+        print temp[1],
         klrd = klrd + float(lrd[temp[1]])
         if float(kdis[temp[1]]) > oplofdis[temp[1]]:
             opreadis = opreadis + float(kdis[temp[1]])
@@ -192,9 +196,10 @@ def detectState():
     K = 5
     MinPts = 5
     selectdb = DBHelper()
-    sqlstate = "select 100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,read_total_in,writ_total_in,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,ps_out from state where id < 680 and stat = 1"
+    sqlstate = "select 100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,int_sys_in*10,csw_sys_in*10,read_total_in/10,writ_total_in/10,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from state where stat = 1"
     statedata = selectdb.oncesql(sqlstate)
     datalen = len(statedata)
+    print "statedata len:",datalen
     kdis,lrd = trainNormaiData(statedata,datalen,K,MinPts)
 
     startServer()
@@ -203,7 +208,7 @@ def detectState():
     t1.setDaemon(True)
     t1.start()
 
-    sqlstate = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,read_total_in,writ_total_in,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,ps_out from state where stat = 0"
+    sqlstate = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,int_sys_in*10,csw_sys_in*10,read_total_in/10,writ_total_in/10,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from state where stat = 0"
     i = 0
     while True:
         i = i + 1       
@@ -220,7 +225,7 @@ def detectState():
             for a in range(0,datanewlen):
                 alof = getoplof(statedata,K,MinPts,datalen,kdis,lrd,statedatanew[a][1:])
                 changestate = ""
-                if alof > 1.1 or alof < 0.9:
+                if alof > 1.3 or alof < 0.7:
                     changestate = "update state set stat = 1 where id =" + str(statedatanew[a][0])
                     addnum = addnum + 1
                     print "add in",
@@ -285,25 +290,26 @@ def detectPsinfo():
         print time.clock()
         addnum = 0
         for a in range(0,datanewlen):
+            print psonedata[a][0],"(",
             alof = getoplof(psdata,K,MinPts,datalen,kdis,lrd,psonedata[a][1:])
-            if alof > 1.1 or alof < 0.9:
+            if alof > 1.3 or alof < 0.7:
                 changestate = "update psinfo set state = 1 where id =" + str(psonedata[a][0])
                 addnum = addnum + 1
                 db.myupdate(changestate)
                 #db.oncesql(changestate)
-                print "add in",psonedata[a][0],alof,time.clock()
+                print ")add in",alof,time.clock()
             
             else:
                 changestate = "update psinfo set state = 2 where id =" + str(psonedata[a][0])
                 db.oncesql(changestate)
-                print "move out",psonedata[a][0],alof,time.clock()
+                print ")move out",alof,time.clock()
 
         db.allcommit()
         print 'add:',addnum
 
 def detectAllState1():
     selectdb = DBHelper()
-    sqlstate = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,read_total_in,writ_total_in,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,ps_out-ps_root_in-ps_other_in from state where stat = 1"
+    sqlstate = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,int_sys_in*10,csw_sys_in*10,read_total_in/10,writ_total_in/10,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from state where stat = 1"
     statedata = selectdb.oncesql(sqlstate)
     statedata = list(statedata)
     print "len:",len(statedata),len(statedata[0])
@@ -329,8 +335,21 @@ def detectAllPsinfo1():
     for  a in range(0,len(psdata)):
         print a,newid[a],pslof[a] 
 
+
+def quitC(signum,frame):
+    print "you stop"
+    sys.exit()
+
 if __name__ =='__main__':
-    detectPsinfo()
+    try:
+        #signal.signal(signal.SIGINT,quitC)
+        #signal.signal(signal.SIGTERM,quitC)
+        #detectState()
+        detectAllState1()
+        #detectPsinfo()
+        #detectAllPsinfo1()
+    except Exception:
+        print "over"
     
 
     

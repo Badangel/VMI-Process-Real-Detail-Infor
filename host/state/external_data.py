@@ -185,6 +185,7 @@ def exdamain():
                 print net0now
                 print net1now
                 print recv_net_out,recv_netp_out,send_net_out,send_netp_out
+                p is package
                 '''
 
                 net0old = net0now
