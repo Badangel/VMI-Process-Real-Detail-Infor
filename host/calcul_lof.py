@@ -344,8 +344,8 @@ if __name__ =='__main__':
     try:
         #signal.signal(signal.SIGINT,quitC)
         #signal.signal(signal.SIGTERM,quitC)
-        #detectState()
-        detectAllState1()
+        detectState()
+        #detectAllState1()
         #detectPsinfo()
         #detectAllPsinfo1()
     except Exception:

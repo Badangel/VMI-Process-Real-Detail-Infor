@@ -83,8 +83,10 @@ def getOutPsNum(psoutlist,psouttime):
     psoutstate = 1
     #print 'Libvmi','socket',len(ps_lines)
     #print psouttime,ps_lines[len(ps_lines)-1]
+    b = 0
     for a in ps_lines:
         #print "[%3d]"%(psn),a
+        psequal = 0
         psin = a.split()
         #print psin
         if a[0:4]== 'USER':
@@ -94,6 +96,13 @@ def getOutPsNum(psoutlist,psouttime):
             ps_root+=1
         else:
             ps_other+=1
+        #print psin[0],psin[1],psoutlist[b][1],psoutlist[b][2]
+        while b < len(psoutlist) and psin[1]!="p" and int(psin[1]) != int(psoutlist[b][1]):
+            if psoutlist[b][1] != 0 and psoutlist[b][2]!="ps" and psoutlist[b][2]!="lsmod":
+                print "warning :",psoutlist[b][1],psoutlist[b][2],"is hided!"
+            b = b+1
+            psequal = 1
+        b = b+1
         '''
         if psn<=len(psoutlist) and psin[5]!=psoutlist[psn-1][2]:
             print psoutlist[psn-1],
