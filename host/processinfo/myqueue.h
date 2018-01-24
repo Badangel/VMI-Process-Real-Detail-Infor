@@ -12,64 +12,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <mysql/mysql.h>
-
-typedef struct TaskNode{
-    uint32_t tspid;
-    unsigned int tsfdnum;
-    //socket in UNIX,NETLINK,TCP,UDP,TCPv6,other
-    //FdInfo tsfdinfo;
-    int socketinfo[6];
-    //anon_inode in [eventfd],inotify,[timerfd],[signalfd],[eventpoll],other
-    int anon_inodeinfo[6];
-    int pipeinfo;
-    int nullinfo;
-    int numinfo;
-    int fileinfo;
-
-    uint32_t tsparent;
-    int tslayer;
-    uint32_t tsgroupleader;
-    int tsprio;
-    unsigned int tsutime;
-    unsigned int tsstime;
-    unsigned int tsinc_utime;
-    unsigned int tsinc_stime;
-
-    uint64_t tsstart_time;
-    uint64_t tsrealstart_time;
-    unsigned long tsminflt;
-    unsigned long tsmajflt;
-    unsigned long tsinc_minflt;
-    unsigned long tsinc_majflt;
-
-    uint64_t tsrchar;
-    uint64_t tswchar;
-    uint64_t tssyscr;
-    uint64_t tssyscw;
-    uint64_t tsread_bytes;
-	uint64_t tswrite_bytes;
-	uint64_t tscancelled_write_bytes;
-
-    uint64_t tsinc_rchar;
-    uint64_t tsinc_wchar;
-    uint64_t tsinc_syscr;
-    uint64_t tsinc_syscw;
-    uint64_t tsinc_read_bytes;
-	uint64_t tsinc_write_bytes;
-	uint64_t tsinc_cancelled_write_bytes;
-
-    uint32_t tsmm_users;
-    uint32_t tsmm_count;
-    unsigned long tstotal_vm;
-    unsigned long tsstack_vm;
-
-    int syscallnum[11];
-
-    char tsname[255];
-    int state;
-    struct TaskNode* next;
-
-}TaskNode;
+#include <vminit.h>
 
 typedef struct{
     TaskNode* front;

@@ -111,6 +111,12 @@ void freeQueue(LinkQueue* queue){
     while(!isEmpty(queue))
     {
         q = queue->front->next;
+        queue->front->next = q->next;
+        if(queue->rear ==q)
+        {
+            queue->rear = queue->front;
+        }
+        freeMyList(q->socket_list);
         free(q);
     }
 }
@@ -147,7 +153,7 @@ void traversal(MYSQL *mysql,LinkQueue *queue,LinkQueue *pre_queue,int frenum)
         
         ///free(freeq);
     }
-    ///freeQueue(pre_queue);
+    freeQueue(pre_queue);
     pre_queue->front->next = queue->front->next;
     pre_queue->rear = queue->rear;
     printf("insert sql num: %d\n",insertsqlnum);

@@ -23,6 +23,7 @@
 #include "mypsinfo.h"
 #include "vminit.h"
 #include "mydbsql.h"
+#include "myList.h"
 #include "acl.h"
 
 int main (int argc, char **argv)
@@ -445,7 +446,6 @@ int main (int argc, char **argv)
         extern int trapnum;
         extern int singstepnum;
         printf("trap:%d , singstep:%d\n",trapnum,singstepnum);
-
 
         printf("child exit\n");
         exit(0);

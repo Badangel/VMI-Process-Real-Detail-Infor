@@ -52,6 +52,7 @@ void* getACLList(VmiInfo* vmivm, MyList * list)
             resread = fscanf(fp,"%*[^\n]");
         }
     }
+    vmivm->acl_list = list;
     return list;
 }
 

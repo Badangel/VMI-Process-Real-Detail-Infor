@@ -8,8 +8,78 @@
 
 #include <libvmi/libvmi.h>
 #include <stdio.h>
+#include <myList.h>
 
 #define NUMBER_OF_OFFSET 57
+
+typedef struct TaskNode{
+    uint32_t tspid;
+    unsigned int tsfdnum;
+    //socket in UNIX,NETLINK,TCP,UDP,TCPv6,other
+    //FdInfo tsfdinfo;
+    int socketinfo[6];
+    //anon_inode in [eventfd],inotify,[timerfd],[signalfd],[eventpoll],other
+    int anon_inodeinfo[6];
+    int pipeinfo;
+    int nullinfo;
+    int numinfo;
+    int fileinfo;
+
+    uint32_t tsparent;
+    int tslayer;
+    uint32_t tsgroupleader;
+    int tsprio;
+    unsigned int tsutime;
+    unsigned int tsstime;
+    unsigned int tsinc_utime;
+    unsigned int tsinc_stime;
+
+    uint64_t tsstart_time;
+    uint64_t tsrealstart_time;
+    unsigned long tsminflt;
+    unsigned long tsmajflt;
+    unsigned long tsinc_minflt;
+    unsigned long tsinc_majflt;
+
+    uint64_t tsrchar;
+    uint64_t tswchar;
+    uint64_t tssyscr;
+    uint64_t tssyscw;
+    uint64_t tsread_bytes;
+	uint64_t tswrite_bytes;
+	uint64_t tscancelled_write_bytes;
+
+    uint64_t tsinc_rchar;
+    uint64_t tsinc_wchar;
+    uint64_t tsinc_syscr;
+    uint64_t tsinc_syscw;
+    uint64_t tsinc_read_bytes;
+	uint64_t tsinc_write_bytes;
+	uint64_t tsinc_cancelled_write_bytes;
+
+    uint32_t tsmm_users;
+    uint32_t tsmm_count;
+    unsigned long tstotal_vm;
+    unsigned long tsstack_vm;
+
+    int syscallnum[11];
+    MyList* socket_list;
+
+    char tsname[255];
+    int state;
+    struct TaskNode* next;
+
+}TaskNode;
+
+typedef struct socketsr
+{
+    int classify;
+    ///0:don't know 1:tcp 2:udp
+    char sendaddr[50];
+    uint16_t sendport;
+    char recvaddr[50];
+    uint16_t recieveport;
+}SocketSR;
 
 typedef struct offsetkv
 {
@@ -36,6 +106,7 @@ typedef struct vmiinfo
     char version[50];
     int syscall_len;
     SyscallOne* syscallall;
+    MyList* acl_list;
     //OffSet vmoffset[NUMBER_OF_OFFSET];
     int offset_len;
     unsigned long vmoffset[NUMBER_OF_OFFSET];

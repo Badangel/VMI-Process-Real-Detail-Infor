@@ -1,5 +1,6 @@
 #include "myList.h"
 #include <stdlib.h>
+#include <vminit.h>
 //init mylist
 MyList * createMyList()
 {
@@ -18,6 +19,9 @@ void freeMyList(MyList * list)
     while (list->first)
     {
         p = list->first->next;
+        ///SocketSR *sock = list->first->data;
+        ///printf("class:%d saddr:%s:%d -> raddr:%s:%d\n",sock->classify,sock->sendaddr,sock->sendport,sock->recvaddr,sock->recieveport);
+        free(list->first->data);
         free(list->first);
         list->first = p;
     }

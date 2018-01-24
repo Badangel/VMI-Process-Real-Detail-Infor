@@ -154,6 +154,7 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid)
                 */
                 //fprintf(pf,"%d open rbx:%lx rcx:%lx rdx:%lx rsi:%lx rdi:%lx\n",pid,rbx,rcx,rdx,rsi,rdi);
                 //printf("%d open %s mode:%lx flags:%x\n", pid, file_name2, rsi, rdxvalue);
+                ///printf("%lx\n",rdi);
                 fprintf(pf, "%d open %s mode:%lx\n", pid, file_name2, rsi);
             }
         }
