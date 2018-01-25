@@ -141,6 +141,7 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
     int i;
     tmp->tsfdnum = 0;
     MyList * socket_list= createMyList();
+    MyList * file_list= createMyList();
 
     for (i = 0; i < max_file; i++)
     {
@@ -182,12 +183,14 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
 
             char vfsname[255] = "";
             get_dentry_name(vmiinfo, vfsname, droot);
+            char filename[255] = "";
 
             //strcat(vfsname,get_dentry_name(vmiinfo,droot));
             if (vfsname[0] != '/')
             {
                 filetype = 0;
-                ///printf("vn:%s ",vfsname);
+                //printf("vn:%s ",vfsname);
+                
             }
             else
             {
@@ -196,7 +199,7 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
 
             char a = '1';
             int tcp = 1;
-            char filename[255] = "";
+            
             //strcat(filename,get_dentry_name(vmiinfo,dentry1));
             get_dentry_name(vmiinfo, filename, dentry1);
             ///printf("fs:%s",filename);
@@ -291,6 +294,7 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
             char pa = '1';
             int n = 0;
 
+            char filepath[255] = "";
             while (d_parent != 0 && n < filetype)
             {
                 n = n + 1;
@@ -298,16 +302,34 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
                 // a=1;
                 char parentname[255] = "";
                 get_dentry_name(vmiinfo, parentname, d_parent);
-                ///printf("%s",parentname);
+                //printf("%s",parentname);
+                
                 if (strcmp(parentname, "/") == 0)
                 {
                     filetype = 0;
                 }
+                else{
+                    strcat(parentname,filepath);
+                    strcpy(filepath,"/");
+                    strcat(filepath,parentname);
+                }
 
-                ///printf("  ");
+                //printf("/");
                 vmi_read_addr_va(vmiinfo->vmi, d_parent + vmiinfo->vmoffset[parent_offset], 0, &d_parent);
             }
-            ///printf("||%d \n",n);
+            if(vfsname[0]=='/'){
+                strcat(filepath,"/");
+            }
+            else{
+                strcat(vfsname,filepath);
+                strcpy(filepath,vfsname);
+            }
+            FileFD* filefd = malloc(sizeof(FileFD));
+            filefd->fd = i;
+            strcat(filepath,filename);
+            strcpy(filefd->filepath,filepath);
+            myListInsertDataAtLast(file_list, filefd);
+            ///printf("%s||%d \n",filefd->filepath,n);
 
             ////////////////////////////////////////////////////
             /*small with dentry qstr name.
@@ -324,6 +346,7 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
         }
     }
     tmp->socket_list = socket_list;
+    tmp->file_list = file_list;
     //fdinfoaddr = &tmp;
 } ///end get_files_info
 

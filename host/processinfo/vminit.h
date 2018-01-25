@@ -64,6 +64,7 @@ typedef struct TaskNode{
 
     int syscallnum[11];
     MyList* socket_list;
+    MyList* file_list;
 
     char tsname[255];
     int state;
@@ -80,6 +81,13 @@ typedef struct socketsr
     char recvaddr[50];
     uint16_t recieveport;
 }SocketSR;
+
+typedef struct filefd
+{
+    ///0:don't know 1:tcp 2:udp
+    int fd;
+    char filepath[255];
+}FileFD;
 
 typedef struct offsetkv
 {

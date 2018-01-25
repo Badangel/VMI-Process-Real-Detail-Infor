@@ -117,6 +117,7 @@ void freeQueue(LinkQueue* queue){
             queue->rear = queue->front;
         }
         freeMyList(q->socket_list);
+        freeMyList(q->file_list);
         free(q);
     }
 }
