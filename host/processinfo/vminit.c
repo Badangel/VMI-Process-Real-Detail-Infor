@@ -385,3 +385,20 @@ int set_offset(VmiInfo* vmiinfo,char* offsetname,unsigned long value)
     }
     return 0;
 }
+
+int get_file_string(vmi_instance_t vmi, addr_t startaddr, pid_t pid,char *mystring)
+{
+    char c = 0;
+    int boolc = 0;
+    do
+    {
+        if(VMI_SUCCESS == vmi_read_8_va(vmi, startaddr, pid, &c))
+        {
+            startaddr = startaddr + 1;
+            char c_rmp[2] = {c};
+            strcat(mystring, c_rmp);
+            boolc = 1;
+        }
+    }while (c != '\0' && (c < 127 && c > 32));
+    return boolc;
+}

@@ -25,6 +25,7 @@ int sys_num = -1;
 //int pipenum = -1;
 int writen = -1;
 int testerror = 0;
+
 event_response_t singlestep_cb(vmi_instance_t vmi, vmi_event_t *event)
 {
     /*
@@ -34,8 +35,8 @@ event_response_t singlestep_cb(vmi_instance_t vmi, vmi_event_t *event)
     }
     testerror = 0;
     */
-   /// printf("enter one cb %d %x\n ",sys_num,trap);
     VmiInfo* vmivm = get_vmiinfo_vmi(vmi);
+   /// printf("enter one cb %d %x\n ",sys_num,trap);
     //printf("modify vmiinfo:%s \n",vmivm->version);
     //vmi_write_8_va(vmi, vmivm->syscallall[sys_num].addr, 0, &trap);
     if(vmivm->syscallall[vmivm->syscall].sign == 1){
@@ -72,6 +73,7 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
     nowsyscall.sysnum = (unsigned int)rax;
 
     record_syscall(vmivm,rax,pid);
+
     writen = write(pipenum, &nowsyscall, sizeof(psyscall));
     if(writen<1){
         printf("pipe write error!\n");
@@ -126,26 +128,9 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid)
         vmi_get_vcpureg(vmivm->vmi, &rsi, RSI, 0);
         if(rdi < 0x7ff000000000){
             char file_name2[255] = "";
-            char c = 1;
             addr_t filenameadd2 = rdi;
-            ///printf("%lx\n",rdi);
-            int wr = 0;
-            while (c != '\0' && (c < 127 && c > 0))
-            {
-                vmi_read_8_va(vmivm->vmi, filenameadd2, pid, &c);
-                filenameadd2 = filenameadd2 + 1;
-                if (c == 1)
-                {
-                    c = 0;
-                }
-                else
-                {
-                    wr = 1;
-                    char c_rmp[2] = {c};
-                    strcat(file_name2, c_rmp);
-                }
-            }
-            if (wr == 1)
+            
+            if(1 == get_file_string(vmivm->vmi,filenameadd2,pid,file_name2))
             {
                 /*
                 unsigned int rdxvalue = 0;
@@ -155,7 +140,7 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid)
                 //fprintf(pf,"%d open rbx:%lx rcx:%lx rdx:%lx rsi:%lx rdi:%lx\n",pid,rbx,rcx,rdx,rsi,rdi);
                 //printf("%d open %s mode:%lx flags:%x\n", pid, file_name2, rsi, rdxvalue);
                 ///printf("%lx\n",rdi);
-                fprintf(pf, "%d open %s mode:%lx\n", pid, file_name2, rsi);
+                fprintf(pf, "%d open %s mode:%lx fileaddr:%lx\n", pid, file_name2, rsi,rdi);
             }
         }
         break;
@@ -167,29 +152,12 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid)
         vmi_get_vcpureg(vmivm->vmi, &rdi, RDI, 0);
         vmi_get_vcpureg(vmivm->vmi, &rsi, RSI, 0);
         
-        char c = 1;
         addr_t  filenameadd2= rdi;
         ///printf("%lx\n",rdi);
         char rdifile[255] = "";
-        int wr = 0;
-        while (c != '\0' && (c < 127 && c > 0))
+        if(1 == get_file_string(vmivm->vmi,filenameadd2,pid,rdifile))
         {
-            vmi_read_8_va(vmivm->vmi, filenameadd2, pid, &c);
-            filenameadd2 = filenameadd2 + 1;
-            if (c == 1)
-            {
-                c = 0;
-            }
-            else
-            {
-                wr = 1;
-                char c_rmp[2] = {c};
-                strcat(rdifile, c_rmp);
-            }
-        }
-        if(wr == 1)
-        {
-            fprintf(pf,"%d exe rdifile:%s\n",pid,rdifile);
+            fprintf(pf,"%d exe %s\n",pid,rdifile);
         }
         break;
     default:

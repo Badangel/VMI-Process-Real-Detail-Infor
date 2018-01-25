@@ -132,4 +132,6 @@ VmiInfo* get_vmiinfo_vmi(vmi_instance_t vmi);
 
 int set_offset(VmiInfo* vmiinfo,char* offsetname,unsigned long value);
 
+int get_file_string(vmi_instance_t vmi,addr_t startaddr, pid_t pid,char* mystring);
+
 #endif
