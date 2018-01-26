@@ -117,7 +117,6 @@ char *get_dentry_name(VmiInfo* vmiinfo, char *name, addr_t dentry_addr)
     //qstr_d_name = (char*)malloc(255);
     char c = 1;
     vmi_read_addr_va(vmiinfo->vmi, dentry_addr + vmiinfo->vmoffset[dname_offset] + vmiinfo->vmoffset[qname_offset], 0, &p_name);
-    //while(c != NULL && filetype != 0)
     while (c != '\0')
     {
         vmi_read_8_va(vmiinfo->vmi, p_name, 0, &c);
@@ -145,7 +144,6 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
 
     for (i = 0; i < max_file; i++)
     {
-
         vmi_read_addr_va(vmiinfo->vmi, fdaddr, 0, &file);
         fdaddr = fdaddr + fdadd;
         if (file != 0)
@@ -189,8 +187,7 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
             if (vfsname[0] != '/')
             {
                 filetype = 0;
-                //printf("vn:%s ",vfsname);
-                
+                //printf("vn:%s ",vfsname); 
             }
             else
             {
@@ -265,7 +262,6 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
             }
             if (tcp == 0)
             {
-                
                 vmi_read_addr_va(vmiinfo->vmi, file + vmiinfo->vmoffset[private_date_offset], 0, &private_date);
                 vmi_read_addr_va(vmiinfo->vmi, private_date + vmiinfo->vmoffset[socket_sk_offset], 0, &sk);
                 vmi_read_64_va(vmiinfo->vmi, sk + vmiinfo->vmoffset[sk_v6_daddr_offset], 0, &v6_daddr);
@@ -308,7 +304,8 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
                 {
                     filetype = 0;
                 }
-                else{
+                else
+                {
                     strcat(parentname,filepath);
                     strcpy(filepath,"/");
                     strcat(filepath,parentname);
@@ -320,7 +317,8 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
             if(vfsname[0]=='/'){
                 strcat(filepath,"/");
             }
-            else{
+            else
+            {
                 strcat(vfsname,filepath);
                 strcpy(filepath,vfsname);
             }
@@ -359,7 +357,6 @@ char *get_qstr_name(VmiInfo* vmiinfo, char *name, addr_t qstr_addr)
     //qstr_name = (char*)malloc(255);
     //qstr_d_name[0] = '';
     char c = 1;
-    //while(c != NULL && filetype != 0)
     ///printf("??");
     while (c != '\0')
     {

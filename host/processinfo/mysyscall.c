@@ -160,6 +160,40 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid)
             fprintf(pf,"%d exe %s\n",pid,rdifile);
         }
         break;
+    /*call exit for children
+    case 60:
+        fprintf(pf,"%d exit\n",pid);
+        printf("%d exit\n",pid);
+        break;
+        */
+    case 62:
+        vmi_get_vcpureg(vmivm->vmi, &rdi, RDI, 0);
+        fprintf(pf,"%d kill %ld\n",pid,rdi);
+        printf("%d kill %ld\n",pid,rdi);
+        break;
+    case 87:
+        vmi_get_vcpureg(vmivm->vmi, &rdi, RDI, 0);
+        addr_t  unlink_pathaddr= rdi;
+        ///printf("%lx\n",rdi);
+        char unlink_path[255] = "";
+        if(1 == get_file_string(vmivm->vmi,unlink_pathaddr,pid,unlink_path))
+        {
+            fprintf(pf,"%d unlink %s\n",pid,unlink_path);
+            printf("%d unlink %s\n",pid,unlink_path);
+        }
+        break;
+    case 176:
+        fprintf(pf,"%d module delete\n",pid);
+        printf("%d module delete\n",pid);
+        break;
+    case 231:
+        fprintf(pf,"%d group exit\n",pid);
+        printf("%d group exit\n",pid);
+        break;
+    case 313:
+        fprintf(pf,"%d module init\n",pid);
+        printf("%d module init\n",pid);
+        break;
     default:
         break;
     }

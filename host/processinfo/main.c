@@ -433,7 +433,7 @@ int main (int argc, char **argv)
 
         for(i = 0; i < vmivm->syscall_len; i++)
         {
-            ///printf("%s :%d\n",vmivm->syscallall[i].name,syscallnum[i]);
+            ///printf("%3d %s :%d\n",i,vmivm->syscallall[i].name,syscallnum[i]);
             if(vmivm->syscallall[i].addr!=0)
             {
                 ///printf("%d ok ",i );
