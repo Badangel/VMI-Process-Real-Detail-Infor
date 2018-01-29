@@ -289,7 +289,7 @@ int main (int argc, char **argv)
                     }
                 }
                 ++getsysnum;
-                ///printf("%d father get %d do syscall %d\n",readn, getsyscall.pid,getsyscall.sysnum);
+               /// printf("%d father get %d do syscall %d\n",readn, getsyscall.pid,getsyscall.sysnum);
 
             }
             while(readn>0);
@@ -359,7 +359,7 @@ int main (int argc, char **argv)
         static uint8_t trap = 0xCC;
         reg_t sysenter_ip = 0;
         addr_t phys_sysenter_ip = 0;
-        addr_t sys_call_table_addr = 0xffffffff81216840;
+        addr_t sys_call_table_addr = 0xffffffff81a001c0;
         ///vmi_instance_t vmi;
         // Initialize the libvmi library.
         
@@ -381,7 +381,7 @@ int main (int argc, char **argv)
             {
                 //printf("syscall num %d",i);
                 vmi_read_8_va(vmi, vmivm->syscallall[i].addr, 0, &(vmivm->syscallall[i].pre));
-                vmi_read_64_va(vmi, vmivm->syscallall[i].addr, 0, &backup_byte);
+                vmi_read_64_va(vmi, sys_call_table_addr+i*8, 0, &backup_byte);
                 if(vmivm->syscallall[i].sign == 1){
                     vmi_write_8_va(vmi, vmivm->syscallall[i].addr, 0, &trap);
                 }
@@ -389,7 +389,7 @@ int main (int argc, char **argv)
                     printf("no change ");
                 }
                 printf("!!%d addr:%lx backup_byte:%lx right:%x\n",i,vmivm->syscallall[i].addr,backup_byte,vmivm->syscallall[i].pre);
-                if(vmivm->syscallall[i].reallyaddr != backup_byte){
+                if(vmivm->syscallall[i].addr != backup_byte){
                     printf("\n%d addr:%s backup_byte:%lx was hooked!!\n",i,vmivm->syscallall[i].name,vmivm->syscallall[i].reallyaddr);
                 }
             }
@@ -416,13 +416,16 @@ int main (int argc, char **argv)
         vmi_resume_vm(vmi);
 
         uint64_t aftermodify;
-        vmi_read_64_va(vmi, sys_call_table_addr, 0, &aftermodify);
+        vmi_read_64_va(vmi, sys_call_table_addr+16, 0, &aftermodify);
         vmi_get_vcpureg(vmi, &sysenter_ip, SYSENTER_EIP, 0);
         printf("vcpu 0 MSR_SYSENTER_IP == %llx\n", (unsigned long long)sysenter_ip);
         printf("sys_call_table_entry_addr == %lx\n", backup_byte);
         printf("afte modify sys_call_table_entry_addr == %lx\n", aftermodify);
         int n1 = 5000;
-
+        addr_t syscall1;
+        
+        vmi_read_64_va(vmi, vmivm->syscallall[2].addr, 0, &syscall1);
+        printf("1 syscall == %lx\n", syscall1);
         while(!interrupted&&ppid == getppid())
         {
             status = vmi_events_listen(vmi,500);
@@ -437,10 +440,11 @@ int main (int argc, char **argv)
         for(i = 0; i < vmivm->syscall_len; i++)
         {
             ///printf("%3d %s :%d\n",i,vmivm->syscallall[i].name,syscallnum[i]);
-            if(vmivm->syscallall[i].addr!=0)
+            if(vmivm->syscallall[i].sign == 1)
             {
                 ///printf("%d ok ",i );
                 vmi_write_8_va(vmi, vmivm->syscallall[i].addr, 0, &(vmivm->syscallall[i].pre));
+                
             }
 
         }

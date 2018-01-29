@@ -36,11 +36,11 @@ event_response_t singlestep_cb(vmi_instance_t vmi, vmi_event_t *event)
     testerror = 0;
     */
     VmiInfo* vmivm = get_vmiinfo_vmi(vmi);
-   /// printf("enter one cb %d %x\n ",sys_num,trap);
+   /// printf("enter one cb %d \n ",vmivm->syscall);
     //printf("modify vmiinfo:%s \n",vmivm->version);
     //vmi_write_8_va(vmi, vmivm->syscallall[sys_num].addr, 0, &trap);
     if(vmivm->syscallall[vmivm->syscall].sign == 1){
-        vmi_write_8_va(vmi, vmivm->syscallall[vmivm->syscall].addr, 0, &trap);
+       vmi_write_8_va(vmi, vmivm->syscallall[vmivm->syscall].addr, 0, &trap);
     }
     ++singstepnum;
  
@@ -52,7 +52,7 @@ event_response_t singlestep_cb(vmi_instance_t vmi, vmi_event_t *event)
 
 event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
 {
-    ///printf("enter trap cb---");
+    ///printf("enter trap cb-----------------\n");
     
 
     VmiInfo* vmivm = get_vmiinfo_vmi(vmi);
