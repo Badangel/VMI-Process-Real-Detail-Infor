@@ -44,7 +44,7 @@ int read_syscall_conf(VmiInfo* vmiinfo)
     ///printf("ready enter:%d\n",vmiinfo->syscall_len);
     while(i-1 < vmiinfo->syscall_len){
         syscallinfo[i].sign = 0;
-        numofread = fscanf(fp,"%d %lx %s %d %d%*[^\n]",&(syscallinfo[i].num),&(syscallinfo[i].addr),syscallinfo[i].name,&syscallinfo[i].classify,&syscallinfo[i].sign);
+        numofread = fscanf(fp,"%d %lx %s %lx %d %d%*[^\n]",&(syscallinfo[i].num),&(syscallinfo[i].addr),syscallinfo[i].name,&(syscallinfo[i].reallyaddr),&syscallinfo[i].classify,&syscallinfo[i].sign);
         syscallinfo[i].pre = 0x00;
         SyscallOne* temp = vmiinfo->syscallall;
         i++;

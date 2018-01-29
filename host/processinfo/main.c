@@ -389,6 +389,9 @@ int main (int argc, char **argv)
                     printf("no change ");
                 }
                 printf("!!%d addr:%lx backup_byte:%lx right:%x\n",i,vmivm->syscallall[i].addr,backup_byte,vmivm->syscallall[i].pre);
+                if(vmivm->syscallall[i].reallyaddr != backup_byte){
+                    printf("\n%d addr:%s backup_byte:%lx was hooked!!\n",i,vmivm->syscallall[i].name,vmivm->syscallall[i].reallyaddr);
+                }
             }
             else
             {
