@@ -299,7 +299,7 @@ int main (int argc, char **argv)
 
             setParentLayer(queue);
 
-            traversal(&mysql,queue,pre_queue,frenum);
+            traversal(vmivm,&mysql,queue,pre_queue,frenum);
             if(frenum > 0){
                 frenum--;
             }
@@ -390,7 +390,7 @@ int main (int argc, char **argv)
                 }
                 printf("!!%d addr:%lx backup_byte:%lx right:%x\n",i,vmivm->syscallall[i].addr,backup_byte,vmivm->syscallall[i].pre);
                 if(vmivm->syscallall[i].addr != backup_byte){
-                    printf("\n%d addr:%s backup_byte:%lx was hooked!!\n",i,vmivm->syscallall[i].name,vmivm->syscallall[i].reallyaddr);
+                    printf("\n%d addr:%s read in right addr:%lx was hooked!!\n",i,vmivm->syscallall[i].name,vmivm->syscallall[i].reallyaddr);
                 }
             }
             else
@@ -422,10 +422,7 @@ int main (int argc, char **argv)
         printf("sys_call_table_entry_addr == %lx\n", backup_byte);
         printf("afte modify sys_call_table_entry_addr == %lx\n", aftermodify);
         int n1 = 5000;
-        addr_t syscall1;
-        
-        vmi_read_64_va(vmi, vmivm->syscallall[2].addr, 0, &syscall1);
-        printf("1 syscall == %lx\n", syscall1);
+
         while(!interrupted&&ppid == getppid())
         {
             status = vmi_events_listen(vmi,500);
@@ -443,8 +440,7 @@ int main (int argc, char **argv)
             if(vmivm->syscallall[i].sign == 1)
             {
                 ///printf("%d ok ",i );
-                vmi_write_8_va(vmi, vmivm->syscallall[i].addr, 0, &(vmivm->syscallall[i].pre));
-                
+                vmi_write_8_va(vmi, vmivm->syscallall[i].addr, 0, &(vmivm->syscallall[i].pre));   
             }
 
         }

@@ -4,7 +4,7 @@ import Queue
 import time,threading
 from state.external_data import exdamain
 from state.external_data import startServer
-
+import sys
 #Calculate the distance of each point
 def getdisance(data,datalen):
     #print data
@@ -192,7 +192,7 @@ def trainNormaiData(data,datalen,K,MinPts):
     print "train over!!"
     return kdis,lrd
 
-def detectState():
+def detectState(domname):
     K = 5
     MinPts = 5
     selectdb = DBHelper()
@@ -208,7 +208,7 @@ def detectState():
     t1.setDaemon(True)
     t1.start()
 
-    sqlstate = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,int_sys_in*10,csw_sys_in*10,read_total_in/10,writ_total_in/10,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from state where stat = 0"
+    sqlstate = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,int_sys_in*10,csw_sys_in*10,read_total_in/10,writ_total_in/10,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from nowstate where stat = 0 and domname = '"+domname+"'"
     i = 0
     while True:
         i = i + 1       
@@ -226,7 +226,7 @@ def detectState():
                 alof = getoplof(statedata,K,MinPts,datalen,kdis,lrd,statedatanew[a][1:])
                 changestate = ""
                 if alof > 1.3 or alof < 0.7:
-                    changestate = "update state set stat = 1 where id =" + str(statedatanew[a][0])
+                    changestate = "update nowstate set stat = 1 where id =" + str(statedatanew[a][0])
                     addnum = addnum + 1
                     print "add in",
                     selectdb.myupdate(changestate)
@@ -234,13 +234,13 @@ def detectState():
                     print statedatanew[a][0],alof,time.clock()
                 
                 else:
-                    changestate = "update state set stat = 2 where id =" + str(statedatanew[a][0])
+                    changestate = "update nowstate set stat = 2 where id =" + str(statedatanew[a][0])
                     selectdb.oncesql(changestate)
                     print "move out",statedatanew[a][0],alof,time.clock()
             selectdb.allcommit()
 
 
-def detectPsinfo():
+def detectPsinfo(domname):
     K = 5
     MinPts = 5
     db = DBHelper()
@@ -275,7 +275,7 @@ def detectPsinfo():
     '''
     print time.clock()
     #delete minflt
-    sqlpsone = "select id,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 0"
+    sqlpsone = "select id,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from nowpsinfo where state = 0 and domname = '"+domname+"'"
     i = 0
     while True:
         i = i+1
@@ -293,23 +293,23 @@ def detectPsinfo():
             print psonedata[a][0],"(",
             alof = getoplof(psdata,K,MinPts,datalen,kdis,lrd,psonedata[a][1:])
             if alof > 1.3 or alof < 0.7:
-                changestate = "update psinfo set state = 1 where id =" + str(psonedata[a][0])
+                changestate = "update nowpsinfo set state = 1 where id =" + str(psonedata[a][0])
                 addnum = addnum + 1
                 db.myupdate(changestate)
                 #db.oncesql(changestate)
                 print ")add in",alof,time.clock()
             
             else:
-                changestate = "update psinfo set state = 2 where id =" + str(psonedata[a][0])
+                changestate = "update nowpsinfo set state = 2 where id =" + str(psonedata[a][0])
                 db.oncesql(changestate)
                 print ")move out",alof,time.clock()
 
         db.allcommit()
         print 'add:',addnum
 
-def detectAllState1():
+def detectAllState1(domname):
     selectdb = DBHelper()
-    sqlstate = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,int_sys_in*10,csw_sys_in*10,read_total_in/10,writ_total_in/10,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from state where stat = 1"
+    sqlstate = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,int_sys_in*10,csw_sys_in*10,read_total_in/10,writ_total_in/10,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from nowstate where stat = 1 and domname = '"+domname+"'"
     statedata = selectdb.oncesql(sqlstate)
     statedata = list(statedata)
     print "len:",len(statedata),len(statedata[0])
@@ -321,9 +321,9 @@ def detectAllState1():
     for  a in range(0,len(statedata)):
         print a,newid[a],statelof[a]
 
-def detectAllPsinfo1():
+def detectAllPsinfo1(domname):
     selectdb = DBHelper()
-    sqlps = "select id,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 1"
+    sqlps = "select id,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from nowpsinfo where state = 1 and domname = '"+domname+"'"
     psdata = selectdb.oncesql(sqlps)
     psdata = list(psdata)
     print "len:",len(psdata),len(psdata[0])
@@ -342,12 +342,16 @@ def quitC(signum,frame):
 
 if __name__ =='__main__':
     try:
-        #signal.signal(signal.SIGINT,quitC)
-        #signal.signal(signal.SIGTERM,quitC)
-        detectState()
-        #detectAllState1()
-        #detectPsinfo()
-        #detectAllPsinfo1()
+
+        if len(sys.argv)==2:
+            detectState(sys.argv[1])
+            #signal.signal(signal.SIGINT,quitC)
+            #signal.signal(signal.SIGTERM,quitC)
+            #detectAllState1(sys.argv[1])
+            #detectPsinfo(sys.argv[1])
+            #detectAllPsinfo1(sys.argv[1])
+        else:
+            print "input vm name!!"
     except Exception:
         print "over"
     

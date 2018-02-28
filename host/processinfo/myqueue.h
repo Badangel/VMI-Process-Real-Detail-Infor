@@ -34,7 +34,7 @@ void popQueue(LinkQueue *queue);
 
 void freeQueue(LinkQueue* queue);
 
-void traversal(MYSQL *mysql,LinkQueue* queue,LinkQueue* pre_queue,int frenum);
+void traversal(VmiInfo* vmivm,MYSQL *mysql,LinkQueue* queue,LinkQueue* pre_queue,int frenum);
 
 int getParentLayer(int parentid,LinkQueue* queue);
 
