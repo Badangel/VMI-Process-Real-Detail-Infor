@@ -3,6 +3,7 @@ import math
 import Queue
 import time,threading
 from state.external_data import exdamain
+from run_psinfo import runpsinfo
 from state.external_data import startServer
 import sys
 #Calculate the distance of each point
@@ -193,6 +194,7 @@ def trainNormaiData(data,datalen,K,MinPts):
     return kdis,lrd
 
 def detectState(domname):
+    print 'enter detect state'
     K = 5
     MinPts = 5
     selectdb = DBHelper()
@@ -204,7 +206,7 @@ def detectState(domname):
 
     startServer()
 
-    t1 = threading.Thread(target = exdamain,args =[],name='getstate')
+    t1 = threading.Thread(target = exdamain,args =[domname],name='getstate')
     t1.setDaemon(True)
     t1.start()
 
@@ -230,6 +232,9 @@ def detectState(domname):
                     addnum = addnum + 1
                     print "add in",
                     selectdb.myupdate(changestate)
+
+                    warningsql = "insert into warning(domname,class,pssqlid,lof) values('%s','%s','%d','%f')"%(domname,"state anomaly",statedatanew[a][0],alof)
+                    selectdb.myupdate(warningsql)
                     #db.oncesql(changestate)
                     print statedatanew[a][0],alof,time.clock()
                 
@@ -241,6 +246,7 @@ def detectState(domname):
 
 
 def detectPsinfo(domname):
+    print 'enter detect psinfo'
     K = 5
     MinPts = 5
     db = DBHelper()
@@ -251,6 +257,10 @@ def detectPsinfo(domname):
     datalen = len(psdata)
 
     kdis,lrd = trainNormaiData(psdata,datalen,K,MinPts)
+
+    t1 = threading.Thread(target = runpsinfo,args =[domname],name='getpsinfo')
+    t1.setDaemon(True)
+    t1.start()
     '''
     filekdis = open ('kdisfile.py', 'w') 
     filekdis.writelines('kdis = '+str(kdis))
@@ -275,7 +285,7 @@ def detectPsinfo(domname):
     '''
     print time.clock()
     #delete minflt
-    sqlpsone = "select id,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from nowpsinfo where state = 0 and domname = '"+domname+"'"
+    sqlpsone = "select id,psid,psname,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from nowpsinfo where state = 0 and domname = '"+domname+"'"
     i = 0
     while True:
         i = i+1
@@ -291,11 +301,13 @@ def detectPsinfo(domname):
         addnum = 0
         for a in range(0,datanewlen):
             print psonedata[a][0],"(",
-            alof = getoplof(psdata,K,MinPts,datalen,kdis,lrd,psonedata[a][1:])
+            alof = getoplof(psdata,K,MinPts,datalen,kdis,lrd,psonedata[a][3:])
             if alof > 1.3 or alof < 0.7:
                 changestate = "update nowpsinfo set state = 1 where id =" + str(psonedata[a][0])
                 addnum = addnum + 1
                 db.myupdate(changestate)
+                warningsql = "insert into warning(domname,class,sqlid,psid,psname,lof) values('%s','%s','%d','%d','%s','%f')"%(domname,"Process Anomaly",statedatanew[a][0],statedatanew[a][1],statedatanew[a][2],alof)
+                selectdb.myupdate(warningsql)
                 #db.oncesql(changestate)
                 print ")add in",alof,time.clock()
             
@@ -342,16 +354,19 @@ def quitC(signum,frame):
 
 if __name__ =='__main__':
     try:
-
-        if len(sys.argv)==2:
-            detectState(sys.argv[1])
+        if len(sys.argv)==3:
+            if sys.argv[2]=='1':
+                detectState(sys.argv[1])
+            if sys.argv[2]=='2':
+                detectPsinfo(sys.argv[1])
             #signal.signal(signal.SIGINT,quitC)
             #signal.signal(signal.SIGTERM,quitC)
-            #detectAllState1(sys.argv[1])
-            #detectPsinfo(sys.argv[1])
-            #detectAllPsinfo1(sys.argv[1])
+            if sys.argv[2]=='3':
+                detectAllState1(sys.argv[1])
+            if sys.argv[2]=='4':
+                detectAllPsinfo1(sys.argv[1])
         else:
-            print "input vm name!!"
+            print "input vm name or way 1:state 2:ps 3:all state 4:all pinfo!!"
     except Exception:
         print "over"
     

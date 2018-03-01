@@ -70,7 +70,7 @@ def getOutModuleNum(module_num):
     #print 'module intern num: ',len(module_lines)-1,' ',module_num
     file_module.truncate(0)
 
-def getOutPsNum(vmi,psoutlist,psouttime):
+def getOutPsNum(vmi,domname,psoutlist,psouttime):
     ps_root = 0
     ps_other = 0
     psoutstate = 0
@@ -100,7 +100,7 @@ def getOutPsNum(vmi,psoutlist,psouttime):
         #print psin[0],psin[1],psoutlist[b][1],psoutlist[b][2]
         while b < len(psoutlist) and psin[1]!="p" and int(psin[1]) != int(psoutlist[b][1]):
             if psoutlist[b][1] != 0 and psoutlist[b][2]!="ps" and psoutlist[b][2]!="lsmod":
-                warining_w(vmi,psoutlist[b][1],psoutlist[b][2])
+                warining_w(vmi,domname,psoutlist[b][1],psoutlist[b][2])
             b = b+1
             psequal = 1
         b = b+1
@@ -124,11 +124,11 @@ def startServer():
     t.start()
 
 
-def exdamain():
+def exdamain(domname):
     print "exdamain start!!!"
     try:
         i = 0
-        vmname  = "ubuntu1604"
+        vmname  = domname
         conn,domU = connectLibvirt(vmname)
        
         cpuoldtime = 0
@@ -219,7 +219,7 @@ def exdamain():
                 module_num = [0,0,0,0]#relation about 0,1,2,more module
                 getOutModuleNum(module_num)
 
-                psoutstate,ps_root,ps_other = getOutPsNum(vmi,psoutlist,psouttime)
+                psoutstate,ps_root,ps_other = getOutPsNum(vmi,domname,psoutlist,psouttime)
                 if psoutstate == 0:
                     print 'ps recv error!'
                     continue
@@ -249,7 +249,7 @@ if __name__ =='__main__':
         signal.signal(signal.SIGINT,quit)
         signal.signal(signal.SIGTERM,quit) 
         startServer()
-        exdamain()
+        exdamain(sys.argv[1])
     except Exception:
         print "over"
     
