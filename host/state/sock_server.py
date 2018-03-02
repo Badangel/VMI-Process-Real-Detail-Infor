@@ -1,7 +1,7 @@
 import SocketServer  
 import time  
 import signal  
-  
+import global_var as Globalvar
  
 class MyHandler(SocketServer.BaseRequestHandler):  
     def handle(self):
@@ -10,6 +10,7 @@ class MyHandler(SocketServer.BaseRequestHandler):
             a=0  
             data = self.request.recv(2048)
             data = self.request.recv(2048)
+
             while True: 
                 a=a+1
                 #print ('wait....',a)

@@ -2,11 +2,17 @@ from state.DBHelper import DBHelper
 import math
 import Queue
 import time,threading
-from state.external_data import exdamain
+#from state.external_data import exdamain
 from run_psinfo import runpsinfo
-from state.external_data import startServer
+import SocketServer
+import state.external_data as exdata
+#from state.external_data import startServer
+#from state.external_data import stopServer
+import state.global_var as Globalvar
 import sys
+import signal
 #Calculate the distance of each point
+
 def getdisance(data,datalen):
     #print data
     dismatrix = [[0 for i in range(datalen)] for i in range(datalen)]
@@ -204,9 +210,14 @@ def detectState(domname):
     print "statedata len:",datalen
     kdis,lrd = trainNormaiData(statedata,datalen,K,MinPts)
 
-    startServer()
+    ser=exdata.startServer()
+    Globalvar.setser(ser)
+    #ser=ServerWork('223.3.85.28',9999)
+    #t = threading.Thread(target = ser.server_start,args =[],name='test')
+    #t.setDaemon(True)
+    #t.start()
 
-    t1 = threading.Thread(target = exdamain,args =[domname],name='getstate')
+    t1 = threading.Thread(target = exdata.exdamain,args =[domname],name='getstate')
     t1.setDaemon(True)
     t1.start()
 
@@ -233,7 +244,7 @@ def detectState(domname):
                     print "add in",
                     selectdb.myupdate(changestate)
 
-                    warningsql = "insert into warning(domname,class,pssqlid,lof) values('%s','%s','%d','%f')"%(domname,"state anomaly",statedatanew[a][0],alof)
+                    warningsql = "insert into warning(domname,class,sqlid,lof) values('%s','%s','%d','%f')"%(domname,"state anomaly",statedatanew[a][0],alof)
                     selectdb.myupdate(warningsql)
                     #db.oncesql(changestate)
                     print statedatanew[a][0],alof,time.clock()
@@ -348,27 +359,29 @@ def detectAllPsinfo1(domname):
         print a,newid[a],pslof[a] 
 
 
-def quitC(signum,frame):
-    print "you stop"
+def quit(signum,frame):
+    Globalvar.setexit()
+    exdata.stopServer(Globalvar.getser())
+    print "you stop calcul_lof!!"
     sys.exit()
 
 if __name__ =='__main__':
     try:
+        signal.signal(signal.SIGINT, quit)
+        signal.signal(signal.SIGTERM, quit)
         if len(sys.argv)==3:
             if sys.argv[2]=='1':
                 detectState(sys.argv[1])
             if sys.argv[2]=='2':
                 detectPsinfo(sys.argv[1])
-            #signal.signal(signal.SIGINT,quitC)
-            #signal.signal(signal.SIGTERM,quitC)
             if sys.argv[2]=='3':
                 detectAllState1(sys.argv[1])
             if sys.argv[2]=='4':
                 detectAllPsinfo1(sys.argv[1])
         else:
             print "input vm name or way 1:state 2:ps 3:all state 4:all pinfo!!"
-    except Exception:
-        print "over"
+    except Exception,exc:
+        print "calcul_lof over",exc
     
 
     

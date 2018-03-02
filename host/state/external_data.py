@@ -12,6 +12,7 @@ import subprocess
 import copy
 import libvirt
 import sys
+import global_var as Globalvar
 
 def stof(num):
     if num[-1] == "k":
@@ -122,6 +123,10 @@ def startServer():
     t = threading.Thread(target = ser.server_start,args =[],name='test')
     t.setDaemon(True)
     t.start()
+    return ser
+def stopServer(ser):
+    print "shutdown port:",ser.port
+    ser.server.shutdown()
 
 
 def exdamain(domname):
@@ -151,7 +156,7 @@ def exdamain(domname):
         file_ps.truncate()
         file_ps.close()
 
-        while True:
+        while True and Globalvar.getexit():
             try:
                 print i
                 
@@ -235,14 +240,15 @@ def exdamain(domname):
                 #print "insert into state(domid,domname,usr_cpu_in,sys_cpu_in ,idl_cpu_in,wai_cpu_in,hiq_cpu_in ,siq_cpu_in,read_disk_in , write_disk_in ,recv_net_in ,send_net_in ,usd_mem_in , buff_mem_in ,cach_mem_in ,free_mem_in ,usd_swap_in ,free_swap_in ,pagein_in ,pageout_in ,interrupts1_in , interrupts2_in ,interrupts3_in ,loadavg1_in ,loadavg5_in ,loadavg15_in ,int_sys_in , csw_sys_in ,read_total_in , writ_total_in , run_procs_in ,blk_procs_in ,new_procs_in ,ps_root_in  ,ps_other_in ,lsmod0_in ,lsmod1_in ,lsmod2_in ,lsmodother_in ,use_cpu_out ,read_disk_out , write_disk_out ,recv_net_out ,send_net_out , lsmod_out ,ps_out ) values('%d','%s','%d','%d' ,'%d','%d','%d' ,'%d','%f' , '%f' ,'%f' ,'%f' ,'%f' , '%f' ,'%f' ,'%f' ,'%f' ,'%f' ,'%f' ,'%f' ,'%d' , '%d' ,'%d' ,'%f' ,'%f' ,'%f' ,'%f' , '%f' ,'%f' , '%f' , '%f' ,'%f' ,'%f' ,'%d'  ,'%d' ,'%d' ,'%d' ,'%d' ,'%d' ,'%d' ,'%f' , '%f' ,'%f' ,'%f' , '%d' ,'%d')"%(0,'ubuntu1604',int(vmstat[0]),int(vmstat[1]) ,int(vmstat[2]),int(vmstat[3]),int(vmstat[4]) ,int(vmstat[5]),stof(vmstat[6]) , stof(vmstat[7])  ,stof(vmstat[20])  ,stof(vmstat[21])  ,stof(vmstat[16])  , stof(vmstat[17])  ,stof(vmstat[18])  ,stof(vmstat[19])  ,stof(vmstat[27])  ,stof(vmstat[28])  ,stof(vmstat[8])  ,stof(vmstat[9])  ,int(vmstat[10]) , int(vmstat[11]) ,int(vmstat[12]) ,float(vmstat[13]) ,float(vmstat[14]) ,float(vmstat[15]) ,stof(vmstat[29])  , stof(vmstat[30])  ,float(vmstat[25]) , float(vmstat[26]) , float(vmstat[22]) ,float(vmstat[23]) ,float(vmstat[24]) ,ps_root  ,ps_other ,module0_num ,module1_num ,module2_num ,moduleo_num ,use_cpu_out ,read_disk_out , write_disk_out ,recv_net_out ,send_net_out , lsmod_out ,ps_out )
                 #sql = "insert into state(domid,domname,usr_cpu_in,sys_cpu_in ,idl_cpu_in,wai_cpu_in,hiq_cpu_in ,siq_cpu_in,read_disk_in , write_disk_in ,recv_net_in ,send_net_in ,usep_mem_in,usd_mem_in , buff_mem_in ,cach_mem_in ,free_mem_in ,usep_swap_in,usd_swap_in ,free_swap_in ,pagein_in ,pageout_in ,interrupts1_in , interrupts2_in ,interrupts3_in ,loadavg1_in ,loadavg5_in ,loadavg15_in ,int_sys_in , csw_sys_in ,read_total_in , writ_total_in , run_procs_in ,blk_procs_in ,new_procs_in ,ps_root_in  ,ps_other_in ,lsmod0_in ,lsmod1_in ,lsmod2_in ,lsmodother_in ,use_cpu_out ,read_disk_out , write_disk_out ,recv_net_out ,send_net_out , lsmod_out ,ps_out,stat ) values('%d','%s','%d','%d' ,'%d','%d','%d' ,'%d','%f' , '%f' ,'%f' ,'%f' ,'%f' , '%f' ,'%f' ,'%f' ,'%f' ,'%f' ,'%f' ,'%f' ,'%d' , '%d' ,'%d' ,'%f' ,'%f' ,'%f' ,'%f' , '%f' ,'%f' , '%f' , '%f' ,'%f' ,'%f' ,'%d'  ,'%d' ,'%d' ,'%d' ,'%d' ,'%d' ,'%d' ,'%f' , '%f' ,'%f' ,'%f' , '%d' ,'%d','%d')"%(0,'ubuntu1604',int(vmstat[0]),int(vmstat[1]) ,int(vmstat[2]),int(vmstat[3]),int(vmstat[4]) ,int(vmstat[5]),stof(vmstat[6]) , stof(vmstat[7])  ,stof(vmstat[20])  ,stof(vmstat[21])  ,stof(vmstat[16])  , stof(vmstat[17])  ,stof(vmstat[18])  ,stof(vmstat[19])  ,stof(vmstat[27])  ,stof(vmstat[28])  ,stof(vmstat[8])  ,stof(vmstat[9])  ,int(vmstat[10]) , int(vmstat[11]) ,int(vmstat[12]) ,float(vmstat[13]) ,float(vmstat[14]) ,float(vmstat[15]) ,stof(vmstat[29])  , stof(vmstat[30])  ,float(vmstat[25]) , float(vmstat[26]) , float(vmstat[22]) ,float(vmstat[23]) ,float(vmstat[24]) ,ps_root  ,ps_other ,module0_num ,module1_num ,module2_num ,moduleo_num ,use_cpu_out ,read_disk_out , write_disk_out ,recv_net_out ,send_net_out , lsmod_out ,ps_out ,1)
                 sql = "insert into nowstate(domid,domname,usr_cpu_in,sys_cpu_in ,idl_cpu_in,wai_cpu_in,hiq_cpu_in ,siq_cpu_in,read_disk_in , write_disk_in ,recv_net_in ,send_net_in ,usep_mem_in,usd_mem_in , buff_mem_in ,cach_mem_in ,free_mem_in ,usep_swap_in,usd_swap_in ,free_swap_in ,pagein_in ,pageout_in ,interrupts1_in , interrupts2_in ,interrupts3_in ,loadavg1_in ,loadavg5_in ,loadavg15_in ,int_sys_in , csw_sys_in ,read_total_in , writ_total_in , run_procs_in ,blk_procs_in ,new_procs_in ,ps_root_in  ,ps_other_in ,lsmod0_in ,lsmod1_in ,lsmod2_in ,lsmodother_in ,use_cpu_out ,read_disk_out , write_disk_out ,recv_net_out ,recv_netp_out,send_net_out,send_netp_out , lsmod_out ,ps_out,stat ) values('%d','%s','%d','%d' ,'%d','%d','%d' ,'%d','%f' , '%f' ,'%f' ,'%f','%d' ,'%f' , '%f' ,'%f' ,'%f' ,'%d','%f' ,'%f' ,'%f' ,'%f' ,'%d' , '%d' ,'%d' ,'%f' ,'%f' ,'%f' ,'%f' , '%f' ,'%f' , '%f' , '%f' ,'%f' ,'%f' ,'%d'  ,'%d' ,'%d' ,'%d' ,'%d' ,'%d' ,'%d' ,'%f' , '%f' ,'%f' ,'%d','%f', '%d', '%d' ,'%d','%d')"%(0,'ubuntu1604',int(vmstat[0]),int(vmstat[1]) ,int(vmstat[2]),int(vmstat[3]),int(vmstat[4]) ,int(vmstat[5]),stof(vmstat[6]) , stof(vmstat[7]) ,stof(vmstat[20])  ,stof(vmstat[21]),100*stof(vmstat[16])/(stof(vmstat[16])+stof(vmstat[17])+stof(vmstat[18])+stof(vmstat[19])) ,stof(vmstat[16])  , stof(vmstat[17])  ,stof(vmstat[18])  ,stof(vmstat[19])  ,100*stof(vmstat[27])/(stof(vmstat[27])+stof(vmstat[28])),stof(vmstat[27])  ,stof(vmstat[28])  ,stof(vmstat[8])  ,stof(vmstat[9])  ,int(vmstat[10]) , int(vmstat[11]) ,int(vmstat[12]) ,float(vmstat[13]) ,float(vmstat[14]) ,float(vmstat[15]) ,stof(vmstat[29])  , stof(vmstat[30])  ,float(vmstat[25]) , float(vmstat[26]) , float(vmstat[22]) ,float(vmstat[23]) ,float(vmstat[24]) ,ps_root  ,ps_other ,module_num[0] ,module_num[1] ,module_num[2] ,module_num[3] ,use_cpu_out ,read_disk_out , write_disk_out ,recv_net_out ,recv_netp_out ,send_net_out ,send_netp_out , lsmod_out ,ps_out ,0)
-                data = db.oncesql(sql)
+                if Globalvar.getexit():
+                    data = db.oncesql(sql)
+                    print "add 1 to nowstate"
             except IndexError:
                 print "list out range"
                 continue
-        print ('?????')
-        time.sleep(12)
+        #stopServer()
     except Exception:
-        print "over"
+        print "exdamain over"
 
 if __name__ =='__main__':
     try:
