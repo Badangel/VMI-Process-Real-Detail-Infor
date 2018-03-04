@@ -51,7 +51,7 @@ def connectLibvirt(vmname):
     return conn,domU
     
 def getOutModuleNum(domname,module_num):
-    file_module = open(domname+'.module', 'r+')
+    file_module = open('tempfile/'+domname+'.module', 'r+')
     module_lines = file_module.readlines()
     for a in module_lines:
         module_apply = re.findall('\s([0-9]{1,3})\s',a)
@@ -75,7 +75,7 @@ def getOutPsNum(vmi,domname,psoutlist,psouttime):
     ps_root = 0
     ps_other = 0
     psoutstate = 0
-    file_ps = open(domname+'.ps', 'r+')
+    file_ps = open('tempfile/'+domname+'.ps', 'r+')
     ps_lines = file_ps.readlines()
     #print ps_lines[0][0]
     if len(ps_lines)==0 or ps_lines[0][0]!='U':
@@ -145,17 +145,15 @@ def exdamain(domname):
         net0old = []
         net1old = []
         vmi = pyvmi.init_complete(vmname)
-        print '00----00'
-        file_module = open(vmname+'.module', 'r+')
+        file_module = open('tempfile/'+vmname+'.module', 'r+')
         file_module.truncate()
         file_module.close()
-        file_dstat = open(vmname+'.d_stat', 'r+')
+        file_dstat = open('tempfile/'+vmname+'.d_stat', 'r+')
         file_dstat.truncate()
         file_dstat.close()
-        file_ps = open(vmname+'.ps', 'r+')
+        file_ps = open('tempfile/'+vmname+'.ps', 'r+')
         file_ps.truncate()
         file_ps.close()
-        print '0000'
 
         while True and Globalvar.getexit():
             try:
@@ -209,8 +207,7 @@ def exdamain(domname):
                 time.sleep(0.4)
                 cpuoldtime = cpunowtime
                 time.sleep(0.7)
-                print '111'
-                file_dstat = open(vmname+'.d_stat', 'r+')
+                file_dstat = open('tempfile/'+vmname+'.d_stat', 'r+')
                 dstat_lines = file_dstat.readline()
                 if len(dstat_lines) == 0:
                     print 'No data'
@@ -221,10 +218,8 @@ def exdamain(domname):
                 vmstat = re.compile('([0-9a-zA-Z.]+?)\s').findall(k)
                 #print vmstat
                 file_dstat.truncate(0)
-                print '222'
                 module_num = [0,0,0,0]#relation about 0,1,2,more module
                 getOutModuleNum(domname,module_num)
-                print '333'
                 psoutstate,ps_root,ps_other = getOutPsNum(vmi,domname,psoutlist,psouttime)
                 if psoutstate == 0:
                     print 'ps recv error!'

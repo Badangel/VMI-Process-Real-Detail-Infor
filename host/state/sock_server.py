@@ -24,17 +24,17 @@ class MyHandler(SocketServer.BaseRequestHandler):
                     stat = data[0]
                     if stat=='s':
                         d_stat=data[2:]
-                        file_object = open(vmname+'.d_stat','w')
+                        file_object = open('tempfile/'+vmname+'.d_stat','w')
                         file_object.writelines(d_stat)
                         #print self.client_address,time.ctime(),' dstat\n',d_stat
                     if stat=='p':
                         ps_stat=data[2:]
-                        file_ps = open(vmname+'.ps','w')
+                        file_ps = open('tempfile/'+vmname+'.ps','w')
                         file_ps.writelines(ps_stat)
                         #print self.client_address,time.ctime(),' ps\n',ps_stat
                     if stat=='m':
                         lsmod_stat=data[2:]
-                        file_module = open(vmname+'.module','w')
+                        file_module = open('tempfile/'+vmname+'.module','w')
                         file_module.writelines(lsmod_stat)
                         #print self.client_address,time.ctime(),' module\n',lsmod_stat
                     
