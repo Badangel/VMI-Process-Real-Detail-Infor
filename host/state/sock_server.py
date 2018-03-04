@@ -2,6 +2,7 @@ import SocketServer
 import time  
 import signal  
 import global_var as Globalvar
+from vmaddr_config import vmaddr
  
 class MyHandler(SocketServer.BaseRequestHandler):  
     def handle(self):
@@ -10,6 +11,8 @@ class MyHandler(SocketServer.BaseRequestHandler):
             a=0  
             data = self.request.recv(2048)
             data = self.request.recv(2048)
+            vmname = vmaddr[self.client_address[0]]
+            print 'socket vm is:',vmname
 
             while True: 
                 a=a+1
@@ -21,17 +24,17 @@ class MyHandler(SocketServer.BaseRequestHandler):
                     stat = data[0]
                     if stat=='s':
                         d_stat=data[2:]
-                        file_object = open('d_stat','w')
+                        file_object = open(vmname+'.d_stat','w')
                         file_object.writelines(d_stat)
                         #print self.client_address,time.ctime(),' dstat\n',d_stat
                     if stat=='p':
                         ps_stat=data[2:]
-                        file_ps = open('ps','w')
+                        file_ps = open(vmname+'.ps','w')
                         file_ps.writelines(ps_stat)
                         #print self.client_address,time.ctime(),' ps\n',ps_stat
                     if stat=='m':
                         lsmod_stat=data[2:]
-                        file_module = open('module','w')
+                        file_module = open(vmname+'.module','w')
                         file_module.writelines(lsmod_stat)
                         #print self.client_address,time.ctime(),' module\n',lsmod_stat
                     
