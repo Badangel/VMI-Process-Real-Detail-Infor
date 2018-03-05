@@ -11,6 +11,7 @@ import state.external_data as exdata
 import state.global_var as Globalvar
 import sys
 import signal
+from state.warning_log import *
 #Calculate the distance of each point
 
 def getdisance(data,datalen):
@@ -140,7 +141,7 @@ def getoplof(data,k,minpts,datalen,kdis,lrd,onepoint):
     while not lofpq.empty():
         temp = lofpq.get()
         #print temp,lrd[temp[1]],' ',kdis[temp[1]],oplofdis[temp[1]]
-        print temp[1],
+        #print temp[1],
         klrd = klrd + float(lrd[temp[1]])
         if float(kdis[temp[1]]) > oplofdis[temp[1]]:
             opreadis = opreadis + float(kdis[temp[1]])
@@ -203,23 +204,13 @@ def detectState(domname):
     print 'enter detect state'
     K = 5
     MinPts = 5
-    selectdb = DBHelper()
+    selectdb = DBHelper.DBHelper()
     sqlstate = "select 100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,int_sys_in*10,csw_sys_in*10,read_total_in/10,writ_total_in/10,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from state where stat = 1"
     statedata = selectdb.oncesql(sqlstate)
     datalen = len(statedata)
     print "statedata len:",datalen
     kdis,lrd = trainNormaiData(statedata,datalen,K,MinPts)
 
-    ser=exdata.startServer()
-    Globalvar.setser(ser)
-    #ser=ServerWork('223.3.85.28',9999)
-    #t = threading.Thread(target = ser.server_start,args =[],name='test')
-    #t.setDaemon(True)
-    #t.start()
-
-    t1 = threading.Thread(target = exdata.exdamain,args =[domname],name='getstate')
-    t1.setDaemon(True)
-    t1.start()
 
     sqlstate = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,int_sys_in*10,csw_sys_in*10,read_total_in/10,writ_total_in/10,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from nowstate where stat = 0 and domname = '"+domname+"'"
     i = 0
@@ -230,10 +221,10 @@ def detectState(domname):
         datanewlen = len(statedatanew)
         if datanewlen == 0:
             time.sleep(1)
-            print "sleep 1!!",i
+            printlog("sleep 1!!"+str(i))
             continue
         else:
-            print 'start time:',time.clock()
+            printlog('start time:'+str(time.clock()))
             addnum = 0
             for a in range(0,datanewlen):
                 alof = getoplof(statedata,K,MinPts,datalen,kdis,lrd,statedatanew[a][1:])
@@ -241,18 +232,17 @@ def detectState(domname):
                 if alof > 1.3 or alof < 0.7:
                     changestate = "update nowstate set stat = 1 where id =" + str(statedatanew[a][0])
                     addnum = addnum + 1
-                    print "add in",
                     selectdb.myupdate(changestate)
 
                     warningsql = "insert into warning(domname,class,sqlid,lof) values('%s','%s','%d','%f')"%(domname,"state anomaly",statedatanew[a][0],alof)
                     selectdb.myupdate(warningsql)
                     #db.oncesql(changestate)
-                    print statedatanew[a][0],alof,time.clock()
+                    printlog('add in '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock()))
                 
                 else:
                     changestate = "update nowstate set stat = 2 where id =" + str(statedatanew[a][0])
                     selectdb.oncesql(changestate)
-                    print "move out",statedatanew[a][0],alof,time.clock()
+                    printlog('move out '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock()))
             selectdb.allcommit()
 
 
@@ -260,7 +250,7 @@ def detectPsinfo(domname):
     print 'enter detect psinfo'
     K = 5
     MinPts = 5
-    db = DBHelper()
+    db = DBHelper.DBHelper()
     print time.clock()
     sqlps = "select layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 1 "
     psdata = db.oncesql(sqlps)
@@ -269,9 +259,7 @@ def detectPsinfo(domname):
 
     kdis,lrd = trainNormaiData(psdata,datalen,K,MinPts)
 
-    t1 = threading.Thread(target = runpsinfo,args =[domname],name='getpsinfo')
-    t1.setDaemon(True)
-    t1.start()
+
     '''
     filekdis = open ('kdisfile.py', 'w') 
     filekdis.writelines('kdis = '+str(kdis))
@@ -317,7 +305,7 @@ def detectPsinfo(domname):
                 changestate = "update nowpsinfo set state = 1 where id =" + str(psonedata[a][0])
                 addnum = addnum + 1
                 db.myupdate(changestate)
-                warningsql = "insert into warning(domname,class,sqlid,psid,psname,lof) values('%s','%s','%d','%d','%s','%f')"%(domname,"Process Anomaly",statedatanew[a][0],statedatanew[a][1],statedatanew[a][2],alof)
+                warningsql = "insert into warning(domname,class,sqlid,psid,psname,lof) values('%s','%s','%d','%d','%s','%f')"%(domname,"Process Anomaly",psonedata[a][0],psonedata[a][1],psonedata[a][2],alof)
                 selectdb.myupdate(warningsql)
                 #db.oncesql(changestate)
                 print ")add in",alof,time.clock()
@@ -331,7 +319,7 @@ def detectPsinfo(domname):
         print 'add:',addnum
 
 def detectAllState1(domname):
-    selectdb = DBHelper()
+    selectdb = DBHelper.DBHelper()
     sqlstate = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,int_sys_in*10,csw_sys_in*10,read_total_in/10,writ_total_in/10,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from nowstate where stat = 1 and domname = '"+domname+"'"
     statedata = selectdb.oncesql(sqlstate)
     statedata = list(statedata)
@@ -345,7 +333,7 @@ def detectAllState1(domname):
         print a,newid[a],statelof[a]
 
 def detectAllPsinfo1(domname):
-    selectdb = DBHelper()
+    selectdb = DBHelper.DBHelper()
     sqlps = "select id,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from nowpsinfo where state = 1 and domname = '"+domname+"'"
     psdata = selectdb.oncesql(sqlps)
     psdata = list(psdata)
@@ -357,7 +345,19 @@ def detectAllPsinfo1(domname):
     print "lof len:",len(pslof)
     for  a in range(0,len(psdata)):
         print a,newid[a],pslof[a] 
+def clearwarning():
+    file_module = open('log/warning.log', 'r+')
+    file_module.truncate()
+    file_module.close()
 
+def clearprintlog():
+    file_module = open('log/print.log', 'r+')
+    file_module.truncate()
+    file_module.close()
+def clearfilelog():
+    file_module = open('log/file.log', 'r+')
+    file_module.truncate()
+    file_module.close()
 
 def quit(signum,frame):
     Globalvar.setexit()
@@ -369,17 +369,55 @@ if __name__ =='__main__':
     try:
         signal.signal(signal.SIGINT, quit)
         signal.signal(signal.SIGTERM, quit)
-        if len(sys.argv)==3:
-            if sys.argv[2]=='1':
-                detectState(sys.argv[1])
-            if sys.argv[2]=='2':
-                detectPsinfo(sys.argv[1])
-            if sys.argv[2]=='3':
-                detectAllState1(sys.argv[1])
-            if sys.argv[2]=='4':
-                detectAllPsinfo1(sys.argv[1])
-        else:
-            print "input vm name or way 1:state 2:ps 3:all state 4:all pinfo!!"
+        over = True
+        ser=exdata.startServer()
+        Globalvar.setser(ser)
+        clearwarning()
+        clearprintlog()
+        clearfilelog()
+        while over:
+            print "enter your command:"
+            command = raw_input()
+            comands = command.split()
+            if len(comands)==2:
+                domname,operation = command.split()
+            else:
+                if command == 'q':
+                    break
+                else:
+                    print "command error !"
+                    continue
+            operation = int(operation)
+            print "(command:)",command
+
+            if operation==1:
+                print 'enter detect domU state'
+                t0 = threading.Thread(target = detectState,args =[domname],name='detectstate')
+                t0.setDaemon(True)
+                t0.start()
+                t1 = threading.Thread(target = exdata.exdamain,args =[domname],name='getstate')
+                t1.setDaemon(True)
+                t1.start()
+            if operation==2:
+                print 'enter detect domU psinfo'
+                t0 = threading.Thread(target = detectPsinfo,args =[domname],name='detectPsinfo')
+                t0.setDaemon(True)
+                t0.start()
+                t1 = threading.Thread(target = runpsinfo,args =[domname],name='getpsinfo')
+                t1.setDaemon(True)
+                t1.start()
+            if operation==3:
+                t0 = threading.Thread(target = detectAllState1,args =[domname],name='detectAllState1')
+                t0.setDaemon(True)
+                t0.start()
+            if operation==4:
+                t0 = threading.Thread(target = detectAllPsinfo1,args =[domname],name='detectAllPsinfo1')
+                t0.setDaemon(True)
+                t0.start()
+        Globalvar.setexit()
+        exdata.stopServer(Globalvar.getser())
+        print "exit calcul_lof normal!!"
+
     except Exception,exc:
         print "calcul_lof over",exc
     

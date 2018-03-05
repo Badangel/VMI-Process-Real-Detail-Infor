@@ -53,6 +53,9 @@ int main (int argc, char **argv)
         printf("Failed to init LibVMI library.\n");
         return 1;
     }
+    else{
+         printf("%s success to init LibVMI library.\n",name);
+    }
 
     /* init the offset values */
     if (VMI_OS_LINUX == vmi_get_ostype(vmi))
