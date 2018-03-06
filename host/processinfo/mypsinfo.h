@@ -113,6 +113,8 @@ void get_fs_info(VmiInfo* vmiinfo, addr_t fs);
 
 void get_task_info(VmiInfo* vmiinfo,addr_t current_process, TaskNode *tmptn);
 
+void get_psname_by_pid(VmiInfo* vmiinfo,vmi_pid_t pid,char* psname);
+
 //void setoffset(VmiInfo* vmiinfo,char* key, unsigned long value);
 
 //int getoffset(VmiInfo* vmiinfo,char* key);

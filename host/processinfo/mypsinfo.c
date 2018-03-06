@@ -589,6 +589,31 @@ void get_task_info(VmiInfo* vmiinfo, addr_t current_process, TaskNode *tmptn)
     }
     ///printf("tfa\n");
 } ///end get_task_info
+
+void get_psname_by_pid(VmiInfo* vmiinfo,vmi_pid_t pid,char* psname)
+{
+    addr_t current_process = 0;
+    vmi_pid_t nowpid = 0;
+    unsigned long tasks_offset = vmi_get_offset(vmiinfo->vmi, "linux_tasks");
+    addr_t list_head = 0, next_list_entry = 0;
+    next_list_entry = vmi_translate_ksym2v(vmiinfo->vmi, "init_task") + tasks_offset;
+    list_head = next_list_entry;
+    strcpy(psname,"none");
+    do{
+        current_process = next_list_entry - tasks_offset;
+        vmi_read_32_va(vmiinfo->vmi, current_process + vmiinfo->vmoffset[pid_offset], 0, (uint32_t *)&nowpid);
+        if(nowpid == pid){
+            char* psnames = vmi_read_str_va(vmiinfo->vmi, current_process + vmiinfo->vmoffset[name_offset], 0);
+            strcpy(psname,psnames);
+            break;
+        }
+        vmi_read_addr_va(vmiinfo->vmi, next_list_entry, 0, &next_list_entry);
+        
+    }
+    while(next_list_entry != list_head);
+    
+
+}
 /*
 void setoffset(VmiInfo *vmiinfo, char *key, unsigned long value)
 {

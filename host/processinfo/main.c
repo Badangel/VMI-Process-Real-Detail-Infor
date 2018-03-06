@@ -377,6 +377,7 @@ int main (int argc, char **argv)
         vmi_pause_vm(vmi);
 
         uint64_t backup_byte = 0;
+        uint64_t code = 0;
         extern int syscallnum[];
         for(i = 0; i < vmivm->syscall_len; i++)
         {
@@ -385,13 +386,14 @@ int main (int argc, char **argv)
                 //printf("syscall num %d",i);
                 vmi_read_8_va(vmi, vmivm->syscallall[i].addr, 0, &(vmivm->syscallall[i].pre));
                 vmi_read_64_va(vmi, sys_call_table_addr+i*8, 0, &backup_byte);
+                vmi_read_64_va(vmi, vmivm->syscallall[i].addr, 0, &code);
                 if(vmivm->syscallall[i].sign == 1){
                     vmi_write_8_va(vmi, vmivm->syscallall[i].addr, 0, &trap);
                 }
                 else{
                     printf("no change ");
                 }
-                printf("!!%d addr:%lx backup_byte:%lx right:%x\n",i,vmivm->syscallall[i].addr,backup_byte,vmivm->syscallall[i].pre);
+                printf("!!%d addr:%lx backup_byte:%lx right:%x code:%lx\n",i,vmivm->syscallall[i].addr,backup_byte,vmivm->syscallall[i].pre,code);
                 if(vmivm->syscallall[i].addr != backup_byte){
                     printf("\n%d addr:%s read in right addr:%lx was hooked!!\n",i,vmivm->syscallall[i].name,vmivm->syscallall[i].reallyaddr);
                 }
