@@ -236,6 +236,7 @@ def detectState(domname):
 
                     warningsql = "insert into warning(domname,class,sqlid,lof) values('%s','%s','%d','%f')"%(domname,"state anomaly",statedatanew[a][0],alof)
                     selectdb.myupdate(warningsql)
+                    warining_st(domname,statedatanew[a][0],alof)
                     #db.oncesql(changestate)
                     printlog('add in '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock()))
                 
@@ -305,8 +306,9 @@ def detectPsinfo(domname):
                 changestate = "update nowpsinfo set state = 1 where id =" + str(psonedata[a][0])
                 addnum = addnum + 1
                 db.myupdate(changestate)
-                warningsql = "insert into warning(domname,class,sqlid,psid,psname,lof) values('%s','%s','%d','%d','%s','%f')"%(domname,"Process Anomaly",psonedata[a][0],psonedata[a][1],psonedata[a][2],alof)
-                selectdb.myupdate(warningsql)
+                warningsql = "insert into warning(domname,class,sqlid,psid,pmname,lof) values('%s','%s','%d','%d','%s','%f')"%(domname,"Process Anomaly",psonedata[a][0],psonedata[a][1],psonedata[a][2],alof)
+                db.myupdate(warningsql)
+                warining_ps(domname,psonedata[a][1],psonedata[a][2],alof)
                 #db.oncesql(changestate)
                 print ")add in",alof,time.clock()
             

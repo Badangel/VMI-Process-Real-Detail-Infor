@@ -19,7 +19,7 @@ class DBHelper:
             res = cursor.execute(sql)
         except:
             self.conn.rollback()
-            print "mysql error"
+            print "mysql error!!!",sql
         finally:
             self.conn.commit()
             #print "commit one data"
@@ -48,11 +48,11 @@ class DBHelper:
             res = cursor.execute(sql)
         except:
             self.conn.rollback()
-            print "mysql error"
+            print "mysql error",sql
         finally:
             if isAutoCommit == True:
                 self.conn.commit()
-        return res
+            return res
     
     #do commit 
     def allcommit(self):

@@ -75,7 +75,7 @@ if __name__=='__main__':
                 try:
                 #s.settimeout(1)
                     s.connect((HOST,PORT))
-                    print "connect success!"
+                    print "connect success!, again"
                     stat_popen = subprocess.Popen(['dstat','-cdgilmnprsy','--noheaders'],stdout = subprocess.PIPE)
                     #get dstat value
                     break

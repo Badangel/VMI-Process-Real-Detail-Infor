@@ -249,7 +249,7 @@ def exdamain(domname):
                 continue
         #stopServer()
     except Exception:
-        print "exdamain over"
+        print "exdamain fail"
 
 if __name__ =='__main__':
     try:

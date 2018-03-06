@@ -195,6 +195,8 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid)
         printf("%d module init\n",pid);
         break;
     default:
+        //fprintf(pf,"%d %ld\n",pid,rax);
+        //printf("%d %ld\n",pid,rax);
         break;
     }
     fclose(pf);
