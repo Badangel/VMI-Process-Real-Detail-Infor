@@ -122,7 +122,7 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid)
     uint64_t rsi = 0;
     char psname[80]="";
     get_psname_by_pid(vmivm,pid,psname);
-    fprintf(pf, "%s- ",psname);
+    fprintf(pf, "%s-%s(%ld) ",psname,vmivm->syscallall[rax].name,rax);
     switch(rax)
     {
     case 2:
@@ -198,7 +198,7 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid)
         printf("%d module init\n",pid);
         break;
     default:
-        fprintf(pf,"%d %ld\n",pid,rax);
+        fprintf(pf,"psnum:%d \n",pid);
         //printf("%d %ld\n",pid,rax);
         break;
     }

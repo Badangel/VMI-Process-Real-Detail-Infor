@@ -7,4 +7,4 @@ bin_PROGRAMS = vmiprocessinfo
 AM_LDFLAGS = -L$(top_builddir)/libvmi/.libs/
 LDADD = -lvmi -lm $(LIBS) $(GLIB_LIBS)
 
-vmiprocessinfo_SOURCES = myqueue.c myList.c acl.c vminit.c mysyscall.c mypsinfo.c main.c
+vmiprocessinfo_SOURCES = myqueue.c myList.c acl.c vminit.c mysyscall.c mypsinfo.c mymodinfo.c main.c

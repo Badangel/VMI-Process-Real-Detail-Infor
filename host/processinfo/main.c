@@ -25,6 +25,7 @@
 #include "mydbsql.h"
 #include "myList.h"
 #include "acl.h"
+#include "mymodinfo.h"
 
 int main (int argc, char **argv)
 {
@@ -168,7 +169,11 @@ int main (int argc, char **argv)
         MyList * acl_list= createMySearchList(compare2ps);
         getACLList(vmivm,acl_list);
         ///myListOutput(acl_list, outputACL);
-      
+        vmivm->modulelist = NULL;
+        MyList * initmod_list= createMySearchList(compare2mod);
+        int initmod_num = get_module_info(vmivm,initmod_list);
+        set_module_info(vmivm,initmod_list,initmod_num);
+        printf("init module ok!!\n");
 
         /* walk the task list */
         int n = 1000;
@@ -276,11 +281,18 @@ int main (int argc, char **argv)
             n--;
             //printf("This is farther, write hello to pipe\n");
             //write(fd[1], "hello\n", 25);
+            int module_change = 0;
 
             int getsysnum = 0;
             do
             {
                 readn = read(fdpipe[0], &getsyscall, sizeof(psyscall));
+                if(getsyscall.sysnum == 176){ 
+                    module_change++;
+                }
+                if(getsyscall.sysnum == 313){ 
+                    module_change--;
+                }
                 i = 0;
                 for(; i < psnum; i++)
                 {
@@ -296,6 +308,17 @@ int main (int argc, char **argv)
 
             }
             while(readn>0);
+            /**find hide module*/
+            MyList * newmod_list= createMySearchList(compare2mod);
+            int newmod_num = get_module_info(vmivm,newmod_list);
+            if(vmivm->module_num-module_change == newmod_num){
+                
+                set_module_info(vmivm,newmod_list,newmod_num);
+            }
+            else{
+                printf("find hide %d module!!\n",vmivm->module_num-module_change-newmod_num);
+                find_hide_module(vmivm,newmod_list,vmivm->module_num-module_change-newmod_num);
+            }
 
             ///printf("2:ok \n");
             combineSyscallAndPs(queue,pssystotal,psnum);
@@ -391,16 +414,16 @@ int main (int argc, char **argv)
                     vmi_write_8_va(vmi, vmivm->syscallall[i].addr, 0, &trap);
                 }
                 else{
-                    printf("no change ");
+                    ///printf("no change ");
                 }
-                printf("!!%d addr:%lx backup_byte:%lx right:%x code:%lx\n",i,vmivm->syscallall[i].addr,backup_byte,vmivm->syscallall[i].pre,code);
+                ///printf("!!%d addr:%lx backup_byte:%lx right:%x code:%lx\n",i,vmivm->syscallall[i].addr,backup_byte,vmivm->syscallall[i].pre,code);
                 if(vmivm->syscallall[i].addr != backup_byte){
-                    printf("\n%d addr:%s read in right addr:%lx was hooked!!\n",i,vmivm->syscallall[i].name,vmivm->syscallall[i].reallyaddr);
+                   /// printf("\n%d addr:%s read in right addr:%lx was hooked!!\n",i,vmivm->syscallall[i].name,vmivm->syscallall[i].reallyaddr);
                 }
             }
             else
             {
-                printf("syscall:%d no addr\n",i);
+                ///printf("syscall:%d no addr\n",i);
                 syscallnum[i] = -1;
             }
 

@@ -8,7 +8,7 @@
 
 #include <libvmi/libvmi.h>
 #include <stdio.h>
-#include <myList.h>
+#include "myList.h"
 
 #define NUMBER_OF_OFFSET 57
 
@@ -72,6 +72,14 @@ typedef struct TaskNode{
 
 }TaskNode;
 
+typedef struct modulenode
+{
+    char name[50];
+    ///0:don't know 1:tcp 2:udp
+    int num_syms;
+    int num_kp;
+}ModuleNode;
+
 typedef struct socketsr
 {
     int classify;
@@ -118,6 +126,8 @@ typedef struct vmiinfo
     MyList* acl_list;
     //OffSet vmoffset[NUMBER_OF_OFFSET];
     int offset_len;
+    int module_num;
+    MyList* modulelist;
     unsigned long vmoffset[NUMBER_OF_OFFSET];
     reg_t syscall;
 }VmiInfo;
