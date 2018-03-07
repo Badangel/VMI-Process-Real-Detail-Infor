@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mymodinfo.h"
+#include "myprint.h"
 int get_module_info(VmiInfo* vmiinfo,MyList* list){
     addr_t next_module, list_head;
     vmi_instance_t vmi = vmiinfo->vmi;
@@ -63,7 +64,7 @@ void set_module_info(VmiInfo* vmiinfo,MyList* list,int num_module){
     vmiinfo->module_num = num_module;
 }
 
-void find_hide_module(VmiInfo* vmiinfo,MyList* list,int hidenum){
+void find_hide_module(VmiInfo* vmiinfo,MYSQL *mysql,MyList* list,int hidenum){
     MyList* oldlist = vmiinfo->modulelist;
     MyNode* p = oldlist->first;
     FILE *pf = fopen("log/warning.log","a");
@@ -72,6 +73,9 @@ void find_hide_module(VmiInfo* vmiinfo,MyList* list,int hidenum){
         ModuleNode* hidemod = p->data;
         if(myListFindDataIndex(list,p->data)<0){
             fprintf(pf, "%s(module) is hided!! \n", hidemod->name);
+            char sql_insert[1024];
+            sprintf(sql_insert,"insert into warning(domname,class,pmname)values('%s','%s','%s');",vmiinfo->vmname,"Module hided",hidemod->name);
+            exec_db(mysql,sql_insert);
             hidenum--;
             if(hidenum==0){
                 break;
@@ -81,6 +85,29 @@ void find_hide_module(VmiInfo* vmiinfo,MyList* list,int hidenum){
     }
     fclose(pf);
 }
+
+void initModule(VmiInfo* vmiinfo){
+    vmiinfo->modulelist = NULL;
+    MyList * initmod_list= createMySearchList(compare2mod);
+    int initmod_num = get_module_info(vmiinfo,initmod_list);
+    set_module_info(vmiinfo,initmod_list,initmod_num);
+    printf("init module ok!!\n");
+}
+
+void detect_hide_module(VmiInfo* vmiinfo,MYSQL *mysql,int module_change){
+    MyList * newmod_list= createMySearchList(compare2mod);
+    int newmod_num = get_module_info(vmiinfo,newmod_list);
+    if(vmiinfo->module_num-module_change == newmod_num){       
+        set_module_info(vmiinfo,newmod_list,newmod_num);
+    }
+    else{
+        printf("find hide %d module!!\n",vmiinfo->module_num-module_change-newmod_num);
+        find_hide_module(vmiinfo,mysql,newmod_list,vmiinfo->module_num-module_change-newmod_num);
+
+    }
+
+}
+
 int compare2mod(void* a, void* b){
     ModuleNode* aa = a;
     ModuleNode* bb = b;

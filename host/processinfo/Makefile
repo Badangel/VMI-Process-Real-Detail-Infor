@@ -104,7 +104,8 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_vmiprocessinfo_OBJECTS = myqueue.$(OBJEXT) myList.$(OBJEXT) \
 	acl.$(OBJEXT) vminit.$(OBJEXT) mysyscall.$(OBJEXT) \
-	mypsinfo.$(OBJEXT) mymodinfo.$(OBJEXT) main.$(OBJEXT)
+	mypsinfo.$(OBJEXT) mymodinfo.$(OBJEXT) myprint.$(OBJEXT) \
+	main.$(OBJEXT)
 vmiprocessinfo_OBJECTS = $(am_vmiprocessinfo_OBJECTS)
 vmiprocessinfo_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
@@ -276,7 +277,7 @@ top_srcdir = .
 AUTOMAKE_OPTIONS = foreign
 AM_LDFLAGS = -L$(top_builddir)/libvmi/.libs/
 LDADD = -lvmi -lm $(LIBS) $(GLIB_LIBS)
-vmiprocessinfo_SOURCES = myqueue.c myList.c acl.c vminit.c mysyscall.c mypsinfo.c mymodinfo.c main.c
+vmiprocessinfo_SOURCES = myqueue.c myList.c acl.c vminit.c mysyscall.c mypsinfo.c mymodinfo.c myprint.c main.c
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -387,6 +388,7 @@ include ./$(DEPDIR)/acl.Po
 include ./$(DEPDIR)/main.Po
 include ./$(DEPDIR)/myList.Po
 include ./$(DEPDIR)/mymodinfo.Po
+include ./$(DEPDIR)/myprint.Po
 include ./$(DEPDIR)/mypsinfo.Po
 include ./$(DEPDIR)/myqueue.Po
 include ./$(DEPDIR)/mysyscall.Po

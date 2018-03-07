@@ -169,11 +169,9 @@ int main (int argc, char **argv)
         MyList * acl_list= createMySearchList(compare2ps);
         getACLList(vmivm,acl_list);
         ///myListOutput(acl_list, outputACL);
-        vmivm->modulelist = NULL;
-        MyList * initmod_list= createMySearchList(compare2mod);
-        int initmod_num = get_module_info(vmivm,initmod_list);
-        set_module_info(vmivm,initmod_list,initmod_num);
-        printf("init module ok!!\n");
+
+        //init the module list
+        initModule(vmivm);
 
         /* walk the task list */
         int n = 1000;
@@ -308,17 +306,9 @@ int main (int argc, char **argv)
 
             }
             while(readn>0);
-            /**find hide module*/
-            MyList * newmod_list= createMySearchList(compare2mod);
-            int newmod_num = get_module_info(vmivm,newmod_list);
-            if(vmivm->module_num-module_change == newmod_num){
-                
-                set_module_info(vmivm,newmod_list,newmod_num);
-            }
-            else{
-                printf("find hide %d module!!\n",vmivm->module_num-module_change-newmod_num);
-                find_hide_module(vmivm,newmod_list,vmivm->module_num-module_change-newmod_num);
-            }
+            /**detect hide module*/
+            detect_hide_module(vmivm,&mysql,module_change);
+            
 
             ///printf("2:ok \n");
             combineSyscallAndPs(queue,pssystotal,psnum);
