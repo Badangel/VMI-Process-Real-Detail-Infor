@@ -28,23 +28,18 @@ int testerror = 0;
 
 event_response_t singlestep_cb(vmi_instance_t vmi, vmi_event_t *event)
 {
-    /*
-    if(testerror != 1)
-    {
-        printf("no trap !!!\n");
-    }
-    testerror = 0;
-    */
+
+    vmi_get_vcpureg(vmi, &rax, RAX, event->vcpu_id);
     VmiInfo* vmivm = get_vmiinfo_vmi(vmi);
+    int singcbsysnum = (unsigned int)rax;
+
    /// printf("enter one cb %d \n ",vmivm->syscall);
     //printf("modify vmiinfo:%s \n",vmivm->version);
     //vmi_write_8_va(vmi, vmivm->syscallall[sys_num].addr, 0, &trap);
-    if(vmivm->syscallall[vmivm->syscall].sign == 1){
-       vmi_write_8_va(vmi, vmivm->syscallall[vmivm->syscall].addr, 0, &trap);
+    if(vmivm->syscallall[singcbsysnum].sign == 1){
+       vmi_write_8_va(vmi, vmivm->syscallall[singcbsysnum].addr, 0, &trap);
     }
     ++singstepnum;
- 
-
    /// printf("%ld one step \n",rax);
 
     return VMI_EVENT_RESPONSE_TOGGLE_SINGLESTEP;
@@ -73,7 +68,7 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
     nowsyscall.pid = pid;
     nowsyscall.sysnum = (unsigned int)rax;
 
-    //record_syscall(vmivm,rax,pid);
+    record_syscall(vmivm,rax,pid);
 
     writen = write(pipenum, &nowsyscall, sizeof(psyscall));
     if(writen<1){
@@ -117,39 +112,31 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid)
 {
     FILE *pf = fopen("log/file.log","a");
     uint64_t r8 = 0;
+    uint64_t r9 = 0;
     uint64_t r10 = 0;
     uint64_t rdx = 0;
     uint64_t rdi = 0;
     uint64_t rsi = 0;
     char psname[80]="";
     get_psname_by_pid(vmivm,pid,psname);
-    fprintf(pf, "%s-%s(%ld) ",psname,vmivm->syscallall[rax].name,rax);
     switch(rax)
     {
     case 2:
-        vmi_get_vcpureg(vmivm->vmi, &rdx, RDX, 0);
         vmi_get_vcpureg(vmivm->vmi, &rdi, RDI, 0);
         vmi_get_vcpureg(vmivm->vmi, &rsi, RSI, 0);
-        if(rdi < 0x7ff000000000){
-            char file_name2[255] = "";
-            addr_t filenameadd2 = rdi;
-            
-            if(1 == get_file_string(vmivm->vmi,filenameadd2,pid,file_name2))
-            {
-                /*
-                unsigned int rdxvalue = 0;
-                addr_t filenameadd5 = rdx;
-                vmi_read_32_va(vmivm->vmi, filenameadd5, pid, &rdxvalue);
-                */
-                //fprintf(pf,"%d open rbx:%lx rcx:%lx rdx:%lx rsi:%lx rdi:%lx\n",pid,rbx,rcx,rdx,rsi,rdi);
-                //printf("%d open %s mode:%lx flags:%x\n", pid, file_name2, rsi, rdxvalue);
-                ///printf("%lx\n",rdi);
-                fprintf(pf, "%d open %s mode:%lx fileaddr:%lx\n", pid, file_name2, rsi,rdi);
-            }
+        addr_t rdifilenameaddr = rdi; 
+        char* rdifilename = vmi_read_str_va(vmivm->vmi,rdifilenameaddr,pid);
+        if(rdifilename!=NULL){
+            fprintf(pf, "%s(%d) %s(%ld)open rdi:%s rsi:%lx\n", psname,pid,vmivm->syscallall[rax].name,rax, rdifilename, rsi);
+            free(rdifilename);
         }
         break;
+    case 3:
+        vmi_get_vcpureg(vmivm->vmi, &rdi, RDI, 0);
+        fprintf(pf, "%s(%d) %s(%ld)close rdi:%ld \n", psname,pid,vmivm->syscallall[rax].name,rax, rdi);
+        break;
     case 43:
-        fprintf(pf, "%d connect \n", pid);
+        fprintf(pf, "%s(%d) %s(%ld) connect\n", psname,pid,vmivm->syscallall[rax].name,rax);
         break;
     case 59:
         vmi_get_vcpureg(vmivm->vmi, &rdx, RDX, 0);
@@ -158,10 +145,10 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid)
         
         addr_t  filenameadd2= rdi;
         ///printf("%lx\n",rdi);
-        char rdifile[255] = "";
-        if(1 == get_file_string(vmivm->vmi,filenameadd2,pid,rdifile))
-        {
-            fprintf(pf,"%d exe %s\n",pid,rdifile);
+        char* rdifile = vmi_read_str_va(vmivm->vmi,filenameadd2,pid);
+        if(rdifile!=NULL){
+            fprintf(pf,"%s(%d) %s(%ld)exe %s\n",psname,pid,vmivm->syscallall[rax].name,rax,rdifile);
+            free(rdifile);
         }
         break;
     /*call exit for children
@@ -172,34 +159,34 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid)
         */
     case 62:
         vmi_get_vcpureg(vmivm->vmi, &rdi, RDI, 0);
-        fprintf(pf,"%d kill %ld\n",pid,rdi);
-        printf("%d kill %ld\n",pid,rdi);
+        fprintf(pf,"%s(%d) %s(%ld)kill %ld\n",psname,pid,vmivm->syscallall[rax].name,rax,rdi);
+        printf("%s(%d) %s(%ld)kill %ld\n",psname,pid,vmivm->syscallall[rax].name,rax,rdi);
         break;
     case 87:
         vmi_get_vcpureg(vmivm->vmi, &rdi, RDI, 0);
         addr_t  unlink_pathaddr= rdi;
         ///printf("%lx\n",rdi);
-        char unlink_path[255] = "";
-        if(1 == get_file_string(vmivm->vmi,unlink_pathaddr,pid,unlink_path))
-        {
-            fprintf(pf,"%d unlink %s\n",pid,unlink_path);
-            printf("%d unlink %s\n",pid,unlink_path);
+        char* unlink_path = vmi_read_str_va(vmivm->vmi,unlink_pathaddr,pid);
+        if(unlink_path!=NULL){
+            fprintf(pf,"%s(%d) %s(%ld)unlink %s\n",psname,pid,vmivm->syscallall[rax].name,rax,unlink_path);
+            printf("%s(%d) %s(%ld)unlink %s\n",psname,pid,vmivm->syscallall[rax].name,rax,unlink_path);
+            free(unlink_path);
         }
         break;
     case 176:
-        fprintf(pf,"%d module delete\n",pid);
-        printf("%d module delete\n",pid);
+        fprintf(pf,"%s(%d) %s(%ld) module delete\n",psname,pid,vmivm->syscallall[rax].name,rax);
+        printf("%s(%d) %s(%ld)  module delete\n",psname,pid,vmivm->syscallall[rax].name,rax);
         break;
     case 231:
-        fprintf(pf,"%d group exit\n",pid);
-        printf("%d group exit\n",pid);
+        fprintf(pf,"%s(%d) %s(%ld) group exit\n",psname,pid,vmivm->syscallall[rax].name,rax);
+        printf("%s(%d) %s(%ld) group exit\n",psname,pid,vmivm->syscallall[rax].name,rax);
         break;
     case 313:
-        fprintf(pf,"%d module init\n",pid);
-        printf("%d module init\n",pid);
+        fprintf(pf,"%s(%d) %s(%ld) module init\n",psname,pid,vmivm->syscallall[rax].name,rax);
+        printf("%s(%d) %s(%ld) module init\n",psname,pid,vmivm->syscallall[rax].name,rax);
         break;
     default:
-        fprintf(pf,"psnum:%d \n",pid);
+        fprintf(pf,"%s(%d) %s(%ld) \n",psname,pid,vmivm->syscallall[rax].name,rax);
         //printf("%d %ld\n",pid,rax);
         break;
     }
