@@ -64,9 +64,9 @@ addr_t fd_array = 1;
 addr_t fd = 1;
 
 unsigned int max_fds = 0;
-char *filename = NULL;
+//char *filename = NULL;
 char *d_iname = NULL;
-char *parentname = NULL;
+//char *parentname = NULL;
 
 /**
  * This funtion get mm_struct info
@@ -179,9 +179,13 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
             vmi_read_addr_va(vmiinfo->vmi, mnt, 0, &droot);
             vmi_read_addr_va(vmiinfo->vmi, droot + vmiinfo->vmoffset[dname_offset] + vmiinfo->vmoffset[qname_offset], 0, &rname);
 
-            char vfsname[255] = "";
-            get_dentry_name(vmiinfo, vfsname, droot);
-            char filename[255] = "";
+            //char vfsname[255] = "";
+            //get_dentry_name(vmiinfo, vfsname, droot);
+            vmi_read_addr_va(vmiinfo->vmi, droot + vmiinfo->vmoffset[dname_offset] + vmiinfo->vmoffset[qname_offset], 0, &p_name);
+            char* vfsname = vmi_read_str_va(vmiinfo->vmi,p_name,0);
+            vmi_read_addr_va(vmiinfo->vmi, dentry1 + vmiinfo->vmoffset[dname_offset] + vmiinfo->vmoffset[qname_offset], 0, &p_name);
+            char* filename = vmi_read_str_va(vmiinfo->vmi,p_name,0);
+            //char filename[255] = "";
 
             //strcat(vfsname,get_dentry_name(vmiinfo,droot));
             if (vfsname[0] != '/')
@@ -198,7 +202,7 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
             int tcp = 1;
             
             //strcat(filename,get_dentry_name(vmiinfo,dentry1));
-            get_dentry_name(vmiinfo, filename, dentry1);
+            //get_dentry_name(vmiinfo, filename, dentry1);
             ///printf("fs:%s",filename);
 
             if (strcmp(vfsname, "pipe:") == 0)
@@ -296,38 +300,47 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
                 n = n + 1;
                 // vmi_read_addr_va(vmiinfo->vmi, d_parent + vmiinfo->vmoffset[dname_offset] + vmiinfo->vmoffset[qname_offset], 0, &p_name);
                 // a=1;
-                char parentname[255] = "";
-                get_dentry_name(vmiinfo, parentname, d_parent);
+                //char parentname[255] = "";
+                //get_dentry_name(vmiinfo, parentname, d_parent);
+
+                vmi_read_addr_va(vmiinfo->vmi, d_parent + vmiinfo->vmoffset[dname_offset] + vmiinfo->vmoffset[qname_offset], 0, &p_name);
+                char* parentname = vmi_read_str_va(vmiinfo->vmi,p_name,0);
+                char cparentname[255] = "";
+                strcpy(cparentname,parentname);
                 //printf("%s",parentname);
                 
-                if (strcmp(parentname, "/") == 0)
+                if (strcmp(cparentname, "/") == 0)
                 {
                     filetype = 0;
                 }
                 else
                 {
-                    strcat(parentname,filepath);
+                    strcat(cparentname,filepath);
                     strcpy(filepath,"/");
-                    strcat(filepath,parentname);
+                    strcat(filepath,cparentname);
                 }
-
-                //printf("/");
+                free(parentname);
                 vmi_read_addr_va(vmiinfo->vmi, d_parent + vmiinfo->vmoffset[parent_offset], 0, &d_parent);
             }
-            if(vfsname[0]=='/'){
+            char cvfsname[255] = "";
+            strcpy(cvfsname,vfsname);
+            free(vfsname);
+            if(cvfsname[0]=='/'){
                 strcat(filepath,"/");
             }
             else
             {
-                strcat(vfsname,filepath);
-                strcpy(filepath,vfsname);
+                strcat(cvfsname,filepath);
+                strcpy(filepath,cvfsname);
             }
             FileFD* filefd = malloc(sizeof(FileFD));
             filefd->fd = i;
             strcat(filepath,filename);
             strcpy(filefd->filepath,filepath);
             myListInsertDataAtLast(file_list, filefd);
-            ///printf("%s||%d \n",filefd->filepath,n);
+            
+            free(filename);
+            //printf("%s||%d \n",filefd->filepath,n);
 
             ////////////////////////////////////////////////////
             /*small with dentry qstr name.
@@ -372,7 +385,7 @@ char *get_qstr_name(VmiInfo* vmiinfo, char *name, addr_t qstr_addr)
 } ///end get_qstr_name
 
 /**
-*4.4.57 nameidata is null...
+*4.4.57 nameidata is null...no use
 */
 void get_nameidata_info(VmiInfo* vmiinfo, addr_t nameidat)
 {

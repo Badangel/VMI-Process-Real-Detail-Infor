@@ -154,7 +154,7 @@ void traversal(VmiInfo* vmivm,MYSQL *mysql,LinkQueue *queue,LinkQueue *pre_queue
             insertsqlnum++;  
         }
         ///}
-        ///printf("\n%s\n",sql_insert);
+        //printf("\n%s\n",sql_insert);
         ///freeq = q;
         q = q->next;
         
