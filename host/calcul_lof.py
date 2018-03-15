@@ -1,3 +1,5 @@
+
+#!/usr/bin/python
 from state.DBHelper import DBHelper
 import math
 import Queue
@@ -200,7 +202,7 @@ def trainNormaiData(data,datalen,K,MinPts):
     print "train over!!"
     return kdis,lrd
 
-def detectState(domname):
+def detectState(domname,sqltable):
     print 'enter detect state'
     K = 5
     MinPts = 5
@@ -212,7 +214,7 @@ def detectState(domname):
     kdis,lrd = trainNormaiData(statedata,datalen,K,MinPts)
 
 
-    sqlstate = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,int_sys_in*10,csw_sys_in*10,read_total_in/10,writ_total_in/10,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from nowstate where stat = 0 and domname = '"+domname+"'"
+    sqlstate = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,int_sys_in*10,csw_sys_in*10,read_total_in/10,writ_total_in/10,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from "+sqltable+" where stat = 0 and domname = '"+domname+"'"
     i = 0
     while True:
         i = i + 1       
@@ -229,8 +231,8 @@ def detectState(domname):
             for a in range(0,datanewlen):
                 alof = getoplof(statedata,K,MinPts,datalen,kdis,lrd,statedatanew[a][1:])
                 changestate = ""
-                if alof > 1.3 or alof < 0.7:
-                    changestate = "update nowstate set stat = 1 where id =" + str(statedatanew[a][0])
+                if alof > 1.5 or alof < 0.7:
+                    changestate = "update "+sqltable+" set stat = 1,lof="+str(alof)+" where id =" + str(statedatanew[a][0])
                     addnum = addnum + 1
                     selectdb.myupdate(changestate)
 
@@ -238,16 +240,18 @@ def detectState(domname):
                     selectdb.myupdate(warningsql)
                     warining_st(domname,statedatanew[a][0],alof)
                     #db.oncesql(changestate)
-                    printlog('add in '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock()))
-                
+                    printlog('state add in '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock()))
+                    print 'state add in '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock())
+
                 else:
-                    changestate = "update nowstate set stat = 2 where id =" + str(statedatanew[a][0])
+                    changestate = "update "+sqltable+" set stat = 2,lof="+str(alof)+" where id =" + str(statedatanew[a][0])
                     selectdb.oncesql(changestate)
-                    printlog('move out '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock()))
+                    printlog('state move out '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock()))
+                    print 'state move out '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock())
             selectdb.allcommit()
 
 
-def detectPsinfo(domname):
+def detectPsinfo(domname,sqltable):
     print 'enter detect psinfo'
     K = 5
     MinPts = 5
@@ -257,68 +261,47 @@ def detectPsinfo(domname):
     psdata = db.oncesql(sqlps)
     print "psdata len:",len(psdata)
     datalen = len(psdata)
-
     kdis,lrd = trainNormaiData(psdata,datalen,K,MinPts)
-
-
-    '''
-    filekdis = open ('kdisfile.py', 'w') 
-    filekdis.writelines('kdis = '+str(kdis))
-    filelrd = open ('lrdfile.py', 'w')
-    filelrd.writelines('lrd = '+str(lrd))
-    '''
-    '''
-    ## write all data lof into file need id!!!
-    dismatrix = getdisance(psdata,datalen)
-    pslof = getlof(psdata,K,MinPts)
-    fileHandle = open ('test.txt', 'w') 
-    for i in range(len(pslof)):
-        temp = str(psdata[i][0])+" "+str(pslof[i])+"\n"
-        fileHandle.write(temp)
-        #print temp
-    fileHandle.flush()
-    '''
-    '''
-    #read offline data
-    from kdisfile import kdis
-    from lrdfile import lrd
-    '''
+    
+    Globalvar.settrainover()
     print time.clock()
     #delete minflt
-    sqlpsone = "select id,psid,psname,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from nowpsinfo where state = 0 and domname = '"+domname+"'"
+    sqlpsone = "select id,psid,psname,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from "+sqltable+" where state = 0 and domname = '"+domname+"'"
     i = 0
     while True:
         i = i+1
         psonedata = db.oncesql(sqlpsone)
         psonedata = list(psonedata)
         datanewlen = len(psonedata)
-        print "len:",datanewlen
+        #print "len:",datanewlen
         if datanewlen == 0:
             time.sleep(1)
-            print "sleep 1!!",i
+            #print "sleep 1!!",i
             continue      
-        print time.clock()
+        #print time.clock()
         addnum = 0
         for a in range(0,datanewlen):
-            print psonedata[a][0],"(",
             alof = getoplof(psdata,K,MinPts,datalen,kdis,lrd,psonedata[a][3:])
-            if alof > 1.3 or alof < 0.7:
-                changestate = "update nowpsinfo set state = 1 where id =" + str(psonedata[a][0])
+            if alof > 1.5 or alof < 0.7:
+                changestate = "update "+sqltable+" set state = 1,lof="+str(alof)+" where id =" + str(psonedata[a][0])
                 addnum = addnum + 1
                 db.myupdate(changestate)
                 warningsql = "insert into warning(domname,class,sqlid,psid,pmname,lof) values('%s','%s','%d','%d','%s','%f')"%(domname,"Process Anomaly",psonedata[a][0],psonedata[a][1],psonedata[a][2],alof)
                 db.myupdate(warningsql)
                 warining_ps(domname,psonedata[a][1],psonedata[a][2],alof)
                 #db.oncesql(changestate)
-                print ")add in",alof,time.clock()
+                printlog( str(psonedata[a][1])+" "+str(psonedata[a][2])+"(pssql:"+str(psonedata[a][0])+") add in "+str(alof)+" "+str(time.clock()))
+                print str(psonedata[a][1])+" "+str(psonedata[a][2])+"(pssql:"+str(psonedata[a][0])+") add in "+str(alof)
+
             
             else:
-                changestate = "update nowpsinfo set state = 2 where id =" + str(psonedata[a][0])
+                changestate = "update "+sqltable+" set state = 2,lof="+str(alof)+" where id =" + str(psonedata[a][0])
                 db.oncesql(changestate)
-                print ")move out",alof,time.clock()
+                printlog( str(psonedata[a][1])+" "+str(psonedata[a][2])+"(pssql:"+str(psonedata[a][0])+") move out "+str(alof)+" "+str(time.clock()))
+                print str(psonedata[a][1])+" "+str(psonedata[a][2])+"(pssql:"+str(psonedata[a][0])+") move out "+str(alof)
 
         db.allcommit()
-        print 'add:',addnum
+        printlog('add: '+str(addnum))
 
 def detectAllState1(domname):
     selectdb = DBHelper.DBHelper()
@@ -394,18 +377,20 @@ if __name__ =='__main__':
 
             if operation==1:
                 print 'enter detect domU state'
-                t0 = threading.Thread(target = detectState,args =[domname],name='detectstate')
+                t0 = threading.Thread(target = detectState,args =[domname,'nowstate'],name='detectstate')
                 t0.setDaemon(True)
                 t0.start()
-                t1 = threading.Thread(target = exdata.exdamain,args =[domname],name='getstate')
+                t1 = threading.Thread(target = exdata.exdamain,args =[domname,'nowstate'],name='getstate')
                 t1.setDaemon(True)
                 t1.start()
             if operation==2:
                 print 'enter detect domU psinfo'
-                t0 = threading.Thread(target = detectPsinfo,args =[domname],name='detectPsinfo')
+                t0 = threading.Thread(target = detectPsinfo,args =[domname,'nowpsinfo'],name='detectPsinfo')
                 t0.setDaemon(True)
                 t0.start()
-                t1 = threading.Thread(target = runpsinfo,args =[domname],name='getpsinfo')
+                while Globalvar.gettrainover():
+                   time.sleep(1)
+                t1 = threading.Thread(target = runpsinfo,args =[domname,str(operation)],name='getpsinfo')
                 t1.setDaemon(True)
                 t1.start()
             if operation==3:
@@ -416,8 +401,27 @@ if __name__ =='__main__':
                 t0 = threading.Thread(target = detectAllPsinfo1,args =[domname],name='detectAllPsinfo1')
                 t0.setDaemon(True)
                 t0.start()
+            if operation==5:
+                print 'enter collect domU state'
+                t0 = threading.Thread(target = detectState,args =[domname,'state'],name='detectstate')
+                t0.setDaemon(True)
+                t0.start()
+                t1 = threading.Thread(target = exdata.exdamain,args =[domname,'state'],name='getstate')
+                t1.setDaemon(True)
+                t1.start()
+            if operation==6:
+                print 'enter collect domU psinfo'
+                t0 = threading.Thread(target = detectPsinfo,args =[domname,'psinfo'],name='detectPsinfo')
+                t0.setDaemon(True)
+                t0.start()
+                while Globalvar.gettrainover():
+                   time.sleep(1)
+                t1 = threading.Thread(target = runpsinfo,args =[domname,str(operation)],name='getpsinfo')
+                t1.setDaemon(True)
+                t1.start()
         Globalvar.setexit()
         exdata.stopServer(Globalvar.getser())
+        
         print "exit calcul_lof normal!!"
 
     except Exception,exc:

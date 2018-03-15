@@ -40,8 +40,8 @@ int get_module_info(VmiInfo* vmiinfo,MyList* list){
 		
         }
         strcpy(onemodule->name,modname);
-	    vmi_read_32_va(vmi, next_module + 224, 0, &num_syms_mod);
-	    vmi_read_32_va(vmi, next_module + 280, 0, &num_kp_mod);
+	    vmi_read_32_va(vmi, next_module + vmiinfo->vmoffset[num_syms_offset], 0, &num_syms_mod);
+	    vmi_read_32_va(vmi, next_module + vmiinfo->vmoffset[num_kp_offset], 0, &num_kp_mod);
         onemodule->num_syms = num_syms_mod;
         onemodule->num_kp = num_kp_mod;
         myListInsertDataAtLast(list, onemodule);

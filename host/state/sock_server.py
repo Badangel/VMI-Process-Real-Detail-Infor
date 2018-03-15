@@ -1,5 +1,5 @@
 import SocketServer  
-import time  
+import time,datetime
 import signal  
 import global_var as Globalvar
 from vmaddr_config import vmaddr
@@ -7,8 +7,6 @@ from warning_log import *
 class MyHandler(SocketServer.BaseRequestHandler):  
     def handle(self):
         try:
-            b=True
-            a=0  
             conn = self.request
             data = conn.recv(2048)
             data = conn.recv(2048)
@@ -16,14 +14,13 @@ class MyHandler(SocketServer.BaseRequestHandler):
             printlog('socket vm is: '+vmname)
 
             while True and Globalvar.getexit(): 
-                a=a+1
                 #print ('wait....',a)
                 data = conn.recv(18900)
-                #print len(data),data,time.ctime()
                 #print ('data:',data)
                 if data.strip():
                     stat = data[0]
                     if stat=='s':
+                        #print datetime.datetime.now()
                         d_stat=data[2:]
                         file_object = open('tempfile/'+vmname+'.d_stat','w')
                         file_object.writelines(d_stat)

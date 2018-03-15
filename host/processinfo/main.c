@@ -38,13 +38,16 @@ int main (int argc, char **argv)
     status_t status;
 
     /* this is the VM or file that we are looking at */
-    if (argc != 2)
+    if (argc != 3)
     {
         printf("Usage: %s <vmname>\n", argv[0]);
         return 1;
     } // if
 
     char *name = argv[1];
+    int table;
+    sscanf(argv[2],"%d",&table);
+    
 
     /* initialize the libvmi library */
     if (VMI_FAILURE ==
@@ -157,7 +160,7 @@ int main (int argc, char **argv)
     }
     else if(fpid > 0)
     {
-        printf("%d father start!\n",fpid);
+        ///printf("%d father start!\n",fpid);
         MYSQL mysql;
 
         init_db(&mysql);
@@ -315,7 +318,7 @@ int main (int argc, char **argv)
 
             setParentLayer(queue);
 
-            traversal(vmivm,&mysql,queue,pre_queue,frenum);
+            traversal(vmivm,&mysql,queue,pre_queue,frenum,table);
             if(frenum > 0){
                 frenum--;
             }
@@ -355,7 +358,7 @@ int main (int argc, char **argv)
     }
     else
     {
-        printf("%d child start!!\n",fpid);
+        ///printf("%d child start!!\n",fpid);
        
         pid_t ppid = getppid();
         extern int pipenum;
@@ -392,6 +395,11 @@ int main (int argc, char **argv)
         uint64_t backup_byte = 0;
         uint64_t code = 0;
         extern int syscallnum[];
+        printf("start detcet syscall hook!\n");
+        FILE *pftest = fopen("log/test.log","a");
+        time_t timep;
+        time(&timep);
+        fprintf(pftest,"%s!!\n",ctime(&timep));
         for(i = 0; i < vmivm->syscall_len; i++)
         {
             if(vmivm->syscallall[i].addr != 0)
@@ -404,20 +412,25 @@ int main (int argc, char **argv)
                     vmi_write_8_va(vmi, vmivm->syscallall[i].addr, 0, &trap);
                 }
                 else{
-                    ///printf("no change ");
+                    printf("syscall:%d no change \n",i);
                 }
                 ///printf("!!%d addr:%lx backup_byte:%lx right:%x code:%lx\n",i,vmivm->syscallall[i].addr,backup_byte,vmivm->syscallall[i].pre,code);
                 if(vmivm->syscallall[i].addr != backup_byte){
+                    fprintf(pftest,"%d %s read in right addr:%lx was hooked to %lx!!\n",i,vmivm->syscallall[i].name,vmivm->syscallall[i].reallyaddr,backup_byte);
+                    printf("%d %s right addr:%lx was hooked to %lx!!\n",i,vmivm->syscallall[i].name,vmivm->syscallall[i].addr,backup_byte);
+                    vmi_write_64_va(vmi, sys_call_table_addr+i*8, 0, &(vmivm->syscallall[i].addr));
+                    printf("recover %s into right addr!\n",vmivm->syscallall[i].name);
                    /// printf("\n%d addr:%s read in right addr:%lx was hooked!!\n",i,vmivm->syscallall[i].name,vmivm->syscallall[i].reallyaddr);
                 }
             }
             else
             {
-                ///printf("syscall:%d no addr\n",i);
+                printf("syscall:%d no addr\n",i);
                 syscallnum[i] = -1;
             }
 
         }
+        fclose(pftest);
         // printf("CR0 set over\n");
         
         vmi_event_t trap_event, singlestep_event;
@@ -436,9 +449,9 @@ int main (int argc, char **argv)
         uint64_t aftermodify;
         vmi_read_64_va(vmi, sys_call_table_addr+16, 0, &aftermodify);
         vmi_get_vcpureg(vmi, &sysenter_ip, SYSENTER_EIP, 0);
-        printf("vcpu 0 MSR_SYSENTER_IP == %llx\n", (unsigned long long)sysenter_ip);
-        printf("sys_call_table_entry_addr == %lx\n", backup_byte);
-        printf("afte modify sys_call_table_entry_addr == %lx\n", aftermodify);
+        ///printf("vcpu 0 MSR_SYSENTER_IP == %llx\n", (unsigned long long)sysenter_ip);
+        ///printf("sys_call_table_entry_addr == %lx\n", backup_byte);
+        ///printf("afte modify sys_call_table_entry_addr == %lx\n", aftermodify);
         int n1 = 5000;
 
         while(!interrupted&&ppid == getppid())
@@ -451,10 +464,10 @@ int main (int argc, char **argv)
             }
 
         }
-
+        FILE *pfover = fopen("log/cprint.log","a");
         for(i = 0; i < vmivm->syscall_len; i++)
         {
-            ///printf("%3d %s :%d\n",i,vmivm->syscallall[i].name,syscallnum[i]);
+            fprintf(pfover,"%3d %s :%d\n",i,vmivm->syscallall[i].name,syscallnum[i]);
             if(vmivm->syscallall[i].sign == 1)
             {
                 ///printf("%d ok ",i );
@@ -462,6 +475,7 @@ int main (int argc, char **argv)
             }
 
         }
+        fclose(pfover);
         //vmi_resume_vm(vmi);
         vmi_destroy(vmi);
         extern int trapnum;

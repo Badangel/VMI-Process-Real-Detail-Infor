@@ -68,11 +68,12 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
     vmi_get_vcpureg(vmi, &rax, RAX, event->vcpu_id);
     vmi_get_vcpureg(vmi, &cr3, CR3, event->vcpu_id);
     vmi_pid_t pid = vmi_dtb_to_pid(vmi, cr3);
+
     psyscall nowsyscall;
     nowsyscall.pid = pid;
     nowsyscall.sysnum = (unsigned int)rax;
 
-    record_syscall(vmivm,rax,pid);
+    //record_syscall(vmivm,rax,pid);
 
     writen = write(pipenum, &nowsyscall, sizeof(psyscall));
     if(writen<1){
