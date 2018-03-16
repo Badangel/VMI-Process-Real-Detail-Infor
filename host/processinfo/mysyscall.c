@@ -67,24 +67,24 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
     psyscall nowsyscall;
     nowsyscall.pid = pid;
     nowsyscall.sysnum = (unsigned int)rax;
-
+    event->interrupt_event.reinject = 0;
+    if(vmivm->syscallall[nowsyscall.sysnum].sign == 0){
+        printf("error int3!!!!!!!!!!\n");
+        return 0;
+    }
     record_syscall(vmivm,rax,pid);
 
     writen = write(pipenum, &nowsyscall, sizeof(psyscall));
-    if(writen<1){
+    if (writen < 1)
+    {
         printf("pipe write error!\n");
     }
 
     //sys_num = rax;
     vmivm->syscall = rax;
     syscallnum[vmivm->syscall]++;
-
     ///printf("%s %d syscall#=%u right:%x\n",vmivm->version, pid,(unsigned int)rax,vmivm->syscallall[vmivm->syscall].pre);
     vmi_write_8_va(vmi, vmivm->syscallall[vmivm->syscall].addr, 0, &(vmivm->syscallall[vmivm->syscall].pre));
-
-    event->interrupt_event.reinject = 0;
-    ///printf("return\n");
-
     ++trapnum;
 
     return VMI_EVENT_RESPONSE_TOGGLE_SINGLESTEP;
@@ -106,6 +106,15 @@ void combineSyscallAndPs(LinkQueue* queue,int sysnum[][11],int psnum){
         i++;
         q = q->next;
     }
+}
+
+void find_syscall_hook(VmiInfo* vmivm,MYSQL* mysql,int sysnum,uint64_t backup_byte){
+    FILE *pf = fopen("log/warning.log","a");
+    fprintf(pf, "%s(%d:%lx) is hooked to %lx!! \n", vmivm->syscallall[sysnum].name,sysnum,vmivm->syscallall[sysnum].addr,backup_byte);
+    char sql_insert[1024];
+    sprintf(sql_insert,"insert into warning(domname,class,pmname)values('%s','%s','%s');",vmivm->vmname,"Syscall Hook",vmivm->syscallall[sysnum].name);
+    exec_db(mysql,sql_insert);
+    fclose(pf);
 }
 
 void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid)

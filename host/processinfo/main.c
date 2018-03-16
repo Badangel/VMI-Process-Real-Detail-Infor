@@ -147,6 +147,13 @@ int main (int argc, char **argv)
     int fdpipe[2];
     char buf[256];
     pid_t fpid;
+    MYSQL mysql;
+
+    init_db(&mysql);
+    if(conn_db(&mysql, "localhost", "root", "309911", "vmidata") != 0)
+    {
+        return;
+    }
 
     if( pipe(fdpipe)<0 )
     {
@@ -161,13 +168,7 @@ int main (int argc, char **argv)
     else if(fpid > 0)
     {
         ///printf("%d father start!\n",fpid);
-        MYSQL mysql;
-
-        init_db(&mysql);
-        if (conn_db(&mysql,"localhost", "root", "309911", "vmidata") != 0)
-        {
-            return;
-        }
+       
         ///init the ACL list of ps
         MyList * acl_list= createMySearchList(compare2ps);
         getACLList(vmivm,acl_list);
@@ -374,7 +375,7 @@ int main (int argc, char **argv)
         sigaction(SIGINT,  &act, NULL);
         sigaction(SIGALRM, &act, NULL);
         uint64_t beforemodify;
-        int i;
+        
         static uint8_t trap = 0xCC;
         reg_t sysenter_ip = 0;
         addr_t phys_sysenter_ip = 0;
@@ -400,6 +401,7 @@ int main (int argc, char **argv)
         time_t timep;
         time(&timep);
         fprintf(pftest,"%s!!\n",ctime(&timep));
+        int i;
         for(i = 0; i < vmivm->syscall_len; i++)
         {
             if(vmivm->syscallall[i].addr != 0)
@@ -420,6 +422,7 @@ int main (int argc, char **argv)
                     printf("%d %s right addr:%lx was hooked to %lx!!\n",i,vmivm->syscallall[i].name,vmivm->syscallall[i].addr,backup_byte);
                     vmi_write_64_va(vmi, sys_call_table_addr+i*8, 0, &(vmivm->syscallall[i].addr));
                     printf("recover %s into right addr!\n",vmivm->syscallall[i].name);
+                    find_syscall_hook(vmivm,&mysql,i,backup_byte);
                    /// printf("\n%d addr:%s read in right addr:%lx was hooked!!\n",i,vmivm->syscallall[i].name,vmivm->syscallall[i].reallyaddr);
                 }
             }
