@@ -56,7 +56,7 @@ void* getACLList(VmiInfo* vmivm, MyList * list)
     return list;
 }
 
-int compare2ps(void* a,void* b)
+int compare2aclps(void* a,void* b)
 {
     ACLPs* aa = a;
     ACLPs* bb = b;
@@ -78,7 +78,7 @@ int findACLps(MyList* list, char* name, int id)
 
 void showACLList(VmiInfo* vmivm)
 {
-    MyList * list= createMySearchList(compare2ps);
+    MyList * list= createMySearchList(compare2aclps);
     getACLList(vmivm,list);
     myListOutput(list, outputACL );
    

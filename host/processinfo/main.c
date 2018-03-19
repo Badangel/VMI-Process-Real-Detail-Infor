@@ -143,6 +143,8 @@ int main (int argc, char **argv)
     }
 
     next_list_entry = list_head;
+    // Initialize the ps list.
+    initPs(vmivm, list_head);
 
     int fdpipe[2];
     char buf[256];
@@ -170,7 +172,7 @@ int main (int argc, char **argv)
         ///printf("%d father start!\n",fpid);
        
         ///init the ACL list of ps
-        MyList * acl_list= createMySearchList(compare2ps);
+        MyList * acl_list= createMySearchList(compare2aclps);
         getACLList(vmivm,acl_list);
         ///myListOutput(acl_list, outputACL);
 
@@ -382,7 +384,7 @@ int main (int argc, char **argv)
         addr_t sys_call_table_addr = 0xffffffff81a001c0;
         ///vmi_instance_t vmi;
         // Initialize the libvmi library.
-        
+ 
         if (VMI_FAILURE == vmi_init_complete(&vmi, name, VMI_INIT_DOMAINNAME | VMI_INIT_EVENTS , NULL,
                                              VMI_CONFIG_GLOBAL_FILE_ENTRY, NULL, NULL))
         {

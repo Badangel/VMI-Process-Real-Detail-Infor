@@ -603,9 +603,10 @@ void get_task_info(VmiInfo* vmiinfo, addr_t current_process, TaskNode *tmptn)
     ///printf("tfa\n");
 } ///end get_task_info
 
-void get_psname_by_pid(VmiInfo* vmiinfo,vmi_pid_t pid,char* psname)
+void get_psname_by_pid(VmiInfo* vmiinfo,vmi_pid_t pid,char* psname,addr_t currpsaddr)
 {
     addr_t current_process = 0;
+    currpsaddr = 0;
     vmi_pid_t nowpid = 0;
     unsigned long tasks_offset = vmi_get_offset(vmiinfo->vmi, "linux_tasks");
     addr_t list_head = 0, next_list_entry = 0;
@@ -618,6 +619,7 @@ void get_psname_by_pid(VmiInfo* vmiinfo,vmi_pid_t pid,char* psname)
         if(nowpid == pid){
             char* psnames = vmi_read_str_va(vmiinfo->vmi, current_process + vmiinfo->vmoffset[name_offset], 0);
             strcpy(psname,psnames);
+            currpsaddr = current_process;
             break;
         }
         vmi_read_addr_va(vmiinfo->vmi, next_list_entry, 0, &next_list_entry);
@@ -656,3 +658,93 @@ int getoffset(VmiInfo *vmiinfo, char *key)
     return -1;
 }
 */
+
+void initPs(VmiInfo* vmiinfo,addr_t list_head){
+    addr_t next_list_e = list_head;
+    addr_t current_process;
+    int psnum = 0;
+    MyList * initps_list= createMySearchList(compare2ps);
+    vmi_pause_vm(vmiinfo->vmi);
+    do
+    {
+        psnum++;
+        current_process = next_list_e - vmiinfo->vmoffset[task_offset];
+
+        PsNode *oneps = malloc(sizeof(PsNode));
+        oneps->addr = current_process;
+        vmi_read_32_va(vmiinfo->vmi, current_process + vmiinfo->vmoffset[pid_offset], 0, &(oneps->pid));
+        procname = vmi_read_str_va(vmiinfo->vmi, current_process + vmiinfo->vmoffset[name_offset], 0);
+        strcpy(oneps->name, procname);
+        addr_t mm_structaddr = 1;
+        vmi_read_addr_va(vmiinfo->vmi, current_process + vmiinfo->vmoffset[mm_offset], 0, &mm_structaddr);
+        vmi_read_64_va(vmiinfo->vmi, mm_structaddr + vmiinfo->vmoffset[pgd_offset], 0, &(oneps->pgd));
+        oneps->pgd = oneps->pgd&0x00000000ffffffff;
+        ///printf("%s(%d) addr:%lx pgd:%lx\n",oneps->name,oneps->pid,oneps->addr,oneps->pgd);
+        myListInsertDataAtLast(initps_list, oneps);
+
+        /* follow the next pointer */
+        status_t status = vmi_read_addr_va(vmiinfo->vmi, next_list_e, 0, &next_list_e);
+        if (status == VMI_FAILURE)
+        {
+            printf("Failed to read next pointer in loop at \n");
+            break;
+        }
+
+    } while (next_list_e != list_head);
+    vmi_resume_vm(vmiinfo->vmi);
+    vmiinfo->pslist = initps_list;
+    vmiinfo->ps_num = psnum;
+    printf("init ps ok num:%d!!\n",psnum);
+}
+
+PsNode* get_ps_fron_pgd(VmiInfo* vmiinfo,addr_t nowpgd){
+    
+    MyNode * p = vmiinfo->pslist->first;
+    int i = 0;
+    for (; i < vmiinfo->ps_num; i++)
+    {
+        PsNode* aa = p->data;
+        //printf("pgd:%lx find:%lx\n",aa->pgd,nowpgd);
+        if(aa->pgd == nowpgd){
+            //printf("find ps!\n");
+            return (PsNode*)p->data;
+        }
+        p = p->next;
+    }
+    //printf("no find ps!\n");
+    return NULL;
+}
+
+void delete_one_ps(VmiInfo* vmiinfo,vmi_pid_t pid){
+    MyNode * p = vmiinfo->pslist->first;
+    int deletere = -1;
+    int re = 0;
+
+    while (p)
+    {
+        PsNode *aa = p->data;
+        if (aa->pid==pid)
+        {
+            deletere=re;
+            printf("find %d",pid);
+            break;
+        }
+        re++;
+        p = p->next;
+    }
+    if (deletere != -1)
+    {
+        printf("deltet ps\n");
+        myListRemoveDataAt(vmiinfo->pslist, deletere);
+    }
+}
+
+int compare2ps(void* a, void* b){
+    PsNode* aa = a;
+    PsNode* bb = b;
+    if(strcmp(aa->name,bb->name)==0&&aa->pid==bb->pid&&aa->pgd==bb->pgd)
+        return 1;
+    else
+        return 0;
+    return 0;
+}

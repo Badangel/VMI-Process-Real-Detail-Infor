@@ -7,6 +7,7 @@
 
 #include <signal.h>
 #include "mysyscall.h"
+#include "mypsinfo.h"
 
 /* Signal handler */
 void close_handler(int sig)
@@ -62,7 +63,41 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
 
     vmi_get_vcpureg(vmi, &rax, RAX, event->vcpu_id);
     vmi_get_vcpureg(vmi, &cr3, CR3, event->vcpu_id);
-    vmi_pid_t pid = vmi_dtb_to_pid(vmi, cr3);
+    //printf("11\n");
+    PsNode* nowps = get_ps_fron_pgd(vmivm,cr3);
+    //printf("22\n");
+    char *psname = NULL;
+    vmi_pid_t pid =-1;
+    addr_t currentpsaddr = 0;
+    
+   // FILE *pf = fopen("log/file.log","a");
+    if (nowps == NULL)
+    {
+        //printf("PsNode is NULL\n");
+        pid = vmi_dtb_to_pid(vmi, cr3);
+        char psnamea[80] = "";
+        get_psname_by_pid(vmivm, pid, psnamea,currentpsaddr);
+        psname = psnamea;
+
+        PsNode *oneps = malloc(sizeof(PsNode));
+        strcpy(oneps->name,psname);
+        oneps->pid=pid;
+        oneps->addr=currentpsaddr;
+        oneps->pgd=cr3;
+        myListInsertDataAtLast(vmivm->pslist, oneps);
+        vmivm->ps_num++;
+        //fprintf(pf,"PsNode is NULL; %s(%d) pgd:%lx\n", psname, pid, cr3);
+    }
+    else
+    {
+        pid = nowps->pid;
+        psname = nowps->name;
+        currentpsaddr = nowps->addr;
+       // fprintf(pf,"find %s(%d) pgd:%lx\n", psname, pid, cr3);
+    }
+    //fclose(pf);
+
+   
 
     psyscall nowsyscall;
     nowsyscall.pid = pid;
@@ -72,7 +107,7 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
         printf("error int3!!!!!!!!!!\n");
         return 0;
     }
-    record_syscall(vmivm,rax,pid);
+    record_syscall(vmivm,rax,pid,psname);
 
     writen = write(pipenum, &nowsyscall, sizeof(psyscall));
     if (writen < 1)
@@ -117,7 +152,7 @@ void find_syscall_hook(VmiInfo* vmivm,MYSQL* mysql,int sysnum,uint64_t backup_by
     fclose(pf);
 }
 
-void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid)
+void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname)
 {
     FILE *pf = fopen("log/file.log","a");
     uint64_t r8 = 0;
@@ -126,8 +161,8 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid)
     uint64_t rdx = 0;
     uint64_t rdi = 0;
     uint64_t rsi = 0;
-    char psname[80]="";
-    get_psname_by_pid(vmivm,pid,psname);
+    //char psname[80]="";
+    //get_psname_by_pid(vmivm,pid,psname);
     switch(rax)
     {
     case 2:
@@ -189,6 +224,7 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid)
     case 231:
         fprintf(pf,"%s(%d) %s(%ld) group exit\n",psname,pid,vmivm->syscallall[rax].name,rax);
         printf("%s(%d) %s(%ld) group exit\n",psname,pid,vmivm->syscallall[rax].name,rax);
+        //delete_one_ps(vmivm,pid);
         break;
     case 313:
         fprintf(pf,"%s(%d) %s(%ld) module init\n",psname,pid,vmivm->syscallall[rax].name,rax);

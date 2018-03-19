@@ -98,6 +98,11 @@ VmiInfo* get_vmiinfo_vmi(vmi_instance_t vmi)
 }
 int set_offset(VmiInfo* vmiinfo,char* offsetname,unsigned long value)
 {
+    if(strcmp(offsetname, "task_offset") == 0)
+    {
+        vmiinfo->vmoffset[task_offset] = value;
+        return 1;
+    }
     if(strcmp(offsetname, "pid_offset") == 0)
     {
         vmiinfo->vmoffset[pid_offset] = value;

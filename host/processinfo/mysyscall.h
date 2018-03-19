@@ -48,6 +48,6 @@ void combineSyscallAndPs(LinkQueue* queue,int sysnum[][11],int psnum);
 
 void find_syscall_hook(VmiInfo* vmivm,MYSQL* mysql,int i,uint64_t backup_byte);
 
-void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid);
+void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname);
 
 #endif // MYSYSCALL_H

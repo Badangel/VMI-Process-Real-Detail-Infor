@@ -17,7 +17,7 @@ void outputACL(const void* const p);
 
 void* getACLList(VmiInfo* vmivm, MyList* list);
 
-int compare2ps(void* a, void* b);
+int compare2aclps(void* a, void* b);
 
 int findACLps(MyList* list, char* name, int id);
 
