@@ -122,6 +122,7 @@ int main (int argc, char **argv)
     vmivm->vmi = vmi;
     strcpy(vmivm->vmname,name);
     // Initialize the vm version.
+    clear_filelog();
     if(0 == read_version_conf(vmivm))
     {
         printf("Failed to init vm version.\n");
@@ -481,6 +482,7 @@ int main (int argc, char **argv)
 
         }
         fclose(pfover);
+        clear_ps_file(vmivm);
         //vmi_resume_vm(vmi);
         vmi_destroy(vmi);
         extern int trapnum;

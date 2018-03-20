@@ -63,7 +63,7 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
 
     vmi_get_vcpureg(vmi, &rax, RAX, event->vcpu_id);
     vmi_get_vcpureg(vmi, &cr3, CR3, event->vcpu_id);
-    //printf("11\n");
+   // printf("11\n");
     PsNode* nowps = get_ps_fron_pgd(vmivm,cr3);
     //printf("22\n");
     char *psname = NULL;
@@ -75,27 +75,47 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
     {
         //printf("PsNode is NULL\n");
         pid = vmi_dtb_to_pid(vmi, cr3);
+        nowps = get_ps_fron_pid(vmivm,pid);
         char psnamea[80] = "";
-        get_psname_by_pid(vmivm, pid, psnamea,currentpsaddr);
+        currentpsaddr = get_psname_by_pid(vmivm, pid, psnamea);
         psname = psnamea;
+       // if (nowps == NULL)
+       // {
+            //printf("11\n");
+            PsNode *oneps = malloc(sizeof(PsNode));
+            strcpy(oneps->name, psname);
+            oneps->pid = pid;
+            oneps->addr = currentpsaddr;
+            oneps->pgd = cr3;
+            //printf("22\n");
+            add_pslist(vmivm, oneps);
+            //printf("33\n");
+            vmivm->ps_num++;
+            printf("Add %s(%d) pgd:%lx\n", psname, pid, cr3);
+        
+        //}
+       // else{
+        //    strcpy(nowps->name, psname);
+        //    nowps->pgd = cr3;
+        //    printf("Modify %s(%d) pgd:%lx\n", psname, pid, cr3);
+        //    
+       // }
+        //printf("33\n");
+        record_ps_list(vmivm);
+        //printf("55\n");
 
-        PsNode *oneps = malloc(sizeof(PsNode));
-        strcpy(oneps->name,psname);
-        oneps->pid=pid;
-        oneps->addr=currentpsaddr;
-        oneps->pgd=cr3;
-        myListInsertDataAtLast(vmivm->pslist, oneps);
-        vmivm->ps_num++;
-        //fprintf(pf,"PsNode is NULL; %s(%d) pgd:%lx\n", psname, pid, cr3);
+        
     }
     else
     {
         pid = nowps->pid;
+        get_psname_by_addr(vmivm,nowps->name,nowps->addr);
         psname = nowps->name;
         currentpsaddr = nowps->addr;
        // fprintf(pf,"find %s(%d) pgd:%lx\n", psname, pid, cr3);
     }
     //fclose(pf);
+    //printf("33\n");
 
    
 
@@ -104,10 +124,11 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
     nowsyscall.sysnum = (unsigned int)rax;
     event->interrupt_event.reinject = 0;
     if(vmivm->syscallall[nowsyscall.sysnum].sign == 0){
-        printf("error int3!!!!!!!!!!\n");
+        printf("error int3!!!!%d!!!!!!\n",nowsyscall.sysnum);
         return 0;
     }
     record_syscall(vmivm,rax,pid,psname);
+   // printf("44\n");
 
     writen = write(pipenum, &nowsyscall, sizeof(psyscall));
     if (writen < 1)
@@ -205,6 +226,10 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname)
         vmi_get_vcpureg(vmivm->vmi, &rdi, RDI, 0);
         fprintf(pf,"%s(%d) %s(%ld)kill %ld\n",psname,pid,vmivm->syscallall[rax].name,rax,rdi);
         printf("%s(%d) %s(%ld)kill %ld\n",psname,pid,vmivm->syscallall[rax].name,rax,rdi);
+        if(pid<=rdi)
+        {
+            delete_one_ps(vmivm,rdi);
+        }
         break;
     case 87:
         vmi_get_vcpureg(vmivm->vmi, &rdi, RDI, 0);
@@ -224,7 +249,7 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname)
     case 231:
         fprintf(pf,"%s(%d) %s(%ld) group exit\n",psname,pid,vmivm->syscallall[rax].name,rax);
         printf("%s(%d) %s(%ld) group exit\n",psname,pid,vmivm->syscallall[rax].name,rax);
-        //delete_one_ps(vmivm,pid);
+        delete_one_ps(vmivm,pid);
         break;
     case 313:
         fprintf(pf,"%s(%d) %s(%ld) module init\n",psname,pid,vmivm->syscallall[rax].name,rax);

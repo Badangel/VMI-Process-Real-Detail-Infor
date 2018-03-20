@@ -9,3 +9,8 @@ void printlog(char* s){
     fprintf(pf,"%s%s",ctime(&timep),s);
     fclose(pf);
 }
+
+void clear_filelog(){
+    FILE *pf = fopen("log/file.log","w");
+    fclose(pf);
+}

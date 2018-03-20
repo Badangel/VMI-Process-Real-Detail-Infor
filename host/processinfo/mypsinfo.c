@@ -603,10 +603,9 @@ void get_task_info(VmiInfo* vmiinfo, addr_t current_process, TaskNode *tmptn)
     ///printf("tfa\n");
 } ///end get_task_info
 
-void get_psname_by_pid(VmiInfo* vmiinfo,vmi_pid_t pid,char* psname,addr_t currpsaddr)
+addr_t get_psname_by_pid(VmiInfo* vmiinfo,vmi_pid_t pid,char* psname)
 {
     addr_t current_process = 0;
-    currpsaddr = 0;
     vmi_pid_t nowpid = 0;
     unsigned long tasks_offset = vmi_get_offset(vmiinfo->vmi, "linux_tasks");
     addr_t list_head = 0, next_list_entry = 0;
@@ -619,14 +618,25 @@ void get_psname_by_pid(VmiInfo* vmiinfo,vmi_pid_t pid,char* psname,addr_t currps
         if(nowpid == pid){
             char* psnames = vmi_read_str_va(vmiinfo->vmi, current_process + vmiinfo->vmoffset[name_offset], 0);
             strcpy(psname,psnames);
-            currpsaddr = current_process;
             break;
         }
         vmi_read_addr_va(vmiinfo->vmi, next_list_entry, 0, &next_list_entry);
         
     }
     while(next_list_entry != list_head);
-    
+    return current_process;
+
+}
+
+void get_psname_by_addr(VmiInfo* vmiinfo,char* psname,addr_t current_process)
+{ 
+    char* psnames = vmi_read_str_va(vmiinfo->vmi, current_process + vmiinfo->vmoffset[name_offset], 0);
+    if(strcmp(psname,psnames)!=0){
+        printf("Modify name %s to %s\n",psname,psnames);
+        strcpy(psname,psnames);
+        record_ps_list(vmiinfo);
+    }
+    free(psnames);
 
 }
 /*
@@ -694,6 +704,7 @@ void initPs(VmiInfo* vmiinfo,addr_t list_head){
     vmi_resume_vm(vmiinfo->vmi);
     vmiinfo->pslist = initps_list;
     vmiinfo->ps_num = psnum;
+    record_ps_list(vmiinfo);
     printf("init ps ok num:%d!!\n",psnum);
 }
 
@@ -701,7 +712,7 @@ PsNode* get_ps_fron_pgd(VmiInfo* vmiinfo,addr_t nowpgd){
     
     MyNode * p = vmiinfo->pslist->first;
     int i = 0;
-    for (; i < vmiinfo->ps_num; i++)
+    for (; i < vmiinfo->pslist->count; i++)
     {
         PsNode* aa = p->data;
         //printf("pgd:%lx find:%lx\n",aa->pgd,nowpgd);
@@ -715,10 +726,28 @@ PsNode* get_ps_fron_pgd(VmiInfo* vmiinfo,addr_t nowpgd){
     return NULL;
 }
 
+PsNode* get_ps_fron_pid(VmiInfo* vmiinfo,vmi_pid_t pid){   
+    MyNode * p = vmiinfo->pslist->first;
+    int i = 0;
+    for (; i < vmiinfo->pslist->count; i++)
+    {
+        PsNode* aa = p->data;
+        //printf("pgd:%lx find:%lx\n",aa->pgd,nowpgd);
+        if(aa->pid == pid){
+            //printf("find ps!\n");
+            return (PsNode*)p->data;
+        }
+        p = p->next;
+    }
+    //printf("no find ps!\n");
+    return NULL;
+}
+
 void delete_one_ps(VmiInfo* vmiinfo,vmi_pid_t pid){
     MyNode * p = vmiinfo->pslist->first;
     int deletere = -1;
     int re = 0;
+    //printf("11\n");
 
     while (p)
     {
@@ -726,17 +755,21 @@ void delete_one_ps(VmiInfo* vmiinfo,vmi_pid_t pid){
         if (aa->pid==pid)
         {
             deletere=re;
-            printf("find %d",pid);
+            printf("find %d\n",pid);
+            (vmiinfo->ps_num)--;
             break;
         }
         re++;
         p = p->next;
     }
+    //printf("22\n");
     if (deletere != -1)
     {
-        printf("deltet ps\n");
+        printf("deltet ps total:%d\n",vmiinfo->ps_num);
         myListRemoveDataAt(vmiinfo->pslist, deletere);
+        record_ps_list(vmiinfo);
     }
+   // printf("33\n");
 }
 
 int compare2ps(void* a, void* b){
@@ -747,4 +780,66 @@ int compare2ps(void* a, void* b){
     else
         return 0;
     return 0;
+}
+
+//insert ps
+void add_pslist(VmiInfo* vmiinfo,PsNode* psnode)
+{
+    MyNode *p = vmiinfo->pslist->last;
+    PsNode* aa = p->data;
+    if (aa->pid < psnode->pid)
+    {
+        myListInsertDataAtLast(vmiinfo->pslist, psnode);
+        return;
+    }
+
+    MyNode * node = (MyNode *) malloc(sizeof(MyNode));
+    node->data = psnode;
+    node->next = NULL;
+
+    p = vmiinfo->pslist->first;
+    while(p->next){
+        aa = p->next->data;
+        if (aa->pid == psnode->pid)
+        {
+            strcpy(aa->name,psnode->name);
+            aa->pgd = psnode->pgd;
+            
+            return;
+            
+        }
+        if (aa->pid > psnode->pid)
+        {
+            break;
+        }
+        p = p->next;
+    }
+    node->next = p->next;
+    p->next = node;
+    (vmiinfo->pslist->count)++;
+}
+
+void record_ps_list(VmiInfo* vmiinfo){
+    MyNode *p = vmiinfo->pslist->first;
+    PsNode *aa;
+    char pslogfile[100]="temple/";
+    strcat(pslogfile,vmiinfo->vmname);
+    strcat(pslogfile,".pslist");
+    FILE *pf = fopen(pslogfile,"w");
+    while (p)
+    {
+        aa = p->data;
+        fprintf(pf,"%d %s %lx %lx \n", aa->pid,aa->name,aa->addr,aa->pgd);
+        p = p->next;
+    }
+    fclose(pf);
+}
+void clear_ps_file(VmiInfo* vmiinfo){
+    MyNode *p = vmiinfo->pslist->first;
+    PsNode *aa;
+    char pslogfile[100]="temple/";
+    strcat(pslogfile,vmiinfo->vmname);
+    strcat(pslogfile,".pslist");
+    FILE *pf = fopen(pslogfile,"w");
+    fclose(pf);
 }

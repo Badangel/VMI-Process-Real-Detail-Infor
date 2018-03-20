@@ -136,6 +136,7 @@ typedef struct vmiinfo
     int offset_len;
     int module_num;
     MyList* modulelist;
+    char pslistfile[50];
     int ps_num;
     MyList* pslist;
     unsigned long vmoffset[NUMBER_OF_OFFSET];

@@ -10,4 +10,5 @@
 #include <stdint.h>
 #include <string.h>
 void printlog(char* s);
+void clear_filelog();
 #endif

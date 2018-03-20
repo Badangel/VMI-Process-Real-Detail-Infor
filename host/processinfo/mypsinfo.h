@@ -113,7 +113,9 @@ void get_fs_info(VmiInfo* vmiinfo, addr_t fs);
 
 void get_task_info(VmiInfo* vmiinfo,addr_t current_process, TaskNode *tmptn);
 
-void get_psname_by_pid(VmiInfo* vmiinfo,vmi_pid_t pid,char* psname,addr_t currpsaddr);
+addr_t get_psname_by_pid(VmiInfo* vmiinfo,vmi_pid_t pid,char* psname);
+
+void get_psname_by_addr(VmiInfo* vmiinfo,char* psname,addr_t current_process);
 
 //void setoffset(VmiInfo* vmiinfo,char* key, unsigned long value);
 
@@ -122,8 +124,16 @@ void initPs(VmiInfo* vmiinfo,addr_t list_head);
 
 PsNode* get_ps_fron_pgd(VmiInfo* vmiinfo,addr_t nowpgd);
 
+PsNode* get_ps_fron_pid(VmiInfo* vmiinfo,vmi_pid_t pid);
+
 void delete_one_ps(VmiInfo* vmiinfo,vmi_pid_t pid);
 
 int compare2ps(void* a, void* b);
+
+void add_pslist(VmiInfo* vmiinfo,PsNode* psnode);
+
+void record_ps_list(VmiInfo* vmiinfo);
+
+void clear_ps_file(VmiInfo* vmiinfo);
 
 #endif // MYPSINFO_H_INCLUDED
