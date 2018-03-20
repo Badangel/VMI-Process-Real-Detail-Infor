@@ -206,6 +206,9 @@ int main (int argc, char **argv)
             ///vmi_pause_vm(vmi);
 
             ///while(false)///test fork
+            MyList* pslist_real = createMySearchList(compare2ps_nameid);
+            read_pslist_from_file(vmivm,pslist_real);
+         
             do
             {
                 psnum++;
@@ -217,6 +220,8 @@ int main (int argc, char **argv)
                 ///printf(" %d-",psnum);
                 get_task_info(vmivm,current_process,tasknodetmp);
                 tasknodetmp->tslayer = -1;
+                
+                check_pslist_poll(pslist_real,tasknodetmp->tsname,tasknodetmp->tspid);
 
 
 //        vmi_read_addr_va(vmi, current_process + nameidata_offset, 0, &nameida);
@@ -315,6 +320,9 @@ int main (int argc, char **argv)
             while(readn>0);
             /**detect hide module*/
             detect_hide_module(vmivm,&mysql,module_change);
+
+            /**detect hide os*/
+            detect_hide_ps(vmivm,&mysql,pslist_real);
             
 
             ///printf("2:ok \n");
@@ -342,6 +350,8 @@ int main (int argc, char **argv)
                 printf("\n");
             }
 
+
+            freeMyList(pslist_real);
 
             time_t now;
             struct tm *timenow;

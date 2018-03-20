@@ -3,7 +3,7 @@
 * record task_struct/files/fd/sk/dentry... offset
 * give some funtions to get infomation about one task deeply
 */
-
+#include <string.h>
 #include "mypsinfo.h"
 #include "myList.h"
 
@@ -670,6 +670,10 @@ int getoffset(VmiInfo *vmiinfo, char *key)
 */
 
 void initPs(VmiInfo* vmiinfo,addr_t list_head){
+    char pslogfile[100]="temple/";
+    strcat(pslogfile,vmiinfo->vmname);
+    strcat(pslogfile,".pslist");
+    strcpy(vmiinfo->pslistfile,pslogfile);
     addr_t next_list_e = list_head;
     addr_t current_process;
     int psnum = 0;
@@ -782,6 +786,16 @@ int compare2ps(void* a, void* b){
     return 0;
 }
 
+int compare2ps_nameid(void* a, void* b){
+    PsNode* aa = a;
+    PsNode* bb = b;
+    if(strcmp(aa->name,bb->name)==0&&(aa->pid==bb->pid))
+        return 1;
+    else
+        return 0;
+    return 0;
+}
+
 //insert ps
 void add_pslist(VmiInfo* vmiinfo,PsNode* psnode)
 {
@@ -829,17 +843,77 @@ void record_ps_list(VmiInfo* vmiinfo){
     while (p)
     {
         aa = p->data;
-        fprintf(pf,"%d %s %lx %lx \n", aa->pid,aa->name,aa->addr,aa->pgd);
+        //fprintf(pf,"%d %s %lx %lx \n", aa->pid,aa->name,aa->addr,aa->pgd);
+        fprintf(pf,"%d %s\n", aa->pid,aa->name);
         p = p->next;
     }
     fclose(pf);
 }
 void clear_ps_file(VmiInfo* vmiinfo){
     MyNode *p = vmiinfo->pslist->first;
-    PsNode *aa;
     char pslogfile[100]="temple/";
     strcat(pslogfile,vmiinfo->vmname);
     strcat(pslogfile,".pslist");
     FILE *pf = fopen(pslogfile,"w");
+    fclose(pf);
+}
+
+void read_pslist_from_file(VmiInfo* vmiinfo,MyList *pslist_real){
+    FILE *pf = fopen(vmiinfo->pslistfile,"r");
+    int over = 1;
+    while(over){
+        PsNode *oneps = malloc(sizeof(PsNode));
+        if(EOF==fscanf(pf,"%d %[^\n]\n",&(oneps->pid),oneps->name)){
+            break;
+        }
+        else{
+           // printf("pslist: %d %s\n",oneps->pid,oneps->name);
+            oneps->pgd = 1;
+            myListInsertDataAtLast(pslist_real, oneps);
+        }
+    }
+    
+    fclose(pf);
+
+}
+void check_pslist_poll(MyList *pslist_real,char* tsname,vmi_pid_t tspid){
+
+    MyNode * p = pslist_real->first;
+    PsNode* aa;
+
+    while (p)
+    {
+        aa = p->data;
+        //if (aa->pid==tspid&&strcmp(tsname,aa->name)==0)
+        if (aa->pid==tspid)
+        {
+            aa->pgd = 0;
+            return;
+        }
+        p = p->next;
+    }
+    printf("can't find %s(%d)\n",tsname,tspid);
+}
+
+void detect_hide_ps(VmiInfo* vmiinfo,MYSQL *mysql,MyList *pslist_real){
+    MyNode * p = pslist_real->first;
+    PsNode* aa;
+    FILE *pf = fopen("log/warning.log","a");
+
+    while (p)
+    {
+        aa = p->data;
+        if (aa->pgd == 1)
+        {
+            char s[8];
+            strncpy(s, aa->name, 7);
+            if (strcmp("kworker", s) != 0)
+            {
+                printf("%s(%d) is hided!!!\n", aa->name, aa->pid);
+                fprintf(pf, "%s(%d) is hided!!!\n", aa->name, aa->pid);
+            }
+        }
+        p = p->next;
+    }
     fclose(pf);
 }
