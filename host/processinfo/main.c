@@ -147,6 +147,9 @@ int main (int argc, char **argv)
     // Initialize the ps list.
     initPs(vmivm, list_head);
 
+    //init the module list
+    initModule(vmivm);
+
     int fdpipe[2];
     char buf[256];
     pid_t fpid;
@@ -177,8 +180,7 @@ int main (int argc, char **argv)
         getACLList(vmivm,acl_list);
         ///myListOutput(acl_list, outputACL);
 
-        //init the module list
-        initModule(vmivm);
+        
 
         /* walk the task list */
         int n = 1000;
@@ -199,6 +201,7 @@ int main (int argc, char **argv)
         while(n>0)
         {
             int psnum = 0;
+            int module_change = 0;
 
             //task queue
             initQueue(queue);
@@ -291,7 +294,7 @@ int main (int argc, char **argv)
             n--;
             //printf("This is farther, write hello to pipe\n");
             //write(fd[1], "hello\n", 25);
-            int module_change = 0;
+            
 
             int getsysnum = 0;
             do
@@ -319,7 +322,7 @@ int main (int argc, char **argv)
             }
             while(readn>0);
             /**detect hide module*/
-            detect_hide_module(vmivm,&mysql,module_change);
+            module_change = detect_hide_module(vmivm,&mysql,module_change);
 
             /**detect hide os*/
             detect_hide_ps(vmivm,&mysql,pslist_real);

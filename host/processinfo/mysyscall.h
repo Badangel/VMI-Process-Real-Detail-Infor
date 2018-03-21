@@ -50,4 +50,6 @@ void find_syscall_hook(VmiInfo* vmivm,MYSQL* mysql,int i,uint64_t backup_byte);
 
 void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname);
 
+void get_module_name(VmiInfo* vmivm,char* unlink_path);
+
 #endif // MYSYSCALL_H

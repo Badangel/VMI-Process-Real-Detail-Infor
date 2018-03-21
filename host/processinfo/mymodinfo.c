@@ -64,10 +64,11 @@ void set_module_info(VmiInfo* vmiinfo,MyList* list,int num_module){
     vmiinfo->module_num = num_module;
 }
 
-void find_hide_module(VmiInfo* vmiinfo,MYSQL *mysql,MyList* list,int hidenum){
+int find_hide_module(VmiInfo* vmiinfo,MYSQL *mysql,MyList* list,int hidenum){
     MyList* oldlist = vmiinfo->modulelist;
     MyNode* p = oldlist->first;
     FILE *pf = fopen("log/warning.log","a");
+    int findno = 1;
     while (p)
     {
         ModuleNode* hidemod = p->data;
@@ -78,12 +79,32 @@ void find_hide_module(VmiInfo* vmiinfo,MYSQL *mysql,MyList* list,int hidenum){
             exec_db(mysql,sql_insert);
             hidenum--;
             if(hidenum==0){
+                findno = 0;
                 break;
             }
         }
         p = p->next;
     }
+    if(findno){
+        printf("11\n");
+        FILE *pf1 = fopen(vmiinfo->modl,"r");
+        printf("22\n");
+        char modname[50]="";
+        while(EOF!=fscanf(pf1,"%s",modname))
+        {
+            fprintf(pf, "%s(module) is hided!! \n", modname);
+            printf("%s(module) is hided!! \n", modname);
+            printf("33\n");
+            char sql_insert[1024];
+            sprintf(sql_insert,"insert into warning(domname,class,pmname)values('%s','%s','%s');",vmiinfo->vmname,"Module hided",modname);
+            exec_db(mysql,sql_insert);
+            hidenum--;
+        }
+         
+        fclose(pf1);
+    }
     fclose(pf);
+    return hidenum;
 }
 
 void initModule(VmiInfo* vmiinfo){
@@ -91,20 +112,26 @@ void initModule(VmiInfo* vmiinfo){
     MyList * initmod_list= createMySearchList(compare2mod);
     int initmod_num = get_module_info(vmiinfo,initmod_list);
     set_module_info(vmiinfo,initmod_list,initmod_num);
+    char modlogfile[100]="temple/";
+    strcat(modlogfile,vmiinfo->vmname);
+    strcat(modlogfile,".modl");
+    strcpy(vmiinfo->modl,modlogfile);
     printf("init module ok!!\n");
 }
 
-void detect_hide_module(VmiInfo* vmiinfo,MYSQL *mysql,int module_change){
+int detect_hide_module(VmiInfo* vmiinfo,MYSQL *mysql,int module_change){
     MyList * newmod_list= createMySearchList(compare2mod);
     int newmod_num = get_module_info(vmiinfo,newmod_list);
     if(vmiinfo->module_num-module_change == newmod_num){       
         set_module_info(vmiinfo,newmod_list,newmod_num);
+        
     }
     else{
         printf("find hide %d module!!\n",vmiinfo->module_num-module_change-newmod_num);
-        find_hide_module(vmiinfo,mysql,newmod_list,vmiinfo->module_num-module_change-newmod_num);
+        return find_hide_module(vmiinfo,mysql,newmod_list,vmiinfo->module_num-module_change-newmod_num);
 
     }
+    return 0;
 
 }
 

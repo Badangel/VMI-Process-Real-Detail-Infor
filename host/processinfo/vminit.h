@@ -134,6 +134,7 @@ typedef struct vmiinfo
     MyList* acl_list;
     //OffSet vmoffset[NUMBER_OF_OFFSET];
     int offset_len;
+    char modl[50];
     int module_num;
     MyList* modulelist;
     char pslistfile[50];

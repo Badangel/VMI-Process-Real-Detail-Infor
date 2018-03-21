@@ -17,11 +17,11 @@ int get_module_info(VmiInfo* vmiinfo,MyList* list);
 
 void set_module_info(VmiInfo* vmiinfo,MyList* list,int num_module);
 
-void find_hide_module(VmiInfo* vmiinfo,MYSQL *mysql,MyList* list,int hidenum);
+int find_hide_module(VmiInfo* vmiinfo,MYSQL *mysql,MyList* list,int hidenum);
 
 void initModule(VmiInfo* vmiinfo);
 
-void detect_hide_module(VmiInfo* vmiinfo,MYSQL *mysql,int module_change);
+int detect_hide_module(VmiInfo* vmiinfo,MYSQL *mysql,int module_change);
 
 int compare2mod(void* a, void* b);
 

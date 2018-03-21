@@ -8,6 +8,7 @@
 #include <signal.h>
 #include "mysyscall.h"
 #include "mypsinfo.h"
+#include "mymodinfo.h"
 
 /* Signal handler */
 void close_handler(int sig)
@@ -189,11 +190,11 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname)
     case 2:
         vmi_get_vcpureg(vmivm->vmi, &rdi, RDI, 0);
         vmi_get_vcpureg(vmivm->vmi, &rsi, RSI, 0);
-        addr_t rdifilenameaddr = rdi; 
-        char* rdifilename = vmi_read_str_va(vmivm->vmi,rdifilenameaddr,pid);
-        if(rdifilename!=NULL){
-            fprintf(pf, "%s(%d) %s(%ld)open rdi:%s rsi:%lx\n", psname,pid,vmivm->syscallall[rax].name,rax, rdifilename, rsi);
-            free(rdifilename);
+        addr_t rdifilenameaddr2 = rdi; 
+        char* rdifilename2 = vmi_read_str_va(vmivm->vmi,rdifilenameaddr2,pid);
+        if(rdifilename2!=NULL){
+            fprintf(pf, "%s(%d) %s(%ld)open rdi:%s rsi:%lx\n", psname,pid,vmivm->syscallall[rax].name,rax, rdifilename2, rsi);
+            free(rdifilename2);
         }
         break;
     case 3:
@@ -237,6 +238,7 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname)
         ///printf("%lx\n",rdi);
         char* unlink_path = vmi_read_str_va(vmivm->vmi,unlink_pathaddr,pid);
         if(unlink_path!=NULL){
+            get_module_name(vmivm,unlink_path);
             fprintf(pf,"%s(%d) %s(%ld)unlink %s\n",psname,pid,vmivm->syscallall[rax].name,rax,unlink_path);
             printf("%s(%d) %s(%ld)unlink %s\n",psname,pid,vmivm->syscallall[rax].name,rax,unlink_path);
             free(unlink_path);
@@ -254,6 +256,38 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname)
     case 313:
         fprintf(pf,"%s(%d) %s(%ld) module init\n",psname,pid,vmivm->syscallall[rax].name,rax);
         printf("%s(%d) %s(%ld) module init\n",psname,pid,vmivm->syscallall[rax].name,rax);
+        //MyList * initmod_list= createMySearchList(compare2mod);
+        //int initmod_num = get_module_info(vmivm,initmod_list);
+        //freeMyList(initmod_list);
+       /* vmi_get_vcpureg(vmivm->vmi, &rdi, RDI, 0);
+        vmi_get_vcpureg(vmivm->vmi, &rsi, RSI, 0);
+       
+        vmi_get_vcpureg(vmivm->vmi, &rdx, RDX, 0);
+        
+        vmi_get_vcpureg(vmivm->vmi, &r8, R8, 0);
+        vmi_get_vcpureg(vmivm->vmi, &r9, R9, 0);
+        vmi_get_vcpureg(vmivm->vmi, &r10, R10, 0);
+        //if(rdi < 0x7ff000000000){
+        addr_t rdifilenameaddr = rdi;
+        addr_t rsifilenameaddr = rsi;
+        addr_t rdxfilenameaddr = rdx;
+        addr_t r10filenameaddr = r10;
+        addr_t r8filenameaddr = r8;
+        addr_t r9filenameaddr = r9;
+ 
+        char* rdifilename = vmi_read_str_va(vmivm->vmi,rdifilenameaddr,0);
+        char* rsifilename = vmi_read_str_va(vmivm->vmi,rsifilenameaddr,0);
+        char* rdxfilename = vmi_read_str_va(vmivm->vmi,rdxfilenameaddr,0);
+        char* r10filename = vmi_read_str_va(vmivm->vmi,r10filenameaddr,0);
+        char* r8filename = vmi_read_str_va(vmivm->vmi,r8filenameaddr,0);
+        char* r9filename = vmi_read_str_va(vmivm->vmi,r9filenameaddr,0);
+        fprintf(pf, "%d open rdi:%ld rsi:%ld rdx:%ld r8:%s r9:%s r10:%s\n", pid, rdi, rsi,rdx,r10filename,r8filename,r9filename);
+		free(rdifilename);
+        free(rsifilename);
+        free(rdxfilename);
+        free(r10filename);
+        free(r8filename);
+        free(r9filename);*/
         break;
     default:
         fprintf(pf,"%s(%d) %s(%ld) \n",psname,pid,vmivm->syscallall[rax].name,rax);
@@ -261,4 +295,21 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname)
         break;
     }
     fclose(pf);
+}
+
+void get_module_name(VmiInfo* vmivm,char* unlink_path){
+    int i =0;
+    int len =strlen(unlink_path);
+    for(;i<len;i++){
+        if(unlink_path[i]=='/'&&unlink_path[i+1]=='+'){
+            char modname[50]="";
+            strcpy(modname,unlink_path+i+9);
+            printf("module name is %s!!\n",modname);
+            
+            FILE *pf = fopen(vmivm->modl,"w");
+            fprintf(pf,"%s\n", modname);
+            fclose(pf);
+        }
+    }
+
 }
