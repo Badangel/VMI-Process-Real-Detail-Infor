@@ -759,7 +759,7 @@ void delete_one_ps(VmiInfo* vmiinfo,vmi_pid_t pid){
         if (aa->pid==pid)
         {
             deletere=re;
-            printf("find %d\n",pid);
+            ///printf("find %d\n",pid);
             (vmiinfo->ps_num)--;
             break;
         }
@@ -769,7 +769,7 @@ void delete_one_ps(VmiInfo* vmiinfo,vmi_pid_t pid){
     //printf("22\n");
     if (deletere != -1)
     {
-        printf("deltet ps total:%d\n",vmiinfo->ps_num);
+        ///printf("deltet ps total:%d\n",vmiinfo->ps_num);
         myListRemoveDataAt(vmiinfo->pslist, deletere);
         record_ps_list(vmiinfo);
     }
@@ -912,6 +912,46 @@ void detect_hide_ps(VmiInfo* vmiinfo,MYSQL *mysql,MyList *pslist_real){
                 printf("%s(%d) is hided!!!\n", aa->name, aa->pid);
                 fprintf(pf, "%s(%d) is hided!!!\n", aa->name, aa->pid);
             }
+        }
+        p = p->next;
+    }
+    fclose(pf);
+}
+
+void detect_hide_ps2(VmiInfo* vmiinfo,MYSQL *mysql,LinkQueue* queue, MyList *pslist_real){
+    MyNode * p = pslist_real->first;
+    TaskNode* q = queue->front->next;
+    PsNode* aa;
+    FILE *pf = fopen("log/warning.log","a");
+    while(p&&q!=NULL){
+        aa = p->data;
+        //printf("T-pid:%d P-pid:%d\n",q->tspid,aa->pid);
+        if(q->tspid > aa->pid){
+            char s[8];
+            strncpy(s, aa->name, 7);
+            if (strcmp("kworker", s) != 0)
+            {
+                printf("%s(%d) is hided!!!\n", aa->name, aa->pid);
+                fprintf(pf, "%s(%d) is hided!!!\n", aa->name, aa->pid);
+            }
+             p = p->next;
+        }
+        if(q->tspid < aa->pid){
+            q =q ->next;
+        }
+        if(q->tspid == aa->pid){
+            q = q->next;
+            p = p->next;
+        }
+    }
+    while(p){
+        aa = p->data;
+        char s[8];
+        strncpy(s, aa->name, 7);
+        if (strcmp("kworker", s) != 0)
+        {
+            printf("%s(%d) is hided!!!\n", aa->name, aa->pid);
+            fprintf(pf, "%s(%d) is hided!!!\n", aa->name, aa->pid);
         }
         p = p->next;
     }

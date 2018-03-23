@@ -209,8 +209,7 @@ int main (int argc, char **argv)
             ///vmi_pause_vm(vmi);
 
             ///while(false)///test fork
-            MyList* pslist_real = createMySearchList(compare2ps_nameid);
-            read_pslist_from_file(vmivm,pslist_real);
+            
          
             do
             {
@@ -224,7 +223,7 @@ int main (int argc, char **argv)
                 get_task_info(vmivm,current_process,tasknodetmp);
                 tasknodetmp->tslayer = -1;
                 
-                check_pslist_poll(pslist_real,tasknodetmp->tsname,tasknodetmp->tspid);
+               /// check_pslist_poll(pslist_real,tasknodetmp->tsname,tasknodetmp->tspid);
 
 
 //        vmi_read_addr_va(vmi, current_process + nameidata_offset, 0, &nameida);
@@ -265,6 +264,9 @@ int main (int argc, char **argv)
 
             }
             while(next_list_entry != list_head);
+
+            MyList* pslist_real = createMySearchList(compare2ps_nameid);
+            read_pslist_from_file(vmivm,pslist_real);
             ///vmi_resume_vm(vmi);
             ///printf("1:ok \n");
 
@@ -325,7 +327,8 @@ int main (int argc, char **argv)
             module_change = detect_hide_module(vmivm,&mysql,module_change);
 
             /**detect hide os*/
-            detect_hide_ps(vmivm,&mysql,pslist_real);
+            //detect_hide_ps(vmivm,&mysql,pslist_real);
+            detect_hide_ps2(vmivm,&mysql,queue,pslist_real);
             
 
             ///printf("2:ok \n");
