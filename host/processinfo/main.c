@@ -315,8 +315,10 @@ int main (int argc, char **argv)
                         pssystotal[i][vmivm->syscallall[getsyscall.sysnum].classify+1]++;
                         pssystotal[psnum][vmivm->syscallall[getsyscall.sysnum].classify+1]++;
                         i = psnum;
-                    }
+                        break;
+                    }   
                 }
+
                 ++getsysnum;
                /// printf("%d father get %d do syscall %d\n",readn, getsyscall.pid,getsyscall.sysnum);
 

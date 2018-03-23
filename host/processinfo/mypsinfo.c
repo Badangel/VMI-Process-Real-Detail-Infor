@@ -670,10 +670,13 @@ int getoffset(VmiInfo *vmiinfo, char *key)
 */
 
 void initPs(VmiInfo* vmiinfo,addr_t list_head){
-    char pslogfile[100]="temple/";
+    char pslogfile[50]="temple/";
     strcat(pslogfile,vmiinfo->vmname);
-    strcat(pslogfile,".pslist");
+    //strcat(pslogfile,".pslist");
     strcpy(vmiinfo->pslistfile,pslogfile);
+    strcat(vmiinfo->pslistfile,".pslist");
+    strcpy(vmiinfo->exitpsfile,pslogfile);
+    strcat(vmiinfo->exitpsfile,".exitps");
     addr_t next_list_e = list_head;
     addr_t current_process;
     int psnum = 0;
@@ -836,10 +839,7 @@ void add_pslist(VmiInfo* vmiinfo,PsNode* psnode)
 void record_ps_list(VmiInfo* vmiinfo){
     MyNode *p = vmiinfo->pslist->first;
     PsNode *aa;
-    char pslogfile[100]="temple/";
-    strcat(pslogfile,vmiinfo->vmname);
-    strcat(pslogfile,".pslist");
-    FILE *pf = fopen(pslogfile,"w");
+    FILE *pf = fopen(vmiinfo->pslistfile,"w");
     while (p)
     {
         aa = p->data;
@@ -850,11 +850,7 @@ void record_ps_list(VmiInfo* vmiinfo){
     fclose(pf);
 }
 void clear_ps_file(VmiInfo* vmiinfo){
-    MyNode *p = vmiinfo->pslist->first;
-    char pslogfile[100]="temple/";
-    strcat(pslogfile,vmiinfo->vmname);
-    strcat(pslogfile,".pslist");
-    FILE *pf = fopen(pslogfile,"w");
+    FILE *pf = fopen(vmiinfo->pslistfile,"w");
     fclose(pf);
 }
 

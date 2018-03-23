@@ -140,6 +140,7 @@ typedef struct vmiinfo
     char pslistfile[50];
     int ps_num;
     MyList* pslist;
+    char exitpsfile[50];
     unsigned long vmoffset[NUMBER_OF_OFFSET];
     reg_t syscall;
 }VmiInfo;
