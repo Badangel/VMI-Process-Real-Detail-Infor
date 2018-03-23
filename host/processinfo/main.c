@@ -223,7 +223,6 @@ int main (int argc, char **argv)
                 get_task_info(vmivm,current_process,tasknodetmp);
                 tasknodetmp->tslayer = -1;
                 
-               /// check_pslist_poll(pslist_real,tasknodetmp->tsname,tasknodetmp->tspid);
 
 
 //        vmi_read_addr_va(vmi, current_process + nameidata_offset, 0, &nameida);
@@ -327,8 +326,7 @@ int main (int argc, char **argv)
             module_change = detect_hide_module(vmivm,&mysql,module_change);
 
             /**detect hide os*/
-            //detect_hide_ps(vmivm,&mysql,pslist_real);
-            detect_hide_ps2(vmivm,&mysql,queue,pslist_real);
+            detect_hide_ps(vmivm,&mysql,queue,pslist_real);
             
 
             ///printf("2:ok \n");

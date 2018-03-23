@@ -246,8 +246,8 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
                     sock->classify = 1;
                     sock->sendport = sk_dport;
                     sock->recieveport = sk_num;
-                    sprintf(sock->recvaddr,"%d.%d.%d.%d:%d",rcvIp[0],rcvIp[1],rcvIp[2],rcvIp[3]);
-                    sprintf(sock->sendaddr,"%d.%d.%d.%d:%d",dIp[0],dIp[1],dIp[2],dIp[3]);
+                    sprintf(sock->recvaddr,"%d.%d.%d.%d:%d",rcvIp[0],rcvIp[1],rcvIp[2],rcvIp[3],sk_num);
+                    sprintf(sock->sendaddr,"%d.%d.%d.%d:%d",dIp[0],dIp[1],dIp[2],dIp[3],sk_dport);
                     myListInsertDataAtLast(socket_list, sock);
                 }
                 if (strcmp(filename, "UDP") == 0){
@@ -256,8 +256,8 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
                     sock->classify = 2;
                     sock->sendport = sk_dport;
                     sock->recieveport = sk_num;
-                    sprintf(sock->recvaddr,"%d.%d.%d.%d:%d",rcvIp[0],rcvIp[1],rcvIp[2],rcvIp[3]);
-                    sprintf(sock->sendaddr,"%d.%d.%d.%d:%d",dIp[0],dIp[1],dIp[2],dIp[3]);
+                    sprintf(sock->recvaddr,"%d.%d.%d.%d:%d",rcvIp[0],rcvIp[1],rcvIp[2],rcvIp[3],sk_num);
+                    sprintf(sock->sendaddr,"%d.%d.%d.%d:%d",dIp[0],dIp[1],dIp[2],dIp[3],sk_dport);
                     myListInsertDataAtLast(socket_list, sock);
                 }
                 ///printf("local:%d(num:%d)  source:%d(port:%d)",rcv_saddr,sk_num,daddr,sk_dport);
@@ -876,49 +876,8 @@ void read_pslist_from_file(VmiInfo* vmiinfo,MyList *pslist_real){
     fclose(pf);
 
 }
-void check_pslist_poll(MyList *pslist_real,char* tsname,vmi_pid_t tspid){
 
-    MyNode * p = pslist_real->first;
-    PsNode* aa;
-
-    while (p)
-    {
-        aa = p->data;
-        //if (aa->pid==tspid&&strcmp(tsname,aa->name)==0)
-        if (aa->pid==tspid)
-        {
-            aa->pgd = 0;
-            return;
-        }
-        p = p->next;
-    }
-    printf("can't find %s(%d)\n",tsname,tspid);
-}
-
-void detect_hide_ps(VmiInfo* vmiinfo,MYSQL *mysql,MyList *pslist_real){
-    MyNode * p = pslist_real->first;
-    PsNode* aa;
-    FILE *pf = fopen("log/warning.log","a");
-
-    while (p)
-    {
-        aa = p->data;
-        if (aa->pgd == 1)
-        {
-            char s[8];
-            strncpy(s, aa->name, 7);
-            if (strcmp("kworker", s) != 0)
-            {
-                printf("%s(%d) is hided!!!\n", aa->name, aa->pid);
-                fprintf(pf, "%s(%d) is hided!!!\n", aa->name, aa->pid);
-            }
-        }
-        p = p->next;
-    }
-    fclose(pf);
-}
-
-void detect_hide_ps2(VmiInfo* vmiinfo,MYSQL *mysql,LinkQueue* queue, MyList *pslist_real){
+void detect_hide_ps(VmiInfo* vmiinfo,MYSQL *mysql,LinkQueue* queue, MyList *pslist_real){
     MyNode * p = pslist_real->first;
     TaskNode* q = queue->front->next;
     PsNode* aa;

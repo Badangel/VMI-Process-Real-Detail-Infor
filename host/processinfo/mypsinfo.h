@@ -139,10 +139,6 @@ void clear_ps_file(VmiInfo* vmiinfo);
 
 void read_pslist_from_file(VmiInfo* vmiinfo,MyList *pslist_real);
 
-void check_pslist_poll(MyList *pslist_real,char* tsname,vmi_pid_t tspid);
-
-void detect_hide_ps(VmiInfo* vmiinfo,MYSQL *mysql,MyList *pslist_real);
-
-void detect_hide_ps2(VmiInfo* vmiinfo,MYSQL *mysql,LinkQueue* queue, MyList *pslist_real);
+void detect_hide_ps(VmiInfo* vmiinfo,MYSQL *mysql,LinkQueue* queue, MyList *pslist_real);
 
 #endif // MYPSINFO_H_INCLUDED
