@@ -129,6 +129,7 @@ PsNode* get_ps_fron_pid(VmiInfo* vmiinfo,vmi_pid_t pid);
 void delete_one_ps(VmiInfo* vmiinfo,vmi_pid_t pid);
 
 int compare2ps(void* a, void* b);
+
 int compare2ps_nameid(void* a, void* b);
 
 void add_pslist(VmiInfo* vmiinfo,PsNode* psnode);
@@ -140,5 +141,9 @@ void clear_ps_file(VmiInfo* vmiinfo);
 void read_pslist_from_file(VmiInfo* vmiinfo,MyList *pslist_real);
 
 void detect_hide_ps(VmiInfo* vmiinfo,MYSQL *mysql,LinkQueue* queue, MyList *pslist_real);
+
+int read_exitps_from_file(VmiInfo* vmiinfo,MyList* exitps_list);
+
+void add_exitps_sql(VmiInfo* vmiinfo,MYSQL *mysql,MyList* exitps_list,int table);
 
 #endif // MYPSINFO_H_INCLUDED

@@ -18,10 +18,10 @@ def runpsinfo(domname,sqltable):
 def runpsinfo_inter(domname,sqltable):
     psmonitor_popen = subprocess.Popen(['/home/vmi/Downloads/code/VmiXen/host/processinfo/vmiprocessinfo',domname,sqltable], stdout = sys.stdout)
 
-    while True and Globalvar.getexit():
+    while True:
          a=0
     psmonitor_popen.terminate()
     printlog('runpsinfo over!')
 
 if __name__ =='__main__':
-    runpsinfo(sys.argv[1],sys.argv[2])
+    runpsinfo_inter(sys.argv[1],sys.argv[2])

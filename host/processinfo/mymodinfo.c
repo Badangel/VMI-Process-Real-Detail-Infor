@@ -112,7 +112,7 @@ void initModule(VmiInfo* vmiinfo){
     MyList * initmod_list= createMySearchList(compare2mod);
     int initmod_num = get_module_info(vmiinfo,initmod_list);
     set_module_info(vmiinfo,initmod_list,initmod_num);
-    char modlogfile[100]="temple/";
+    char modlogfile[100]="tempfile/";
     strcat(modlogfile,vmiinfo->vmname);
     strcat(modlogfile,".modl");
     strcpy(vmiinfo->modl,modlogfile);

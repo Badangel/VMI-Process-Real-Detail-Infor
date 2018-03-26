@@ -142,11 +142,10 @@ int main (int argc, char **argv)
         printf("Failed to init vm syscall.\n");
         return 1;
     }
-
+    
     next_list_entry = list_head;
     // Initialize the ps list.
     initPs(vmivm, list_head);
-
     //init the module list
     initModule(vmivm);
 
@@ -174,7 +173,6 @@ int main (int argc, char **argv)
     else if(fpid > 0)
     {
         ///printf("%d father start!\n",fpid);
-       
         ///init the ACL list of ps
         MyList * acl_list= createMySearchList(compare2aclps);
         getACLList(vmivm,acl_list);
@@ -295,7 +293,10 @@ int main (int argc, char **argv)
             n--;
             //printf("This is farther, write hello to pipe\n");
             //write(fd[1], "hello\n", 25);
-            
+
+
+            MyList* exitps_list = createMyList();
+            int exitps_num = read_exitps_from_file(vmivm,exitps_list);       
 
             int getsysnum = 0;
             do
@@ -308,6 +309,7 @@ int main (int argc, char **argv)
                     module_change--;
                 }
                 i = 0;
+                int find = 1;
                 for(; i < psnum; i++)
                 {
                     if(pssystotal[i][0] == getsyscall.pid)
@@ -315,34 +317,54 @@ int main (int argc, char **argv)
                         pssystotal[i][vmivm->syscallall[getsyscall.sysnum].classify+1]++;
                         pssystotal[psnum][vmivm->syscallall[getsyscall.sysnum].classify+1]++;
                         i = psnum;
+                        find = 0;
                         break;
                     }   
+                }
+                if(find){
+                    
+                    MyNode * p = exitps_list->first;
+                    TaskNode* aa;
+
+                    while (p)
+                    {
+                        aa = p->data;
+                        if (aa->tspid == getsyscall.pid)
+                        {
+                            (aa->syscallnum[vmivm->syscallall[getsyscall.sysnum].classify])++;
+                            (aa->syscallnum[10])++;
+                            find = 0;
+                            break;
+                        }
+                        p = p->next;
+                    }
+                }
+                if(find){
+                    printf("Can't find ps:%d %d\n",getsyscall.pid,getsyscall.sysnum);
                 }
 
                 ++getsysnum;
                /// printf("%d father get %d do syscall %d\n",readn, getsyscall.pid,getsyscall.sysnum);
-
-            }
-            while(readn>0);
+            }while(readn>0);
             /**detect hide module*/
             module_change = detect_hide_module(vmivm,&mysql,module_change);
 
             /**detect hide os*/
             detect_hide_ps(vmivm,&mysql,queue,pslist_real);
             
-
             ///printf("2:ok \n");
             combineSyscallAndPs(queue,pssystotal,psnum);
 
             setParentLayer(queue);
 
             traversal(vmivm,&mysql,queue,pre_queue,frenum,table);
+
+            add_exitps_sql(vmivm,&mysql,exitps_list,table);
             if(frenum > 0){
                 frenum--;
             }
             comm_db(&mysql);
-
-
+            
             i = psnum;/// i = 0
             for(; i < psnum+1; i++)
             {
@@ -355,17 +377,16 @@ int main (int argc, char **argv)
                 }
                 printf("\n");
             }
-
-
+            
             freeMyList(pslist_real);
+            freeMyList(exitps_list);
 
             time_t now;
             struct tm *timenow;
             time(&now);
             //timenow = localtime(&now);
             printf("Local   time   is   %ld\n",now);
-
-
+       
             printf("father get %d syscall sleep 1\n\n",getsysnum);
             sleep(1);
             //getsysnum = 0;

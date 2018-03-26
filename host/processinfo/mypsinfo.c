@@ -670,7 +670,7 @@ int getoffset(VmiInfo *vmiinfo, char *key)
 */
 
 void initPs(VmiInfo* vmiinfo,addr_t list_head){
-    char pslogfile[50]="temple/";
+    char pslogfile[50]="tempfile/";
     strcat(pslogfile,vmiinfo->vmname);
     //strcat(pslogfile,".pslist");
     strcpy(vmiinfo->pslistfile,pslogfile);
@@ -696,8 +696,17 @@ void initPs(VmiInfo* vmiinfo,addr_t list_head){
         vmi_read_addr_va(vmiinfo->vmi, current_process + vmiinfo->vmoffset[mm_offset], 0, &mm_structaddr);
         vmi_read_64_va(vmiinfo->vmi, mm_structaddr + vmiinfo->vmoffset[pgd_offset], 0, &(oneps->pgd));
         oneps->pgd = oneps->pgd&0x00000000ffffffff;
+
+        vmi_read_addr_va(vmiinfo->vmi, current_process + vmiinfo->vmoffset[files_offset], 0, &files);
+        if (VMI_FAILURE == vmi_read_addr_va(vmiinfo->vmi, files + vmiinfo->vmoffset[fdt_offset], 0, &fdt))
+        {
+            printf("[init ps list]%d %s Failed to read its files!!!!!\n", oneps->pid, procname);
+            free(procname);
+            free(oneps);
+        }else{
         ///printf("%s(%d) addr:%lx pgd:%lx\n",oneps->name,oneps->pid,oneps->addr,oneps->pgd);
         myListInsertDataAtLast(initps_list, oneps);
+        }
 
         /* follow the next pointer */
         status_t status = vmi_read_addr_va(vmiinfo->vmi, next_list_e, 0, &next_list_e);
@@ -880,13 +889,13 @@ void detect_hide_ps(VmiInfo* vmiinfo,MYSQL *mysql,LinkQueue* queue, MyList *psli
     FILE *pf = fopen("log/warning.log","a");
     while(p&&q!=NULL){
         aa = p->data;
-        //printf("T-pid:%d P-pid:%d\n",q->tspid,aa->pid);
+        //printf("T-pid:%d(%s) P-pid:%d(%s)\n",q->tspid,q->tsname,aa->pid,aa->name);
         if(q->tspid > aa->pid){
             char s[8];
             strncpy(s, aa->name, 7);
             if (strcmp("kworker", s) != 0)
             {
-                printf("%s(%d) is hided!!!\n", aa->name, aa->pid);
+                printf("[warning]%s(%d) is hided!!!\n", aa->name, aa->pid);
                 fprintf(pf, "%s(%d) is hided!!!\n", aa->name, aa->pid);
             }
              p = p->next;
@@ -905,10 +914,60 @@ void detect_hide_ps(VmiInfo* vmiinfo,MYSQL *mysql,LinkQueue* queue, MyList *psli
         strncpy(s, aa->name, 7);
         if (strcmp("kworker", s) != 0)
         {
-            printf("%s(%d) is hided!!!\n", aa->name, aa->pid);
+            printf("[warning]%s(%d) is hided!!!\n", aa->name, aa->pid);
             fprintf(pf, "%s(%d) is hided!!!\n", aa->name, aa->pid);
         }
         p = p->next;
     }
     fclose(pf);
+}
+
+int read_exitps_from_file(VmiInfo* vmiinfo,MyList* exitps_list){
+    FILE *pf = fopen(vmiinfo->exitpsfile,"r");
+    int over = 1;
+    int num = 0;
+    while(over){
+        TaskNode* exitps = malloc(sizeof(TaskNode));
+        if(EOF==fscanf(pf,"%d %[^\n]\n",&(exitps->tspid),exitps->tsname)){
+            free(exitps);
+            break;
+        }
+        else{
+            num++;
+            int i = 0;
+            exitps->state = 0;
+            for(;i<11;i++){
+                exitps->syscallnum[i] = 0;
+            }
+            printf("find %d %s exit!\n",exitps->tspid,exitps->tsname);
+            myListInsertDataAtLast(exitps_list,exitps);
+        }
+    }
+    fclose(pf);
+    pf = fopen(vmiinfo->exitpsfile,"w");
+    fclose(pf);
+    return num;
+}
+
+void add_exitps_sql(VmiInfo* vmiinfo,MYSQL *mysql,MyList* exitps_list,int table){
+    MyNode *p = exitps_list->first;
+    TaskNode *q;
+    char sql_insert[1024];
+    while (p)
+    {
+        q = p->data;
+        if(q->syscallnum[10]>0){
+            if (table == 2)
+            {
+                sprintf(sql_insert, "insert into nowpsinfo(domname,psid,psname,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation,state)values('%s','%d','%s','%d', '%d', '%d', '%d', '%d', '%d','%d','%d','%d','%d','%d');", vmiinfo->vmname, q->tspid, q->tsname, q->syscallnum[10], q->syscallnum[1], q->syscallnum[2], q->syscallnum[3], q->syscallnum[4], q->syscallnum[5], q->syscallnum[6], q->syscallnum[7], q->syscallnum[8], q->syscallnum[9], q->state);
+            }
+            else
+            {
+                sprintf(sql_insert, "insert into psinfo(domname,psid,psname,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation,state)values('%s','%d','%s','%d', '%d', '%d', '%d', '%d', '%d','%d','%d','%d','%d','%d');", vmiinfo->vmname, q->tspid, q->tsname, q->syscallnum[10], q->syscallnum[1], q->syscallnum[2], q->syscallnum[3], q->syscallnum[4], q->syscallnum[5], q->syscallnum[6], q->syscallnum[7], q->syscallnum[8], q->syscallnum[9], q->state);
+            }
+            //printf("%s(%d) totalsyscall(%d),ps_control(%d),file_rw(%d),file_control(%d),sys_control(%d),mem_control(%d),net_control(%d),socket_control(%d),user_control(%d),ps_communcation(%d)\n", q->tsname, q->tspid, q->syscallnum[10], q->syscallnum[1], q->syscallnum[2], q->syscallnum[3], q->syscallnum[4], q->syscallnum[5], q->syscallnum[6], q->syscallnum[7], q->syscallnum[8], q->syscallnum[9]);
+            exec_db(mysql,sql_insert);
+        }
+        p = p->next;   
+    }
 }
