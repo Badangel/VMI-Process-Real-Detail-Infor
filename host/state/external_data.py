@@ -78,6 +78,7 @@ def getOutPsNum(vmi,domname,psoutlist,psouttime,hidelist):
     hidelistnew = {}
     file_ps = open('tempfile/'+domname+'.ps', 'r+')
     ps_lines = file_ps.readlines()
+    print "11"
     #print ps_lines[0][0]
     if len(ps_lines)==0 or ps_lines[0][0]!='U':
         print 'ps recv error!'
@@ -87,6 +88,7 @@ def getOutPsNum(vmi,domname,psoutlist,psouttime,hidelist):
     #print 'Libvmi','socket',len(ps_lines)
     #print psouttime,ps_lines[len(ps_lines)-1]
     b = 0
+    print "22"
     for a in ps_lines:
         #print "[%3d]"%(psn),a
         psequal = 0
@@ -99,10 +101,12 @@ def getOutPsNum(vmi,domname,psoutlist,psouttime,hidelist):
             ps_root+=1
         else:
             ps_other+=1
-        #print psin[0],psin[1],psoutlist[b][1],psoutlist[b][2]
+        print psin[0],psin[1],psoutlist[b][1],psoutlist[b][2]
+        print "33"
         while b < len(psoutlist) and psin[1]!="p" and int(psin[1]) != int(psoutlist[b][1]):
             if psoutlist[b][1] != 0 and psoutlist[b][2]!="ps" and psoutlist[b][2]!="lsmod":
                 printlog(str(psoutlist[b][1])+' '+str(psoutlist[b][2])+' may hide!!')
+                print "44"
                 if hidelist.has_key(psoutlist[b][1]):
                     warining_w(vmi,domname,psoutlist[b][1],psoutlist[b][2])
                 hidelistnew[psoutlist[b][1]]=psoutlist[b][2]

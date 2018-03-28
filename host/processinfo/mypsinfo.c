@@ -953,10 +953,12 @@ void add_exitps_sql(VmiInfo* vmiinfo,MYSQL *mysql,MyList* exitps_list,int table)
     MyNode *p = exitps_list->first;
     TaskNode *q;
     char sql_insert[1024];
+    int inser_num = 0;
     while (p)
     {
         q = p->data;
         if(q->syscallnum[10]>0){
+            inser_num++;
             if (table == 2)
             {
                 sprintf(sql_insert, "insert into nowpsinfo(domname,psid,psname,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation,state)values('%s','%d','%s','%d', '%d', '%d', '%d', '%d', '%d','%d','%d','%d','%d','%d');", vmiinfo->vmname, q->tspid, q->tsname, q->syscallnum[10], q->syscallnum[1], q->syscallnum[2], q->syscallnum[3], q->syscallnum[4], q->syscallnum[5], q->syscallnum[6], q->syscallnum[7], q->syscallnum[8], q->syscallnum[9], q->state);
@@ -970,4 +972,5 @@ void add_exitps_sql(VmiInfo* vmiinfo,MYSQL *mysql,MyList* exitps_list,int table)
         }
         p = p->next;   
     }
+    printf("add sql exit ps %d\n",inser_num);
 }
