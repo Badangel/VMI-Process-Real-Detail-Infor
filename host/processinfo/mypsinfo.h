@@ -146,4 +146,6 @@ int read_exitps_from_file(VmiInfo* vmiinfo,MyList* exitps_list);
 
 void add_exitps_sql(VmiInfo* vmiinfo,MYSQL *mysql,MyList* exitps_list,int table);
 
+void get_socket_info(VmiInfo* vmiinfo,addr_t currentaddr,int fdnum,SocketSR* sock);
+
 #endif // MYPSINFO_H_INCLUDED

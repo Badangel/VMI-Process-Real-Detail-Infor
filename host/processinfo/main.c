@@ -203,6 +203,8 @@ int main (int argc, char **argv)
 
             //task queue
             initQueue(queue);
+            FILE *pf = fopen("tempfile/ubuntu1604.sklist","w");
+            fclose(pf);
             
             ///vmi_pause_vm(vmi);
 

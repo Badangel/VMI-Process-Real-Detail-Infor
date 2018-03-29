@@ -103,12 +103,12 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
     psyscall nowsyscall;
     nowsyscall.pid = pid;
     nowsyscall.sysnum = (unsigned int)rax;
-    event->interrupt_event.reinject = 0;
+    
     if(vmivm->syscallall[nowsyscall.sysnum].sign == 0){
         printf("error int3!!!!%d!!!!!!\n",nowsyscall.sysnum);
         return VMI_EVENT_RESPONSE_EMULATE;
     }
-    record_syscall(vmivm,rax,pid,psname,event);
+    record_syscall(vmivm,rax,pid,psname,currentpsaddr,event);
    // printf("44\n");
 
     writen = write(pipenum, &nowsyscall, sizeof(psyscall));
@@ -117,6 +117,7 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
         printf("pipe write error!\n");
     }
 
+    event->interrupt_event.reinject = 0;
     //sys_num = rax;
     vmivm->syscall = rax;
     syscallnum[vmivm->syscall]++;
@@ -154,7 +155,7 @@ void find_syscall_hook(VmiInfo* vmivm,MYSQL* mysql,int sysnum,uint64_t backup_by
     fclose(pf);
 }
 
-void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname, vmi_event_t *event)
+void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname,addr_t currentpsaddr,vmi_event_t *event)
 {
     FILE *pf = fopen("log/file.log","a");
     uint64_t r8 = 0;
@@ -181,8 +182,15 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname, vmi_ev
         rdi = event->x86_regs->rdi;
         fprintf(pf, "%s(%d) %s(%ld)close rdi:%ld \n", psname,pid,vmivm->syscallall[rax].name,rax, rdi);
         break;
-    case 43:
-        fprintf(pf, "%s(%d) %s(%ld) connect\n", psname,pid,vmivm->syscallall[rax].name,rax);
+    case 42:
+        rdi = event->x86_regs->rdi;
+        //SocketSR* sock = malloc(sizeof(SocketSR));
+        //strcpy(sock->sendaddr,"1.1.1.1");
+        //strcpy(sock->recvaddr,"1.1.1.1");
+        //get_socket_info(vmivm,currentpsaddr,rdi,sock);
+        //fprintf(pf, "%s(%d) %s(%ld) connect fd:%ld %s->%s\n", psname,pid,vmivm->syscallall[rax].name,rax,rdi,sock->sendaddr,sock->recvaddr);
+        fprintf(pf, "%s(%d) %s(%ld) connect fd:%ld\n", psname,pid,vmivm->syscallall[rax].name,rax,rdi);
+       // free(sock);
         break;
     case 59:
         rdi = event->x86_regs->rdi;
@@ -270,7 +278,7 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname, vmi_ev
         free(r9filename);*/
         break;
     default:
-        fprintf(pf,"%s(%d) %s(%ld) \n",psname,pid,vmivm->syscallall[rax].name,rax);
+        //fprintf(pf,"%s(%d) %s(%ld) \n",psname,pid,vmivm->syscallall[rax].name,rax);
         //printf("%d %ld\n",pid,rax);
         break;
     }

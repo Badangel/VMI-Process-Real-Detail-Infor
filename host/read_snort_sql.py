@@ -12,6 +12,17 @@ def iptonum(ip):
     ch3 = lambda x:sum([256**j*int(i) for j,i in enumerate(x.split('.')[::-1])])
     return ch3(ip)
 
+def get_all_event(mincid):
+    db = DBSnort.DBSnort()
+    sql = "select event.cid,event.signature,signature.sig_name,iphdr.ip_src,iphdr.ip_dst from event,iphdr,signature where event.cid > "+mincid+" and event.cid = iphdr.cid and event.signature = signature.sig_id"
+    ipeventdata = db.oncesql(sql)
+    ipeventdata = list(ipeventdata)
+    i = 0
+    for a in ipeventdata:
+        i=i+1
+        print i,a[0],a[1],a[2],numtoip(a[3]),numtoip(a[4])       
+    return mincid
+
 def get_event(mincid,iplist,dbwarning):
     db = DBSnort.DBSnort()
     sql = "select event.cid,event.signature,signature.sig_name,iphdr.ip_src,iphdr.ip_dst from event,iphdr,signature where event.cid > "+mincid+" and event.cid = iphdr.cid and event.signature = signature.sig_id"
@@ -85,4 +96,5 @@ def main():
         
 
 if __name__ =='__main__':
+    #get_all_event(str(518))
     main()

@@ -141,7 +141,7 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
     tmp->tsfdnum = 0;
     MyList * socket_list= createMyList();
     MyList * file_list= createMyList();
-
+    FILE *pf = fopen("tempfile/ubuntu1604.sklist","a");
     for (i = 0; i < max_file; i++)
     {
         vmi_read_addr_va(vmiinfo->vmi, fdaddr, 0, &file);
@@ -248,6 +248,7 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
                     sock->recieveport = sk_num;
                     sprintf(sock->recvaddr,"%d.%d.%d.%d:%d",rcvIp[0],rcvIp[1],rcvIp[2],rcvIp[3],sk_num);
                     sprintf(sock->sendaddr,"%d.%d.%d.%d:%d",dIp[0],dIp[1],dIp[2],dIp[3],sk_dport);
+                    fprintf(pf,"%s(%d):%s->%s\n",tmp->tsname,tmp->tspid,sock->sendaddr,sock->recvaddr);
                     myListInsertDataAtLast(socket_list, sock);
                 }
                 if (strcmp(filename, "UDP") == 0){
@@ -258,6 +259,7 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
                     sock->recieveport = sk_num;
                     sprintf(sock->recvaddr,"%d.%d.%d.%d:%d",rcvIp[0],rcvIp[1],rcvIp[2],rcvIp[3],sk_num);
                     sprintf(sock->sendaddr,"%d.%d.%d.%d:%d",dIp[0],dIp[1],dIp[2],dIp[3],sk_dport);
+                    fprintf(pf,"%s(%d):%s->%s\n",tmp->tsname,tmp->tspid,sock->sendaddr,sock->recvaddr);
                     myListInsertDataAtLast(socket_list, sock);
                 }
                 ///printf("local:%d(num:%d)  source:%d(port:%d)",rcv_saddr,sk_num,daddr,sk_dport);
@@ -282,6 +284,7 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
                 sock->recieveport = sk_num;
                 sprintf(sock->recvaddr,"%x%02x:%x%02x:%x%02x:%x%02x",v6rcvIp[0],v6rcvIp[1],v6rcvIp[2],v6rcvIp[3],v6rcvIp[4],v6rcvIp[5],v6rcvIp[6],v6rcvIp[7]);
                 sprintf(sock->sendaddr,"%x%02x:%x%02x:%x%02x:%x%02x",v6dIp[0],v6dIp[1],v6dIp[2],v6dIp[3],v6dIp[4],v6dIp[5],v6dIp[6],v6dIp[7]);
+                fprintf(pf,"%s(%d):%s->%s\n",tmp->tsname,tmp->tspid,sock->sendaddr,sock->recvaddr);
                 myListInsertDataAtLast(socket_list, sock);
                 ///printf(" %lx: <-- %lx ",v6_rcv_saddr,v6_daddr);
                 ///printf(" %x%02x:%x%02x:%x%02x:%x%02x :%d <-- ",v6rcvIp[0],v6rcvIp[1],v6rcvIp[2],v6rcvIp[3],v6rcvIp[4],v6rcvIp[5],v6rcvIp[6],v6rcvIp[7],sk_num);
@@ -358,6 +361,7 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
     }
     tmp->socket_list = socket_list;
     tmp->file_list = file_list;
+    fclose(pf);
     //fdinfoaddr = &tmp;
 } ///end get_files_info
 
@@ -684,7 +688,7 @@ void initPs(VmiInfo* vmiinfo,addr_t list_head){
     vmi_pause_vm(vmiinfo->vmi);
     do
     {
-        psnum++;
+        
         current_process = next_list_e - vmiinfo->vmoffset[task_offset];
 
         PsNode *oneps = malloc(sizeof(PsNode));
@@ -703,9 +707,11 @@ void initPs(VmiInfo* vmiinfo,addr_t list_head){
             printf("[init ps list]%d %s Failed to read its files!!!!!\n", oneps->pid, procname);
             free(procname);
             free(oneps);
-        }else{
-        ///printf("%s(%d) addr:%lx pgd:%lx\n",oneps->name,oneps->pid,oneps->addr,oneps->pgd);
-        myListInsertDataAtLast(initps_list, oneps);
+        }
+        else{
+        //printf("%s(%d) addr:%lx pgd:%lx\n",oneps->name,oneps->pid,oneps->addr,oneps->pgd);
+            myListInsertDataAtLast(initps_list, oneps);
+            psnum++;
         }
 
         /* follow the next pointer */
@@ -973,4 +979,29 @@ void add_exitps_sql(VmiInfo* vmiinfo,MYSQL *mysql,MyList* exitps_list,int table)
         p = p->next;   
     }
     printf("add sql exit ps %d\n",inser_num);
+}
+
+///this funtion may no need!!!
+void get_socket_info(VmiInfo* vmiinfo,addr_t currentaddr,int fdnum,SocketSR* sock){
+    vmi_read_addr_va(vmiinfo->vmi, currentaddr + vmiinfo->vmoffset[files_offset], 0, &files);
+    vmi_read_addr_va(vmiinfo->vmi, files + vmiinfo->vmoffset[fdt_offset], 0, &fdt);
+    vmi_read_addr_va(vmiinfo->vmi, fdt + vmiinfo->vmoffset[fd_offset], 0, &fd);
+    fd = fd + fdnum*8;
+    printf("11\n");
+    vmi_read_addr_va(vmiinfo->vmi, fd, 0, &file);
+    vmi_read_addr_va(vmiinfo->vmi, file + vmiinfo->vmoffset[private_date_offset], 0, &private_date);
+    vmi_read_addr_va(vmiinfo->vmi, private_date + vmiinfo->vmoffset[socket_sk_offset], 0, &sk);
+    vmi_read_32_va(vmiinfo->vmi, sk + vmiinfo->vmoffset[sk_daddr_offset], 0, &daddr);
+    vmi_read_32_va(vmiinfo->vmi, sk + vmiinfo->vmoffset[sk_rcv_saddr_offset], 0, &rcv_saddr);
+    unsigned char *rcvIp = (unsigned char *)&rcv_saddr;
+    unsigned char *dIp = (unsigned char *)&daddr;
+    vmi_read_16_va(vmiinfo->vmi, sk + vmiinfo->vmoffset[sk_num_offset], 0, &sk_num);
+    vmi_read_16_va(vmiinfo->vmi, sk + vmiinfo->vmoffset[sk_dport_offset], 0, &sk_dport);
+    printf("22\n");
+    sock->classify = 1;
+    sock->sendport = sk_dport;
+    sock->recieveport = sk_num;
+    sprintf(sock->recvaddr, "%d.%d.%d.%d:%d", rcvIp[0], rcvIp[1], rcvIp[2], rcvIp[3], sk_num);
+    sprintf(sock->sendaddr, "%d.%d.%d.%d:%d", dIp[0], dIp[1], dIp[2], dIp[3], sk_dport);
+    printf("%s->%s\n",sock->sendaddr,sock->recvaddr);
 }
