@@ -103,7 +103,7 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
     psyscall nowsyscall;
     nowsyscall.pid = pid;
     nowsyscall.sysnum = (unsigned int)rax;
-    
+    event->interrupt_event.reinject = 0;
     if(vmivm->syscallall[nowsyscall.sysnum].sign == 0){
         printf("error int3!!!!%d!!!!!!\n",nowsyscall.sysnum);
         return VMI_EVENT_RESPONSE_EMULATE;
@@ -117,7 +117,7 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
         printf("pipe write error!\n");
     }
 
-    event->interrupt_event.reinject = 0;
+    
     //sys_num = rax;
     vmivm->syscall = rax;
     syscallnum[vmivm->syscall]++;
@@ -215,6 +215,11 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname,addr_t 
         if(pid<=rdi)
         {
             delete_one_ps(vmivm,rdi);
+            FILE *ep = fopen(vmivm->exitpsfile,"a");
+            char psnamea[80] = "";
+            get_psname_by_pid(vmivm, rdi, psnamea);
+            fprintf(ep,"%ld %s\n",rdi,psnamea);
+            fclose(ep);
         }
         break;
     case 87:
@@ -278,7 +283,7 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname,addr_t 
         free(r9filename);*/
         break;
     default:
-        //fprintf(pf,"%s(%d) %s(%ld) \n",psname,pid,vmivm->syscallall[rax].name,rax);
+        fprintf(pf,"%s(%d) %s(%ld) \n",psname,pid,vmivm->syscallall[rax].name,rax);
         //printf("%d %ld\n",pid,rax);
         break;
     }
