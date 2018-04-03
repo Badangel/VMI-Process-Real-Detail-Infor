@@ -33,6 +33,7 @@ event_response_t singlestep_cb(vmi_instance_t vmi, vmi_event_t *event)
     rax = event->x86_regs->rax;
     VmiInfo* vmivm = get_vmiinfo_vmi(vmi);
     int singcbsysnum = (unsigned int)rax;
+    //printf("single rip:%lx\n",event->x86_regs->rip);
 
    /// printf("enter one cb %d \n ",vmivm->syscall);
     //printf("modify vmiinfo:%s \n",vmivm->version);
@@ -100,15 +101,29 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
     }
     //fclose(pf);
     //printf("33\n");
+    uint64_t value_rip = 0;
+    uint64_t rip = event->x86_regs->rip;
+    vmi_read_64_va(vmi,rip,0,&value_rip);
+    int rip_rax = rax;
+    if(vmivm->syscallall[rip_rax].addr != rip){
+        rip_rax = get_sysnum_from_rip(vmivm,rip);
+        printf("rax:%ld rip-rax:%d rip:%lx value:%lx\n", event->x86_regs->rax, rip_rax, rip, value_rip);
+    }
+    
     psyscall nowsyscall;
     nowsyscall.pid = pid;
-    nowsyscall.sysnum = (unsigned int)rax;
+    nowsyscall.sysnum = rip_rax;
     event->interrupt_event.reinject = 0;
-    if(vmivm->syscallall[nowsyscall.sysnum].sign == 0){
-        printf("error int3!!!!%d!!!!!!\n",nowsyscall.sysnum);
+
+    if (vmivm->syscallall[nowsyscall.sysnum].sign == 0)
+    {
+        uint8_t nowadd = 0;
+        vmi_read_8_va(vmi, vmivm->syscallall[nowsyscall.sysnum].addr, 0, &nowadd);
+        printf("error int3!!!!%d!!!!!!8bit:%x\n", nowsyscall.sysnum, nowadd);
+        detect_syscall_hook(vmivm);
         return VMI_EVENT_RESPONSE_EMULATE;
     }
-    record_syscall(vmivm,rax,pid,psname,currentpsaddr,event);
+    record_syscall(vmivm,rip_rax,pid,psname,currentpsaddr,event);
    // printf("44\n");
 
     writen = write(pipenum, &nowsyscall, sizeof(psyscall));
@@ -119,7 +134,7 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
 
     
     //sys_num = rax;
-    vmivm->syscall = rax;
+    vmivm->syscall = rip_rax;
     syscallnum[vmivm->syscall]++;
     ///printf("%s %d syscall#=%u right:%x\n",vmivm->version, pid,(unsigned int)rax,vmivm->syscallall[vmivm->syscall].pre);
     vmi_write_8_va(vmi, vmivm->syscallall[vmivm->syscall].addr, 0, &(vmivm->syscallall[vmivm->syscall].pre));
@@ -305,4 +320,43 @@ void get_module_name(VmiInfo* vmivm,char* unlink_path){
         }
     }
 
+}
+
+void detect_syscall_hook(VmiInfo* vmivm){
+    printf("start detcet syscall hook!\n");
+    FILE *pftest = fopen("log/test.log", "a");
+    int i;
+    // for(i = 0; i < vmivm->syscall_len; i++)
+    int endsysnum = vmivm->syscall_len;
+    addr_t sys_call_table_addr = 0xffffffff81a001c0;
+    uint64_t sysaddr = 0;
+    for (i = 0; i < endsysnum; i++)
+    {
+        if (vmivm->syscallall[i].addr != 0)
+        {
+            vmi_read_64_va(vmivm->vmi, sys_call_table_addr + i * 8, 0, &sysaddr);
+            
+            if (vmivm->syscallall[i].addr != sysaddr)
+            {
+                fprintf(pftest, "%d %s read in right addr:%lx was hooked to %lx!!\n", i, vmivm->syscallall[i].name, vmivm->syscallall[i].reallyaddr, sysaddr);
+                printf("%d %s right addr:%lx was hooked to %lx!!\n", i, vmivm->syscallall[i].name, vmivm->syscallall[i].addr, sysaddr);
+                vmi_write_64_va(vmivm->vmi, sys_call_table_addr + i * 8, 0, &(vmivm->syscallall[i].addr));
+                printf("recover %s into right addr!\n", vmivm->syscallall[i].name);
+                //find_syscall_hook(vmivm, &mysql, i, sysaddr);
+            }
+        }
+      
+    }
+    fclose(pftest);
+}
+
+int get_sysnum_from_rip(VmiInfo* vmivm,uint64_t rip){
+    int i =0;
+    for (; i < vmivm->syscall_len; i++)
+    {
+        if(vmivm->syscallall[i].addr==rip){
+            return i;
+        }
+    }
+    return -1;
 }

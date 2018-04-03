@@ -52,4 +52,8 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname,addr_t 
 
 void get_module_name(VmiInfo* vmivm,char* unlink_path);
 
+void detect_syscall_hook(VmiInfo* vmivm);
+
+int get_sysnum_from_rip(VmiInfo* vmivm,uint64_t rip);
+
 #endif // MYSYSCALL_H

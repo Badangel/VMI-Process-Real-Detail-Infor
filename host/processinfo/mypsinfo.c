@@ -893,6 +893,7 @@ void detect_hide_ps(VmiInfo* vmiinfo,MYSQL *mysql,LinkQueue* queue, MyList *psli
     TaskNode* q = queue->front->next;
     PsNode* aa;
     FILE *pf = fopen("log/warning.log","a");
+
     while(p&&q!=NULL){
         aa = p->data;
         //printf("T-pid:%d(%s) P-pid:%d(%s)\n",q->tspid,q->tsname,aa->pid,aa->name);
@@ -905,15 +906,18 @@ void detect_hide_ps(VmiInfo* vmiinfo,MYSQL *mysql,LinkQueue* queue, MyList *psli
                 fprintf(pf, "%s(%d) is hided!!!\n", aa->name, aa->pid);
             }
              p = p->next;
+             continue;
         }
         if(q->tspid < aa->pid){
             q =q ->next;
+            continue;
         }
         if(q->tspid == aa->pid){
             q = q->next;
             p = p->next;
         }
     }
+
     while(p){
         aa = p->data;
         char s[8];
@@ -925,6 +929,7 @@ void detect_hide_ps(VmiInfo* vmiinfo,MYSQL *mysql,LinkQueue* queue, MyList *psli
         }
         p = p->next;
     }
+
     fclose(pf);
 }
 

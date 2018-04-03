@@ -209,7 +209,6 @@ int main (int argc, char **argv)
             ///vmi_pause_vm(vmi);
 
             ///while(false)///test fork
-            
          
             do
             {
@@ -273,7 +272,7 @@ int main (int argc, char **argv)
             int pssystotal[psnum+1][sysclassnum+1];
             int i = 0;
             TaskNode* q = queue->front->next;
-
+            
             for(; i < psnum; i++)
             {
                 pssystotal[i][0] = q->tspid;
@@ -296,10 +295,9 @@ int main (int argc, char **argv)
             //printf("This is farther, write hello to pipe\n");
             //write(fd[1], "hello\n", 25);
 
-
             MyList* exitps_list = createMyList();
             int exitps_num = read_exitps_from_file(vmivm,exitps_list);       
-
+            
             int getsysnum = 0;
             do
             {
@@ -348,12 +346,11 @@ int main (int argc, char **argv)
                 ++getsysnum;
                /// printf("%d father get %d do syscall %d\n",readn, getsyscall.pid,getsyscall.sysnum);
             }while(readn>0);
+
             /**detect hide module*/
             module_change = detect_hide_module(vmivm,&mysql,module_change);
-
             /**detect hide os*/
             detect_hide_ps(vmivm,&mysql,queue,pslist_real);
-            
             ///printf("2:ok \n");
             combineSyscallAndPs(queue,pssystotal,psnum);
 
@@ -382,7 +379,7 @@ int main (int argc, char **argv)
             
             freeMyList(pslist_real);
             freeMyList(exitps_list);
-
+            
             time_t now;
             struct tm *timenow;
             time(&now);
@@ -444,7 +441,9 @@ int main (int argc, char **argv)
         time(&timep);
         fprintf(pftest,"%s!!\n",ctime(&timep));
         int i;
-        for(i = 0; i < vmivm->syscall_len; i++)
+       // for(i = 0; i < vmivm->syscall_len; i++)
+        int endsysnum = vmivm->syscall_len; 
+        for(i = 0; i < endsysnum; i++)
         {
             if(vmivm->syscallall[i].addr != 0)
             {
@@ -510,7 +509,8 @@ int main (int argc, char **argv)
 
         }
         FILE *pfover = fopen("log/cprint.log","a");
-        for(i = 0; i < vmivm->syscall_len; i++)
+        //for(i = 0; i < vmivm->syscall_len; i++)
+        for(i = 0; i < endsysnum; i++)
         {
             fprintf(pfover,"%3d %s :%d\n",i,vmivm->syscallall[i].name,syscallnum[i]);
             if(vmivm->syscallall[i].sign == 1)
