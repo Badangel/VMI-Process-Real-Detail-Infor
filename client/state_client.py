@@ -21,11 +21,13 @@ import commands
 def ps_stat():
     #output = commands.getstatusoutput('ps -aux')
     ps_res = subprocess.Popen(['ps','axco','user,pid,time,%cpu,%mem,command'], stdout=subprocess.PIPE)
+    ps_res.wait()
     return ps_res
     
 def module_stat():
     #output = commands.getstatusoutput('ps -aux')
     lsmod_res = subprocess.Popen(['lsmod'], stdout=subprocess.PIPE)
+    lsmod_res.wait()
     return lsmod_res    
  
 if __name__=='__main__':
@@ -69,6 +71,7 @@ if __name__=='__main__':
             #break 
         except:
             stat_popen.kill()
+            stat_popen.wait()
             s.close()
             s = socket.socket()
             while True:
