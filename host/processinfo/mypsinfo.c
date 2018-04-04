@@ -951,6 +951,14 @@ int read_exitps_from_file(VmiInfo* vmiinfo,MyList* exitps_list){
                 exitps->syscallnum[i] = 0;
             }
             printf("find %d %s exit!\n",exitps->tspid,exitps->tsname);
+            if (findACLps(vmiinfo->acl_list, exitps->tsname, exitps->tspid) > -1)
+            {
+                exitps->state = 3;
+                ///printf("ACL: ");
+            }
+            else{
+                exitps->state = 0;
+            }
             myListInsertDataAtLast(exitps_list,exitps);
         }
     }
@@ -968,7 +976,7 @@ void add_exitps_sql(VmiInfo* vmiinfo,MYSQL *mysql,MyList* exitps_list,int table)
     while (p)
     {
         q = p->data;
-        if(q->syscallnum[10]>0){
+        if(q->syscallnum[10]>0&&q->state!=3){
             inser_num++;
             if (table == 2)
             {

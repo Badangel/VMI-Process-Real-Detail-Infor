@@ -262,7 +262,7 @@ int main (int argc, char **argv)
 
             }
             while(next_list_entry != list_head);
-
+            
             MyList* pslist_real = createMySearchList(compare2ps_nameid);
             read_pslist_from_file(vmivm,pslist_real);
             ///vmi_resume_vm(vmi);
@@ -346,14 +346,14 @@ int main (int argc, char **argv)
                 ++getsysnum;
                /// printf("%d father get %d do syscall %d\n",readn, getsyscall.pid,getsyscall.sysnum);
             }while(readn>0);
-
+            
             /**detect hide module*/
             module_change = detect_hide_module(vmivm,&mysql,module_change);
             /**detect hide os*/
             detect_hide_ps(vmivm,&mysql,queue,pslist_real);
             ///printf("2:ok \n");
             combineSyscallAndPs(queue,pssystotal,psnum);
-
+            
             setParentLayer(queue);
 
             traversal(vmivm,&mysql,queue,pre_queue,frenum,table);
@@ -379,7 +379,6 @@ int main (int argc, char **argv)
             
             freeMyList(pslist_real);
             freeMyList(exitps_list);
-            
             time_t now;
             struct tm *timenow;
             time(&now);

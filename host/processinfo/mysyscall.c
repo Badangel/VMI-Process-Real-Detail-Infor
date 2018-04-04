@@ -30,9 +30,9 @@ int testerror = 0;
 
 event_response_t singlestep_cb(vmi_instance_t vmi, vmi_event_t *event)
 {
-    rax = event->x86_regs->rax;
+    //rax = event->x86_regs->rax;
     VmiInfo* vmivm = get_vmiinfo_vmi(vmi);
-    int singcbsysnum = (unsigned int)rax;
+    int singcbsysnum = vmivm->syscall;
     //printf("single rip:%lx\n",event->x86_regs->rip);
 
    /// printf("enter one cb %d \n ",vmivm->syscall);
@@ -43,7 +43,6 @@ event_response_t singlestep_cb(vmi_instance_t vmi, vmi_event_t *event)
     }
     ++singstepnum;
    /// printf("%ld one step \n",rax);
-
     return VMI_EVENT_RESPONSE_TOGGLE_SINGLESTEP;
 }
 
@@ -60,14 +59,12 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
     }
     testerror = 1;
     */
-
     rax = event->x86_regs->rax;
     cr3 = event->x86_regs->cr3;
     PsNode* nowps = get_ps_fron_pgd(vmivm,cr3);
     char *psname = NULL;
     vmi_pid_t pid =-1;
     addr_t currentpsaddr = 0;
-    
    // FILE *pf = fopen("log/file.log","a");
     if (nowps == NULL)
     {
@@ -99,17 +96,18 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
         currentpsaddr = nowps->addr;
        // fprintf(pf,"find %s(%d) pgd:%lx\n", psname, pid, cr3);
     }
+    
     //fclose(pf);
     //printf("33\n");
     uint64_t value_rip = 0;
     uint64_t rip = event->x86_regs->rip;
     vmi_read_64_va(vmi,rip,0,&value_rip);
     int rip_rax = rax;
-    if(vmivm->syscallall[rip_rax].addr != rip){
+
+    if(rip_rax<0||vmivm->syscallall[rip_rax].addr != rip){
         rip_rax = get_sysnum_from_rip(vmivm,rip);
-        printf("rax:%ld rip-rax:%d rip:%lx value:%lx\n", event->x86_regs->rax, rip_rax, rip, value_rip);
+        //printf("rax:%ld rip-rax:%d rip:%lx value:%lx\n", event->x86_regs->rax, rip_rax, rip, value_rip);
     }
-    
     psyscall nowsyscall;
     nowsyscall.pid = pid;
     nowsyscall.sysnum = rip_rax;
@@ -123,9 +121,11 @@ event_response_t trap_cb(vmi_instance_t vmi, vmi_event_t *event)
         detect_syscall_hook(vmivm);
         return VMI_EVENT_RESPONSE_EMULATE;
     }
+    if(trapnum%10000==0){
+        detect_syscall_hook(vmivm);
+    }
     record_syscall(vmivm,rip_rax,pid,psname,currentpsaddr,event);
    // printf("44\n");
-
     writen = write(pipenum, &nowsyscall, sizeof(psyscall));
     if (writen < 1)
     {
@@ -298,7 +298,7 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname,addr_t 
         free(r9filename);*/
         break;
     default:
-        fprintf(pf,"%s(%d) %s(%ld) \n",psname,pid,vmivm->syscallall[rax].name,rax);
+        //fprintf(pf,"%s(%d) %s(%ld) \n",psname,pid,vmivm->syscallall[rax].name,rax);
         //printf("%d %ld\n",pid,rax);
         break;
     }
