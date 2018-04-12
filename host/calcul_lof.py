@@ -305,6 +305,85 @@ def detectPsinfo(domname,sqltable):
         db.allcommit()
         printlog('add: '+str(addnum))
 
+def trainpsinfo(domname,sqltable,maxnum):
+    print 'enter detect psinfo'
+    K = 9
+    MinPts = 9
+    db = DBHelper.DBHelper()
+    print time.clock()
+    #sqlps = "select layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from psinfo where state = 1 "
+    sqlps = "select layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from npsinfo where state = 1 "
+    psdata = db.oncesql(sqlps)
+    print "psdata len:",len(psdata)
+    datalen = len(psdata)
+    kdis,lrd = trainNormaiData(psdata,datalen,K,MinPts)
+    
+    Globalvar.settrainover()
+    print time.clock()
+    #delete minflt
+    #sqlpsone = "select id,psid,psname,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from "+sqltable+" where state = 0 and domname = '"+domname+"'"
+    sqlpsone = "select id,psid,psname,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from "+sqltable+" where id<"+str(maxnum)+" and state = 0 and domname = '"+domname+"'"
+    i = 0
+    while True:
+        i = i+1
+        psonedata = db.oncesql(sqlpsone)
+        psonedata = list(psonedata)
+        datanewlen = len(psonedata)
+        #print "len:",datanewlen
+        if datanewlen == 0:
+            time.sleep(1)
+            #print "sleep 1!!",i
+            break      
+        #print time.clock()
+        addnum = 0
+        for a in range(0,datanewlen):
+            alof = getoplof(psdata,K,MinPts,datalen,kdis,lrd,psonedata[a][3:])
+            if alof > 1.5 or alof < 0.7:
+                changestate = "update "+sqltable+" set state = 1,lof="+str(alof)+" where id =" + str(psonedata[a][0])
+                addnum = addnum + 1
+                db.myupdate(changestate)           
+                printlog( str(psonedata[a][1])+" "+str(psonedata[a][2])+"(pssql:"+str(psonedata[a][0])+") add in "+str(alof)+" "+str(time.clock()))
+                print str(psonedata[a][1])+" "+str(psonedata[a][2])+"(pssql:"+str(psonedata[a][0])+") add in "+str(alof)
+           
+            else:
+                changestate = "update "+sqltable+" set state = 2,lof="+str(alof)+" where id =" + str(psonedata[a][0])
+                db.oncesql(changestate)
+                printlog( str(psonedata[a][1])+" "+str(psonedata[a][2])+"(pssql:"+str(psonedata[a][0])+") move out "+str(alof)+" "+str(time.clock()))
+                print str(psonedata[a][1])+" "+str(psonedata[a][2])+"(pssql:"+str(psonedata[a][0])+") move out "+str(alof)
+
+        db.allcommit()
+        printlog('add: '+str(addnum))
+
+from sklearn import tree
+
+def trainDecTree():
+    mode = tree.DecisionTreeClassifier(criterion='gini')
+    db = DBHelper.DBHelper()
+    sqlps = "select layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation,state from trainset"
+    psdata = db.oncesql(sqlps)
+    psdata = list(psdata)
+    X=[]
+    Y=[]
+    for l in psdata:
+        X.append(l[:-1])
+        Y.append(l[-1])
+    print len(X),len(Y),len(X[0])
+    mode.fit(X,Y)
+    print "train over!"
+    sqlpsone = "select id,psid,psname,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from testset where state = 0 and domname = '"+domname+"'"
+    psonedata = db.oncesql(sqlpsone)
+    psonedata = list(psonedata)
+    datanewlen = len(psonedata)
+    for a in psonedata:
+        x_test = a[3:]
+        x_id = a[0:2]
+        y_test = mode.predict([x_test])
+        changestate = "update testset set state = "+str(y_test[0])+" where id =" + str(a[0])
+        print a[0],a[2]," is ",y_test[0]
+        db.oncesql(changestate)
+    db.allcommit()
+
+
 def detectAllState1(domname):
     selectdb = DBHelper.DBHelper()
     sqlstate = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,int_sys_in*10,csw_sys_in*10,read_total_in/10,writ_total_in/10,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from nowstate where stat = 1 and domname = '"+domname+"'"
@@ -421,6 +500,23 @@ if __name__ =='__main__':
                 t1 = threading.Thread(target = runpsinfo,args =[domname,str(operation)],name='getpsinfo')
                 t1.setDaemon(True)
                 t1.start()
+            if operation==7:
+                print 'enter train domU psinfo'
+                a =  [1000,1500,2000,2500,3000,3500,4000,5000,6000,8000]
+                for a1 in a:
+                    trainpsinfo(domname,"npsinfo",a1)
+                db = DBHelper.DBHelper()
+                sqlps = "update npsinfo set state = 0 where id <501"
+                psdata = db.oncesql(sqlps)
+                trainpsinfo(domname,"npsinfo",1000)
+                trainpsinfo(domname,"abnpsinfo",8000)
+            if operation==8:
+                print 'enter test domU psinfo'
+                t0 = threading.Thread(target = trainpsinfo,args =[domname,'testset'],name='testpsinfo')
+                t0.setDaemon(True)
+                t0.start()
+            if operation==9:
+                trainDecTree()
         Globalvar.setexit()
         exdata.stopServer(Globalvar.getser())
         
