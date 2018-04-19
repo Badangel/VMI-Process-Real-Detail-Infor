@@ -343,7 +343,7 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
             myListInsertDataAtLast(file_list, filefd);
             
             free(filename);
-            //printf("%s||%d \n",filefd->filepath,n);
+            ///printf("%s||%d \n",filefd->filepath,n);
 
             ////////////////////////////////////////////////////
             /*small with dentry qstr name.
@@ -491,8 +491,8 @@ void get_task_info(VmiInfo* vmiinfo, addr_t current_process, TaskNode *tmptn)
     */
 
     /* print out the process name */
-    ///printf("\n[%5d] [%5d] %s (struct addr:%lx)\n   rparent:%d  parent:%d ", pid, tgid, procname, current_process, real_parent_pid, parent_pid);
-    ///printf("%d",pid);
+    ///printf("\n[%5d] [%5d] %s (struct addr:%lx)\n   rparent:%d  parent:%d \n", pid, tgid, procname, current_process, real_parent_pid, parent_pid);
+    ///printf("[%5d]%s\n",pid,procname);
 
     /*only show mm_struct info not add in struct*/
     get_mm_struct(vmiinfo, current_process, tmptn);
@@ -980,7 +980,7 @@ void add_exitps_sql(VmiInfo* vmiinfo,MYSQL *mysql,MyList* exitps_list,int table)
             inser_num++;
             if (table == 2)
             {
-                sprintf(sql_insert, "insert into nowpsinfo(domname,psid,psname,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation,state)values('%s','%d','%s','%d', '%d', '%d', '%d', '%d', '%d','%d','%d','%d','%d','%d');", vmiinfo->vmname, q->tspid, q->tsname, q->syscallnum[10], q->syscallnum[1], q->syscallnum[2], q->syscallnum[3], q->syscallnum[4], q->syscallnum[5], q->syscallnum[6], q->syscallnum[7], q->syscallnum[8], q->syscallnum[9], q->state);
+                sprintf(sql_insert, "insert into testset(domname,psid,psname,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation,state)values('%s','%d','%s','%d', '%d', '%d', '%d', '%d', '%d','%d','%d','%d','%d','%d');", vmiinfo->vmname, q->tspid, q->tsname, q->syscallnum[10], q->syscallnum[1], q->syscallnum[2], q->syscallnum[3], q->syscallnum[4], q->syscallnum[5], q->syscallnum[6], q->syscallnum[7], q->syscallnum[8], q->syscallnum[9], q->state);
             }
             else
             {

@@ -14,6 +14,15 @@ import state.global_var as Globalvar
 import sys
 import signal
 from state.warning_log import *
+from sklearn import tree
+
+from sklearn import linear_model
+from sklearn import naive_bayes
+from sklearn import neighbors
+from sklearn import svm
+from sklearn import ensemble
+from sklearn.model_selection import cross_val_score
+from sklearn import preprocessing
 #Calculate the distance of each point
 
 def getdisance(data,datalen):
@@ -354,10 +363,8 @@ def trainpsinfo(domname,sqltable,maxnum):
         db.allcommit()
         printlog('add: '+str(addnum))
 
-from sklearn import tree
-
-def trainDecTree():
-    mode = tree.DecisionTreeClassifier(criterion='gini')
+def trainmode(mode):
+    
     db = DBHelper.DBHelper()
     sqlps = "select layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation,state from trainset"
     psdata = db.oncesql(sqlps)
@@ -368,7 +375,14 @@ def trainDecTree():
         X.append(l[:-1])
         Y.append(l[-1])
     print len(X),len(Y),len(X[0])
-    mode.fit(X,Y)
+    #normalized_X = preprocessing.normalize(X)
+    scaler = preprocessing.StandardScaler().fit(X)
+    #scaled_X = preprocessing.scale(X)
+    scaled_X = scaler.transform(X)
+    score = cross_val_score(mode,scaled_X,Y)
+    print score.mean()
+    mode.fit(scaled_X,Y)
+    #print mode.feature_importances_
     print "train over!"
     sqlpsone = "select id,psid,psname,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from testset where state = 0 and domname = '"+domname+"'"
     psonedata = db.oncesql(sqlpsone)
@@ -377,12 +391,59 @@ def trainDecTree():
     for a in psonedata:
         x_test = a[3:]
         x_id = a[0:2]
-        y_test = mode.predict([x_test])
+        x_stand = scaler.transform([x_test])
+        y_test = mode.predict(x_stand)
         changestate = "update testset set state = "+str(y_test[0])+" where id =" + str(a[0])
         print a[0],a[2]," is ",y_test[0]
         db.oncesql(changestate)
     db.allcommit()
 
+def selectmode():
+    from hpsklearn import HyperoptEstimator,random_forest,svc,knn,decision_tree,ada_boost,multinomial_nb,extra_trees
+    db = DBHelper.DBHelper()
+    sqlps = "select layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation,state from trainset"
+    psdata = db.oncesql(sqlps)
+    psdata = list(psdata)
+    X=[]
+    Y=[]
+    for l in psdata:
+        X.append(l[:-1])
+        Y.append(l[-1])
+    print len(X),len(Y),len(X[0])
+    scaler = preprocessing.StandardScaler().fit(X)
+    scaled_X = scaler.transform(X)
+    mode = HyperoptEstimator(classifier=random_forest('myrandom_forest'))
+    #mode = ensemble.RandomForestClassifier()
+    mode.fit(scaled_X,Y)
+    print mode.best_model()
+    #print mode()
+    '''
+    sqlps = "select layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation,state from testset"
+    psdata1 = db.oncesql(sqlps)
+    psdata1 = list(psdata1)
+    testX=[]
+    testY=[]
+    for l in psdata1:
+        testX.append(l[:-1])
+        testY.append(l[-1])
+    testX_scale = scaler.transform(testX)
+    print mode
+    print(mode.score(testX_scale, testY))
+    '''
+    print "train over!"
+    sqlpsone = "select id,psid,psname,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from abnpsinfo where id>3993 and state = 0 and domname = '"+domname+"'"
+    psonedata = db.oncesql(sqlpsone)
+    psonedata = list(psonedata)
+    datanewlen = len(psonedata)
+    for a in psonedata:
+        x_test = a[3:]
+        x_id = a[0:2]
+        x_stand = scaler.transform([x_test])
+        y_test = mode.predict(x_stand)
+        changestate = "update abnpsinfo set state = "+str(y_test[0])+" where id =" + str(a[0])
+        print a[0],a[2]," is ",y_test[0]
+        db.oncesql(changestate)
+    db.allcommit()
 
 def detectAllState1(domname):
     selectdb = DBHelper.DBHelper()
@@ -516,7 +577,44 @@ if __name__ =='__main__':
                 t0.setDaemon(True)
                 t0.start()
             if operation==9:
-                trainDecTree()
+                mode = tree.DecisionTreeClassifier(criterion='entropy')
+                print "tree.DecisionTreeClassifier(criterion=/'entropy/')"
+                trainmode(mode)
+            if operation==10:
+                mode = linear_model.LogisticRegression()
+                print "mode = linear_model.LogisticRegression"
+                trainmode(mode)
+            if operation==11:
+                mode = naive_bayes.GaussianNB()
+                print "mode = naive_bayes.GaussianNB"
+                trainmode(mode)
+            if operation==12:
+                mode = neighbors.KNeighborsClassifier()
+                print "mode = neighbors.KNeighborsClassifier"
+                trainmode(mode)
+            if operation==13:
+                mode = svm.SVC()
+                print "mode = svm.SVC"
+                trainmode(mode)
+            if operation==14:
+                mode = ensemble.RandomForestClassifier()
+                print "mode = ensemble.RandomForestClassifier"
+                trainmode(mode)
+            if operation==15:
+                mode = ensemble.ExtraTreesClassifier()
+                print "mode = ensemble.ExtraTreesClassifier"
+                trainmode(mode)
+            if operation==16:
+                mode = ensemble.GradientBoostingClassifier()
+                print "mode = ensemble.GradientBoostingClassifier"
+                trainmode(mode)
+            if operation==17:
+                mode = ensemble.AdaBoostClassifier()
+                print "mode = ensemble.AdaBoostClassifier"
+                trainmode(mode)
+            if operation==18:
+                print "test select mode!"
+                selectmode()
         Globalvar.setexit()
         exdata.stopServer(Globalvar.getser())
         

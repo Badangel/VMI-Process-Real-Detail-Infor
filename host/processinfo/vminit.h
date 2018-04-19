@@ -75,7 +75,6 @@ typedef struct TaskNode{
 typedef struct modulenode
 {
     char name[50];
-    ///0:don't know 1:tcp 2:udp
     int num_syms;
     int num_kp;
 }ModuleNode;
