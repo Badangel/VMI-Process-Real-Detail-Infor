@@ -11,6 +11,10 @@ def setexit():
     print "exit chang False!!"
     Globalvar.exitstat=False
 
+def setexitT():
+    print "exit chang True!!"
+    Globalvar.exitstat=True
+
 def getexit():
     return Globalvar.exitstat
 

@@ -250,13 +250,13 @@ def detectState(domname,sqltable):
                     warining_st(domname,statedatanew[a][0],alof)
                     #db.oncesql(changestate)
                     printlog('state add in '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock()))
-                    print 'state add in '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock())
+                    #print 'state add in '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock())
 
                 else:
                     changestate = "update "+sqltable+" set stat = 2,lof="+str(alof)+" where id =" + str(statedatanew[a][0])
                     selectdb.oncesql(changestate)
                     printlog('state move out '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock()))
-                    print 'state move out '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock())
+                    #print 'state move out '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock())
             selectdb.allcommit()
 
 
@@ -398,7 +398,7 @@ def trainmode(mode):
         db.oncesql(changestate)
     db.allcommit()
 
-def selectmode():
+def selectmode(domname):
     from hpsklearn import HyperoptEstimator,random_forest,svc,knn,decision_tree,ada_boost,multinomial_nb,extra_trees
     db = DBHelper.DBHelper()
     sqlps = "select layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation,state from trainset"
@@ -444,6 +444,45 @@ def selectmode():
         print a[0],a[2]," is ",y_test[0]
         db.oncesql(changestate)
     db.allcommit()
+
+def detectpsmode(domname):
+    from hpsklearn import HyperoptEstimator,random_forest,svc,knn,decision_tree,ada_boost,multinomial_nb,extra_trees
+    db = DBHelper.DBHelper()
+    sqlps = "select layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation,state from trainset"
+    psdata = db.oncesql(sqlps)
+    psdata = list(psdata)
+    X=[]
+    Y=[]
+    for l in psdata:
+        X.append(l[:-1])
+        Y.append(l[-1])
+    print len(X),len(Y),len(X[0])
+    scaler = preprocessing.StandardScaler().fit(X)
+    scaled_X = scaler.transform(X)
+    #mode = HyperoptEstimator(classifier=random_forest('myrandom_forest'))
+    mode = ensemble.RandomForestClassifier()
+    mode.fit(scaled_X,Y)
+    #print mode.best_model()
+    #print mode()
+    Globalvar.settrainover()
+    print "train over!"
+    sqlpsone = "select id,psid,psname,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from testset where state = 0 and domname = '"+domname+"'"
+    while True:
+        psonedata = db.oncesql(sqlpsone)
+        psonedata = list(psonedata)
+        datanewlen = len(psonedata)
+        if datanewlen==0:
+            time.sleep(1)
+            continue
+        for a in psonedata:
+            x_test = a[3:]
+            x_id = a[0:2]
+            x_stand = scaler.transform([x_test])
+            y_test = mode.predict(x_stand)
+            changestate = "update testset set state = "+str(y_test[0])+" where id =" + str(a[0])
+            #print a[0],a[2]," is ",y_test[0]
+            db.oncesql(changestate)
+        db.allcommit()
 
 def detectAllState1(domname):
     selectdb = DBHelper.DBHelper()
@@ -615,6 +654,16 @@ if __name__ =='__main__':
             if operation==18:
                 print "test select mode!"
                 selectmode()
+            if operation==19:
+                print 'enter randome forest detect domU psinfo'
+                t0 = threading.Thread(target = detectpsmode,args =[domname],name='detectPsmode')
+                t0.setDaemon(True)
+                t0.start()
+                while Globalvar.gettrainover():
+                   time.sleep(1)
+                t1 = threading.Thread(target = runpsinfo,args =[domname,'2'],name='getpsinfo')
+                t1.setDaemon(True)
+                t1.start()
         Globalvar.setexit()
         exdata.stopServer(Globalvar.getser())
         
