@@ -9,25 +9,25 @@ def vm_renew():
     creataddimg = subprocess.Popen(str(creataddimgshell), stdout=subprocess.PIPE, shell=True)
     creataddimg.wait()
     print 'creat addimg over!'
-    time.sleep(2)
+    time.sleep(1)
     chmodvm = subprocess.Popen(['chmod 777 /home/vmi/Downloads/test.qcow2'], stdout=subprocess.PIPE, shell=True)
     chmodvm.wait()
     print 'chmod vm over!'
-    time.sleep(2)
+    time.sleep(1)
     startvm = subprocess.Popen(['virsh start ubuntu1604add'], stdout=subprocess.PIPE, shell=True)
     startvm.wait()
     print 'start vm over!'
-    time.sleep(30)
+    time.sleep(40)
 
 def ssh_connect():
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(hostname='223.3.71.214', port=22, username='ubuntu1604', password='309911')
+    ssh.connect(hostname='223.3.91.247', port=22, username='ubuntu1604', password='309911')
     print 'ssh ok!'
     return ssh
 
 def ssh_cmd(sshc,runVS):
-    cmd = '/home/ubuntu1604/Downloads/malware/vsup/'+runVS
+    cmd = '/home/ubuntu1604/Downloads/malware/sample/'+runVS
     sshc.exec_command(cmd)
     
 
@@ -38,38 +38,38 @@ def vm_shutdown():
     closevm = subprocess.Popen(['virsh destroy ubuntu1604add'], stdout=subprocess.PIPE, shell=True)
     closevm.wait()
     print 'close vm over!'
-    time.sleep(3)
+    time.sleep(2)
     deleteimg = subprocess.Popen(['rm -f /home/vmi/Downloads/test.qcow2'], stdout=subprocess.PIPE, shell=True)
     deleteimg.wait()
-    time.sleep(5)
+    time.sleep(3)
     print 'delete vm over!'
 
 if __name__ =='__main__':
-    n = 44
+    n = 1866
     vslist = []
-    vslistfile = open('/home/vmi/Downloads/code/VmiXen/host/vslist', 'r+')
+    vslistfile = open('/home/vmi/Downloads/code/VmiXen/host/samplebinlist', 'r+')
     vslistname = vslistfile.readlines()
     for a in vslistname:
         a1 = a[:-1]
         vslist.append(a1)
     
-    while n<252:
+    while n<1872:
         domname = 'ubuntu1604add'
         
         Globalvar.setexitT()
         vm_renew()
         
         sshc = ssh_connect()
-        time.sleep(2)
+        time.sleep(5)
 
         t1 = threading.Thread(target = runpsinfo,args =[domname,'2'],name='getpsinfo')
         t1.setDaemon(True)
         t1.start()
         print 'run get psinfo!'
-        time.sleep(2)
+        time.sleep(5)
 
-        ssh_cmd(sshc,vslist[n])
-        print 'run vs!',vslist[n]
+        #ssh_cmd(sshc,vslist[n])
+        #print 'run vs!',vslist[n]
         time.sleep(10)
         Globalvar.setexit()
         ssh_close(sshc)
