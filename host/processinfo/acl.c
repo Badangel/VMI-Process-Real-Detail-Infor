@@ -20,7 +20,7 @@ void* getACLList(VmiInfo* vmivm, MyList * list)
 
     FILE *fp;
     char filepath[100];
-    strcpy(filepath,"config/");
+    strcpy(filepath,"/home/vmi/Downloads/code/VmiXen/host/config/");
     strcat(filepath,vmivm->vmname);
     strcat(filepath,"_ACL.conf");
     fp = fopen(filepath,"r");

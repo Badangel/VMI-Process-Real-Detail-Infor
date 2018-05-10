@@ -79,12 +79,12 @@ def initvmip():
     return iplist
 
 def write_sql_cid(sqlcid):
-    file_snortcid = open('tempfile/snort.sql', 'w+')
+    file_snortcid = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/snort.sql', 'w+')
     file_snortcid.write(sqlcid)
     file_snortcid.close()
 def main():
     iplist = initvmip()
-    file_snortcid = open('tempfile/snort.sql', 'r+')
+    file_snortcid = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/snort.sql', 'r+')
     sqlcid = file_snortcid.read()
     file_snortcid.close()
         

@@ -3,7 +3,7 @@
 #include <time.h>
 #include <stdio.h>
 void printlog(char* s){
-    FILE *pf = fopen("log/file.log","a");
+    FILE *pf = fopen("/home/vmi/Downloads/code/VmiXen/host/log/file.log","a");
     time_t timep;
     time(&timep);
     fprintf(pf,"%s%s",ctime(&timep),s);
@@ -11,6 +11,6 @@ void printlog(char* s){
 }
 
 void clear_filelog(){
-    FILE *pf = fopen("log/file.log","w");
+    FILE *pf = fopen("/home/vmi/Downloads/code/VmiXen/host/log/file.log","w");
     fclose(pf);
 }

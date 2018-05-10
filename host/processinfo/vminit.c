@@ -9,7 +9,7 @@
 int read_version_conf(VmiInfo* vmiinfo)
 {
     FILE *fp;
-    char vmname[100] = "config/";
+    char vmname[100] = "/home/vmi/Downloads/code/VmiXen/host/config/";
     strcat(vmname,vmiinfo->vmname);
     strcat(vmname,".conf");
     fp = fopen(vmname,"r");
@@ -28,7 +28,7 @@ int read_version_conf(VmiInfo* vmiinfo)
 int read_syscall_conf(VmiInfo* vmiinfo)
 {
     FILE *fp;
-    char vmversion[100] = "config/";
+    char vmversion[100] = "/home/vmi/Downloads/code/VmiXen/host/config/";
     strcat(vmversion,vmiinfo->version);
     strcat(vmversion,"_syscall.conf");
     fp = fopen(vmversion,"r");
@@ -63,7 +63,7 @@ int read_offset_conf(VmiInfo* vmiinfo)
 {
     vmiinfo->offset_len = 0;
     FILE *fp;
-    char vmversion[100] = "config/";
+    char vmversion[100] = "/home/vmi/Downloads/code/VmiXen/host/config/";
     strcat(vmversion,vmiinfo->version);
     strcat(vmversion,"_offset.conf");
     ///printf("%s\n",vmversion);

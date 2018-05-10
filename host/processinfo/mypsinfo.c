@@ -141,7 +141,7 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
     tmp->tsfdnum = 0;
     MyList * socket_list= createMyList();
     MyList * file_list= createMyList();
-    FILE *pf = fopen("tempfile/ubuntu1604.sklist","a");
+    FILE *pf = fopen(vmiinfo->sklistfile,"a");
     for (i = 0; i < max_file; i++)
     {
         vmi_read_addr_va(vmiinfo->vmi, fdaddr, 0, &file);
@@ -674,13 +674,15 @@ int getoffset(VmiInfo *vmiinfo, char *key)
 */
 
 void initPs(VmiInfo* vmiinfo,addr_t list_head){
-    char pslogfile[50]="tempfile/";
+    char pslogfile[100]="/home/vmi/Downloads/code/VmiXen/host/tempfile/";
     strcat(pslogfile,vmiinfo->vmname);
     //strcat(pslogfile,".pslist");
     strcpy(vmiinfo->pslistfile,pslogfile);
     strcat(vmiinfo->pslistfile,".pslist");
     strcpy(vmiinfo->exitpsfile,pslogfile);
     strcat(vmiinfo->exitpsfile,".exitps");
+    strcpy(vmiinfo->sklistfile,pslogfile);
+    strcat(vmiinfo->sklistfile,".sklist");
     addr_t next_list_e = list_head;
     addr_t current_process;
     int psnum = 0;
@@ -892,7 +894,7 @@ void detect_hide_ps(VmiInfo* vmiinfo,MYSQL *mysql,LinkQueue* queue, MyList *psli
     MyNode * p = pslist_real->first;
     TaskNode* q = queue->front->next;
     PsNode* aa;
-    FILE *pf = fopen("log/warning.log","a");
+    FILE *pf = fopen("/home/vmi/Downloads/code/VmiXen/host/log/warning.log","a");
 
     while(p&&q!=NULL){
         aa = p->data;
@@ -980,7 +982,7 @@ void add_exitps_sql(VmiInfo* vmiinfo,MYSQL *mysql,MyList* exitps_list,int table)
             inser_num++;
             if (table == 2)
             {
-                sprintf(sql_insert, "insert into testset(domname,psid,psname,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation,state)values('%s','%d','%s','%d', '%d', '%d', '%d', '%d', '%d','%d','%d','%d','%d','%d');", vmiinfo->vmname, q->tspid, q->tsname, q->syscallnum[10], q->syscallnum[1], q->syscallnum[2], q->syscallnum[3], q->syscallnum[4], q->syscallnum[5], q->syscallnum[6], q->syscallnum[7], q->syscallnum[8], q->syscallnum[9], q->state);
+                sprintf(sql_insert, "insert into nowpsinfo(domname,psid,psname,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation,state)values('%s','%d','%s','%d', '%d', '%d', '%d', '%d', '%d','%d','%d','%d','%d','%d');", vmiinfo->vmname, q->tspid, q->tsname, q->syscallnum[10], q->syscallnum[1], q->syscallnum[2], q->syscallnum[3], q->syscallnum[4], q->syscallnum[5], q->syscallnum[6], q->syscallnum[7], q->syscallnum[8], q->syscallnum[9], q->state);
             }
             else
             {

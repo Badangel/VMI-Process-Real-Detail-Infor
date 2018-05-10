@@ -203,7 +203,7 @@ int main (int argc, char **argv)
 
             //task queue
             initQueue(queue);
-            FILE *pf = fopen("tempfile/ubuntu1604.sklist","w");
+            FILE *pf = fopen(vmivm->sklistfile,"w");
             fclose(pf);
             
             ///vmi_pause_vm(vmi);
@@ -435,7 +435,7 @@ int main (int argc, char **argv)
         uint64_t code = 0;
         extern int syscallnum[];
         printf("start detcet syscall hook!\n");
-        FILE *pftest = fopen("log/test.log","a");
+        FILE *pftest = fopen("/home/vmi/Downloads/code/VmiXen/host/log/test.log","a");
         time_t timep;
         time(&timep);
         fprintf(pftest,"%s!!\n",ctime(&timep));
@@ -507,7 +507,7 @@ int main (int argc, char **argv)
             }
 
         }
-        FILE *pfover = fopen("log/cprint.log","a");
+        FILE *pfover = fopen("/home/vmi/Downloads/code/VmiXen/host/log/cprint.log","a");
         //for(i = 0; i < vmivm->syscall_len; i++)
         for(i = 0; i < endsysnum; i++)
         {

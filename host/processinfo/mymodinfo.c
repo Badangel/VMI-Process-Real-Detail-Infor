@@ -67,7 +67,7 @@ void set_module_info(VmiInfo* vmiinfo,MyList* list,int num_module){
 int find_hide_module(VmiInfo* vmiinfo,MYSQL *mysql,MyList* list,int hidenum){
     MyList* oldlist = vmiinfo->modulelist;
     MyNode* p = oldlist->first;
-    FILE *pf = fopen("log/warning.log","a");
+    FILE *pf = fopen("/home/vmi/Downloads/code/VmiXen/host/log/warning.log","a");
     int findno = 1;
     while (p)
     {
@@ -112,7 +112,7 @@ void initModule(VmiInfo* vmiinfo){
     MyList * initmod_list= createMySearchList(compare2mod);
     int initmod_num = get_module_info(vmiinfo,initmod_list);
     set_module_info(vmiinfo,initmod_list,initmod_num);
-    char modlogfile[100]="tempfile/";
+    char modlogfile[100]="/home/vmi/Downloads/code/VmiXen/host/tempfile/";
     strcat(modlogfile,vmiinfo->vmname);
     strcat(modlogfile,".modl");
     strcpy(vmiinfo->modl,modlogfile);

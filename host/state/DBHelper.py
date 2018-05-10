@@ -15,6 +15,7 @@ class DBHelper:
     #excute an sql, return 0 for success, -1 for failed
     def dosql(self, sql):
         cursor = self.conn.cursor()
+        res=""
         try:
             res = cursor.execute(sql)
         except:

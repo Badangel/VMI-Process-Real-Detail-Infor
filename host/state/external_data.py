@@ -51,7 +51,7 @@ def connectLibvirt(vmname):
     return conn,domU
     
 def getOutModuleNum(domname,module_num):
-    file_module = open('tempfile/'+domname+'.module', 'r+')
+    file_module = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+domname+'.module', 'r+')
     module_lines = file_module.readlines()
     for a in module_lines:
         module_apply = re.findall('\s([0-9]{1,3})\s',a)
@@ -76,7 +76,7 @@ def getOutPsNum(vmi,domname,psoutlist,psouttime,hidelist):
     ps_other = 0
     psoutstate = 0
     hidelistnew = {}
-    file_ps = open('tempfile/'+domname+'.ps', 'r+')
+    file_ps = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+domname+'.ps', 'r+')
     ps_lines = file_ps.readlines()
     #print ps_lines[0][0]
     if len(ps_lines)==0 or ps_lines[0][0]!='U':
@@ -134,6 +134,7 @@ def stopServer(ser):
 
 
 def exdamain(domname,tablename):
+       
     print "exdamain start!!!"
     try:
         i = 0
@@ -149,18 +150,28 @@ def exdamain(domname,tablename):
         net0old = []
         net1old = []
         vmi = pyvmi.init_complete(vmname)
-        file_module = open('tempfile/'+vmname+'.module', 'r+')
+        file_module = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+vmname+'.module', 'r+')
         file_module.truncate()
         file_module.close()
-        file_dstat = open('tempfile/'+vmname+'.d_stat', 'r+')
+        file_dstat = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+vmname+'.d_stat', 'r+')
         file_dstat.truncate()
         file_dstat.close()
-        file_ps = open('tempfile/'+vmname+'.ps', 'r+')
+        file_ps = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+vmname+'.ps', 'r+')
         file_ps.truncate()
         file_ps.close()
         hidelist = {}
 
-        while True and Globalvar.getexit():
+        state_detect1 = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+domname+'.statedetect', 'r')
+        state_Det1 = state_detect1.readline()
+        state_detect1.close()
+        while int(state_Det1)==1:
+            time.sleep(1)
+	    state_detect1 = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+domname+'.statedetect', 'r')
+	    state_Det1 = state_detect1.readline()
+	    state_detect1.close()
+
+        while True :
+            printlog("collect state runing!")
             try:
                 #print i                
                 ps_out,psoutlist = processes(vmi)
@@ -213,7 +224,7 @@ def exdamain(domname,tablename):
                 cpuoldtime = cpunowtime
                 time.sleep(0.7)
                 #print "exr",datetime.datetime.now()
-                file_dstat = open('tempfile/'+vmname+'.d_stat', 'r+')
+                file_dstat = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+vmname+'.d_stat', 'r')
                 dstat_lines = file_dstat.readline()
                 if len(dstat_lines) == 0:
                     print 'No data'
@@ -224,7 +235,7 @@ def exdamain(domname,tablename):
                 k=dstat_lines.replace('|','  ')
                 vmstat = re.compile('([0-9a-zA-Z.]+?)\s').findall(k)
                 #print vmstat
-                file_dstat.truncate(0)
+                file_dstat.close()
                 module_num = [0,0,0,0]#relation about 0,1,2,more module
                 getOutModuleNum(domname,module_num)
                 psoutstate,ps_root,ps_other,hidelist = getOutPsNum(vmi,domname,psoutlist,psouttime,hidelist)
@@ -245,7 +256,13 @@ def exdamain(domname,tablename):
                 
                 sql = "insert into "+tablename+"(domid,domname,usr_cpu_in,sys_cpu_in ,idl_cpu_in,wai_cpu_in,hiq_cpu_in ,siq_cpu_in,read_disk_in , write_disk_in ,recv_net_in ,send_net_in ,usep_mem_in,usd_mem_in , buff_mem_in ,cach_mem_in ,free_mem_in ,usep_swap_in,usd_swap_in ,free_swap_in ,pagein_in ,pageout_in ,interrupts1_in , interrupts2_in ,interrupts3_in ,loadavg1_in ,loadavg5_in ,loadavg15_in ,int_sys_in , csw_sys_in ,read_total_in , writ_total_in , run_procs_in ,blk_procs_in ,new_procs_in ,ps_root_in  ,ps_other_in ,lsmod0_in ,lsmod1_in ,lsmod2_in ,lsmodother_in ,use_cpu_out ,read_disk_out , write_disk_out ,recv_net_out ,recv_netp_out,send_net_out,send_netp_out , lsmod_out ,ps_out,stat ) values('%d','%s','%d','%d' ,'%d','%d','%d' ,'%d','%f' , '%f' ,'%f' ,'%f','%d' ,'%f' , '%f' ,'%f' ,'%f' ,'%d','%f' ,'%f' ,'%f' ,'%f' ,'%d' , '%d' ,'%d' ,'%f' ,'%f' ,'%f' ,'%f' , '%f' ,'%f' , '%f' , '%f' ,'%f' ,'%f' ,'%d'  ,'%d' ,'%d' ,'%d' ,'%d' ,'%d' ,'%d' ,'%f' , '%f' ,'%f' ,'%d','%f', '%d', '%d' ,'%d','%d')"%(0,domname,int(vmstat[0]),int(vmstat[1]) ,int(vmstat[2]),int(vmstat[3]),int(vmstat[4]) ,int(vmstat[5]),stof(vmstat[6]) , stof(vmstat[7]) ,stof(vmstat[20])  ,stof(vmstat[21]),100*stof(vmstat[16])/(0.1+stof(vmstat[16])+stof(vmstat[17])+stof(vmstat[18])+stof(vmstat[19])) ,stof(vmstat[16])  , stof(vmstat[17])  ,stof(vmstat[18])  ,stof(vmstat[19])  ,100*stof(vmstat[27])/(0.1+stof(vmstat[27])+stof(vmstat[28])),stof(vmstat[27])  ,stof(vmstat[28])  ,stof(vmstat[8])  ,stof(vmstat[9])  ,int(vmstat[10]) , int(vmstat[11]) ,int(vmstat[12]) ,float(vmstat[13]) ,float(vmstat[14]) ,float(vmstat[15]) ,stof(vmstat[29])  , stof(vmstat[30])  ,float(vmstat[25]) , float(vmstat[26]) , float(vmstat[22]) ,float(vmstat[23]) ,float(vmstat[24]) ,ps_root  ,ps_other ,module_num[0] ,module_num[1] ,module_num[2] ,module_num[3] ,use_cpu_out ,read_disk_out , write_disk_out ,recv_net_out ,recv_netp_out ,send_net_out ,send_netp_out , lsmod_out ,ps_out ,0)
                 
-                if Globalvar.getexit():
+                state_detect = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+vmname+'.statedetect', 'r')
+                state_Det = state_detect.readline()
+                state_detect.close()
+                if int(state_Det)==0:
+                    printlog("stop exdamain!")
+                    break
+                else:
                     data = db.oncesql(sql)
                     printlog("add 1 to "+tablename)
                     

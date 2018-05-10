@@ -12,6 +12,7 @@ class MyHandler(SocketServer.BaseRequestHandler):
             data = conn.recv(2048)
             vmname = vmaddr[self.client_address[0]]
             printlog('socket vm is: '+vmname)
+            
 
             while True and Globalvar.getexit(): 
                 #print ('wait....',a)
@@ -22,19 +23,18 @@ class MyHandler(SocketServer.BaseRequestHandler):
                     if stat=='s':
                         #print datetime.datetime.now()
                         d_stat=data[2:]
-                        file_object = open('tempfile/'+vmname+'.d_stat','w')
+                        file_object = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+vmname+'.d_stat','w')
                         file_object.writelines(d_stat)
-                        #print 'write to d_stat',vmname
                         #print self.client_address,time.ctime(),' dstat\n',d_stat
                     if stat=='p':
                         ps_stat=data[2:]
-                        file_ps = open('tempfile/'+vmname+'.ps','w')
+                        file_ps = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+vmname+'.ps','w')
                         #print 'write to ps',vmname
                         file_ps.writelines(ps_stat)
                         #print self.client_address,time.ctime(),' ps\n',ps_stat
                     if stat=='m':
                         lsmod_stat=data[2:]
-                        file_module = open('tempfile/'+vmname+'.module','w')
+                        file_module = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+vmname+'.module','w')
                         file_module.writelines(lsmod_stat)
                         #print 'write to module',vmname
                         #print self.client_address,time.ctime(),' module\n',lsmod_stat
@@ -53,6 +53,7 @@ class MyHandler(SocketServer.BaseRequestHandler):
                 #if kel == 'exit': 
                 conn.send( ' %s %s ' % (stat,time.ctime())) 
         except Exception:
+            aa=0
             print "port error"
                  
 

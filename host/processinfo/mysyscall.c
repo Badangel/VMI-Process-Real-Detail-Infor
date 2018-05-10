@@ -162,7 +162,7 @@ void combineSyscallAndPs(LinkQueue* queue,int sysnum[][11],int psnum){
 }
 
 void find_syscall_hook(VmiInfo* vmivm,MYSQL* mysql,int sysnum,uint64_t backup_byte){
-    FILE *pf = fopen("log/warning.log","a");
+    FILE *pf = fopen("/home/vmi/Downloads/code/VmiXen/host/log/warning.log","a");
     fprintf(pf, "%s(%d:%lx) is hooked to %lx!! \n", vmivm->syscallall[sysnum].name,sysnum,vmivm->syscallall[sysnum].addr,backup_byte);
     char sql_insert[1024];
     sprintf(sql_insert,"insert into warning(domname,class,pmname)values('%s','%s','%s');",vmivm->vmname,"Syscall Hook",vmivm->syscallall[sysnum].name);
@@ -172,7 +172,7 @@ void find_syscall_hook(VmiInfo* vmivm,MYSQL* mysql,int sysnum,uint64_t backup_by
 
 void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname,addr_t currentpsaddr,vmi_event_t *event)
 {
-    FILE *pf = fopen("log/file.log","a");
+    FILE *pf = fopen("/home/vmi/Downloads/code/VmiXen/host/log/file.log","a");
     uint64_t r8 = 0;
     uint64_t r9 = 0;
     uint64_t r10 = 0;
@@ -324,7 +324,7 @@ void get_module_name(VmiInfo* vmivm,char* unlink_path){
 
 void detect_syscall_hook(VmiInfo* vmivm){
     printf("start detcet syscall hook!\n");
-    FILE *pftest = fopen("log/test.log", "a");
+    FILE *pftest = fopen("/home/vmi/Downloads/code/VmiXen/host/log/test.log", "a");
     int i;
     // for(i = 0; i < vmivm->syscall_len; i++)
     int endsysnum = vmivm->syscall_len;
