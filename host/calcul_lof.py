@@ -14,7 +14,7 @@ import state.global_var as Globalvar
 import sys
 import signal
 from state.warning_log import *
-
+from response_detect import responsevm
 #Calculate the distance of each point
 
 def getdisance(data,datalen):
@@ -214,6 +214,19 @@ def detectState(domname,sqltable):
     print "statedata len:",datalen
     kdis,lrd = trainNormaiData(statedata,datalen,K,MinPts)
 
+    getstatefactor_sql = "select state_p,state_m,state_c,state_anomaly from response where domname = '"+domname+"'"
+    statefactor = selectdb.oncesql(getstatefactor_sql)
+    
+    statefactor1 = list(statefactor)
+    sfactor = statefactor1[0]
+    print sfactor
+    state_p = int(sfactor[0])
+    state_m = int(sfactor[1])
+    state_c = int(sfactor[2])
+    state_f = int(sfactor[3])
+
+    factortotal = 0
+
     state_detect = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+domname+'.statedetect', 'w')
     state_detect.write("2")
     state_detect.close()
@@ -248,13 +261,30 @@ def detectState(domname,sqltable):
                     #db.oncesql(changestate)
                     printlog('state add in '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock()))
                     #print 'state add in '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock())
+                    if state_f==0:
+                        factortotal = factortotal + alof
+                    else:
+                        factortotal = factortotal + state_f
 
                 else:
                     changestate = "update "+sqltable+" set stat = 2,lof="+str(alof)+" where id =" + str(statedatanew[a][0])
                     selectdb.oncesql(changestate)
                     printlog('state move out '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock()))
                     #print 'state move out '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock())
+            setfactor_sql="update response set state_factor = "+str(factortotal)+" where domname = '"+domname+"'"
+            selectdb.myupdate(setfactor_sql)
             selectdb.allcommit()
+            printlog("start factor:"+str(factortotal))
+            if factortotal>state_p:
+                responsevm(domname,1)
+            else:
+                if factortotal>state_c:
+                    responsevm(domname,2)
+                else:
+                    if factortotal>state_m:
+                        responsevm(domname,3)
+                    
+
         state_detect = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+domname+'.statedetect', 'r')
         state_Det = int(state_detect.readline())
         state_detect.close()

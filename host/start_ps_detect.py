@@ -29,6 +29,19 @@ def detect_ps(domname,sqltable):
     mode = ensemble.RandomForestClassifier()
     mode.fit(scaled_X,Y)
 
+
+    getpsfactor_sql = "select ps_p,ps_m,ps_c,process_anomaly from response where domname = '"+domname+"'"
+    psfactor = db.oncesql(getpsfactor_sql)
+    
+    psfactor1 = list(psfactor)
+    pfactor = psfactor1[0]
+    print pfactor
+    ps_p = int(pfactor[0])
+    ps_m = int(pfactor[1])
+    ps_c = int(pfactor[2])
+    ps_f = int(pfactor[3])
+    factortotal = 0
+
     ps_detect = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+domname+'.psdetect', 'w')
     ps_detect.write("2")
     ps_detect.close()
@@ -58,8 +71,19 @@ def detect_ps(domname,sqltable):
             db.myupdate(changestate)
             if y_test[0]==1:
                 warningsql = "insert into warning(domname,class,sqlid,psid,pmname,lof) values('%s','%s','%d','%d','%s','%f')"%(domname,"Process Anomaly",a[0],a[1],a[2],1)
+                factortotal = factortotal+ps_f
                 db.myupdate(warningsql)
+        setfactor_sql="update response set ps_factor = "+str(factortotal)+" where domname = '"+domname+"'"
+        db.myupdate(setfactor_sql)
         db.allcommit()
+        if factortotal>ps_p:
+            responsevm(domname,1)
+        else:
+            if factortotal>ps_c:
+                responsevm(domname,2)
+            else:
+                if factortotal>ps_m:
+                    responsevm(domname,3)
         time.sleep(1)
         ps_detect = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+domname+'.psdetect', 'r')
         ps_Det = int(ps_detect.readline())
