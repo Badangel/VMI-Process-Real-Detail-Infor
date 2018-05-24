@@ -15,6 +15,8 @@ import sys
 import signal
 from state.warning_log import *
 from response_detect import responsevm
+
+from sklearn import preprocessing
 #Calculate the distance of each point
 
 def getdisance(data,datalen):
@@ -205,8 +207,8 @@ def trainNormaiData(data,datalen,K,MinPts):
 
 def detectState(domname,sqltable):
     print 'enter detect state'
-    K = 4
-    MinPts = 4
+    K = 8
+    MinPts = 8
     selectdb = DBHelper.DBHelper()
     sqlstate = "select 100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,int_sys_in*10,csw_sys_in*10,read_total_in/10,writ_total_in/10,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from state where stat = 1"
     statedata = selectdb.oncesql(sqlstate)
@@ -236,7 +238,7 @@ def detectState(domname,sqltable):
     sqlstate = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,int_sys_in*10,csw_sys_in*10,read_total_in/10,writ_total_in/10,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from "+sqltable+" where stat = 0 and domname = '"+domname+"'"
     i = 0
     while True and state_Det!=0:
-        i = i + 1       
+        i = i + 1
         statedatanew = selectdb.oncesql(sqlstate)
         statedatanew = list(statedatanew)
         datanewlen = len(statedatanew)
@@ -250,7 +252,7 @@ def detectState(domname,sqltable):
             for a in range(0,datanewlen):
                 alof = getoplof(statedata,K,MinPts,datalen,kdis,lrd,statedatanew[a][1:])
                 changestate = ""
-                if alof > 1.8 or alof < 0.7:
+                if alof > 10 or alof < 0.7:
                     changestate = "update "+sqltable+" set stat = 1,lof="+str(alof)+" where id =" + str(statedatanew[a][0])
                     addnum = addnum + 1
                     selectdb.myupdate(changestate)
@@ -284,13 +286,60 @@ def detectState(domname,sqltable):
                     if factortotal>state_m:
                         responsevm(domname,3)
                     
-
         state_detect = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+domname+'.statedetect', 'r')
         state_Det = int(state_detect.readline())
         state_detect.close()
         if state_Det==0:
             printlog("stop detect state!")
             break
+
+
+def traindetectState(domname,sqltable,threshold,maxnum):
+    print 'enter train detect state'
+    K = 11
+    MinPts = 11
+    selectdb = DBHelper.DBHelper()
+    #sqlstate = "select 100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,int_sys_in*10,csw_sys_in*10,read_total_in/10,writ_total_in/10,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from state where stat = 1"
+    sqlstate = "select 100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in,int_sys_in,csw_sys_in,read_total_in,writ_total_in,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from state where stat = 1"
+    statedata = selectdb.oncesql(sqlstate)
+    datalen = len(statedata)
+
+    scaler = preprocessing.MinMaxScaler()
+    statedata = scaler.fit_transform(statedata)
+    print "statedata len:",datalen
+    kdis,lrd = trainNormaiData(statedata,datalen,K,MinPts)
+
+    #sqlstate = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,int_sys_in*10,csw_sys_in*10,read_total_in/10,writ_total_in/10,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from "+sqltable+" where stat = 0 and domname = '"+domname+"' and id<"+str(maxnum)
+    sqlstate = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in,int_sys_in,csw_sys_in,read_total_in,writ_total_in,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from "+sqltable+" where stat = 0 and domname = '"+domname+"' and id<"+str(maxnum)
+    i = 0
+    while True:
+        i = i + 1       
+        statedatanew = selectdb.oncesql(sqlstate)
+        statedatanew = list(statedatanew)
+        datanewlen = len(statedatanew)
+        if datanewlen == 0:
+            break
+        else:
+            addnum = 0
+            for a in range(0,datanewlen):
+                x_stand = scaler.transform([statedatanew[a][1:]])
+                #print x_stand
+                alof = getoplof(statedata,K,MinPts,datalen,kdis,lrd,x_stand[0])
+                #alof = getoplof(statedata,K,MinPts,datalen,kdis,lrd,statedatanew[a][1:])
+                changestate = ""
+                if alof > threshold or alof < 0.8:
+                    changestate = "update "+sqltable+" set stat = 1,lof="+str(alof)+" where id =" + str(statedatanew[a][0])
+                    addnum = addnum + 1
+                    selectdb.myupdate(changestate)
+                    print 'state add in ',statedatanew[a][0],alof,time.clock()
+                    #print 'state add in '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock())
+                else:
+                    changestate = "update "+sqltable+" set stat = 2,lof="+str(alof)+" where id =" + str(statedatanew[a][0])
+                    selectdb.oncesql(changestate)
+                    print 'state move out ',statedatanew[a][0],alof,time.clock()
+            selectdb.allcommit()
+    print maxnum,'train over!'
+
 
 
 def detectPsinfo(domname,sqltable):
@@ -396,33 +445,6 @@ def trainpsinfo(domname,sqltable,maxnum):
         db.allcommit()
         printlog('add: '+str(addnum))
 
-def detectAllState1(domname):
-    selectdb = DBHelper.DBHelper()
-    sqlstate = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,int_sys_in*10,csw_sys_in*10,read_total_in/10,writ_total_in/10,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from nowstate where stat = 1 and domname = '"+domname+"'"
-    statedata = selectdb.oncesql(sqlstate)
-    statedata = list(statedata)
-    print "len:",len(statedata),len(statedata[0])
-    newdata = [x[1:] for x in statedata]
-    newid = [x[0]for x in statedata]
-    print len(newdata),len(newdata[0])
-    statelof = getlof(newdata,4,4)
-    print "lof len:",len(statelof)
-    for  a in range(0,len(statedata)):
-        print a,newid[a],statelof[a]
-
-def detectAllPsinfo1(domname):
-    selectdb = DBHelper.DBHelper()
-    sqlps = "select id,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,totalfiles,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,totalsyscall,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from nowpsinfo where state = 1 and domname = '"+domname+"'"
-    psdata = selectdb.oncesql(sqlps)
-    psdata = list(psdata)
-    print "len:",len(psdata),len(psdata[0])
-    newdata = [x[1:] for x in psdata]
-    newid = [x[0]for x in psdata]
-    print len(newdata),len(newdata[0])
-    pslof = getlof(newdata,4,4)
-    print "lof len:",len(pslof)
-    for  a in range(0,len(psdata)):
-        print a,newid[a],pslof[a] 
 def clearwarning():
     file_module = open('log/warning.log', 'r+')
     file_module.truncate()
@@ -438,8 +460,6 @@ def clearfilelog():
     file_module.close()
 
 def quit(signum,frame):
-    Globalvar.setexit()
-    exdata.stopServer(Globalvar.getser())
     print "you stop calcul_lof!!"
     sys.exit()
 
@@ -448,8 +468,6 @@ if __name__ =='__main__':
         signal.signal(signal.SIGINT, quit)
         signal.signal(signal.SIGTERM, quit)
         over = True
-        ser=exdata.startServer()
-        Globalvar.setser(ser)
         clearwarning()
         clearprintlog()
         clearfilelog()
@@ -487,13 +505,20 @@ if __name__ =='__main__':
                 t1.setDaemon(True)
                 t1.start()
             if operation==3:
-                t0 = threading.Thread(target = detectAllState1,args =[domname],name='detectAllState1')
-                t0.setDaemon(True)
-                t0.start()
-            if operation==4:
-                t0 = threading.Thread(target = detectAllPsinfo1,args =[domname],name='detectAllPsinfo1')
-                t0.setDaemon(True)
-                t0.start()
+                numlist = [453,678,905,1131,1357,1583,1809,2035,2264,13015]
+                trainlof = 1.4
+                detectlof = 1.8
+                db = DBHelper.DBHelper()
+                sqlps = "update state set stat = 1 where id <227"
+                psdata = db.oncesql(sqlps)
+                for num in numlist:
+                    traindetectState(domname,"state",trainlof,num)
+                '''
+                sqlps = "update state set stat = 0 where id <227"
+                psdata = db.oncesql(sqlps)
+                traindetectState(domname,"state",trainlof,227)
+                '''
+                traindetectState(domname,"nowstate",detectlof,20250)
             if operation==5:
                 print 'enter collect domU state'
                 t0 = threading.Thread(target = detectState,args =[domname,'state'],name='detectstate')
@@ -528,8 +553,7 @@ if __name__ =='__main__':
                 t0.setDaemon(True)
                 t0.start()
             
-        Globalvar.setexit()
-        exdata.stopServer(Globalvar.getser())
+    
         
         print "exit calcul_lof normal!!"
 

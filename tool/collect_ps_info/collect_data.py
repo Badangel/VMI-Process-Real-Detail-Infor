@@ -5,12 +5,12 @@ import state.global_var as Globalvar
 from run_psinfo import runpsinfo
 
 def vm_renew():
-    creataddimgshell = 'qemu-img create -b /home/vmi/Downloads/ubuntu1604.img -f qcow2 /home/vmi/Downloads/test.qcow2 10G'
+    creataddimgshell = 'qemu-img create -b /home/vmi/img/ubuntu1604.img -f qcow2 /home/vmi/img/test.qcow2 10G'
     creataddimg = subprocess.Popen(str(creataddimgshell), stdout=subprocess.PIPE, shell=True)
     creataddimg.wait()
     print 'creat addimg over!'
     time.sleep(1)
-    chmodvm = subprocess.Popen(['chmod 777 /home/vmi/Downloads/test.qcow2'], stdout=subprocess.PIPE, shell=True)
+    chmodvm = subprocess.Popen(['chmod 777 /home/vmi/img/test.qcow2'], stdout=subprocess.PIPE, shell=True)
     chmodvm.wait()
     print 'chmod vm over!'
     time.sleep(1)
@@ -39,7 +39,7 @@ def vm_shutdown():
     closevm.wait()
     print 'close vm over!'
     time.sleep(2)
-    deleteimg = subprocess.Popen(['rm -f /home/vmi/Downloads/test.qcow2'], stdout=subprocess.PIPE, shell=True)
+    deleteimg = subprocess.Popen(['rm -f /home/vmi/img/test.qcow2'], stdout=subprocess.PIPE, shell=True)
     deleteimg.wait()
     time.sleep(3)
     print 'delete vm over!'

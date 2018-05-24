@@ -29,7 +29,6 @@ def detect_ps(domname,sqltable):
     mode = ensemble.RandomForestClassifier()
     mode.fit(scaled_X,Y)
 
-
     getpsfactor_sql = "select ps_p,ps_m,ps_c,process_anomaly from response where domname = '"+domname+"'"
     psfactor = db.oncesql(getpsfactor_sql)
     
