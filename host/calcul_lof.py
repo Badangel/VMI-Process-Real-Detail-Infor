@@ -234,64 +234,70 @@ def detectState(domname,sqltable):
     state_detect.close()
     state_Det = 2
 
-
-    sqlstate = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,int_sys_in*10,csw_sys_in*10,read_total_in/10,writ_total_in/10,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from "+sqltable+" where stat = 0 and domname = '"+domname+"'"
-    i = 0
-    while True and state_Det!=0:
-        i = i + 1
-        statedatanew = selectdb.oncesql(sqlstate)
-        statedatanew = list(statedatanew)
-        datanewlen = len(statedatanew)
-        if datanewlen == 0:
-            time.sleep(1)
-            printlog("detect sleep 1!!"+str(i))
-            continue
-        else:
-            printlog('start time:'+str(time.clock()))
-            addnum = 0
-            for a in range(0,datanewlen):
-                alof = getoplof(statedata,K,MinPts,datalen,kdis,lrd,statedatanew[a][1:])
-                changestate = ""
-                if alof > 10 or alof < 0.7:
-                    changestate = "update "+sqltable+" set stat = 1,lof="+str(alof)+" where id =" + str(statedatanew[a][0])
-                    addnum = addnum + 1
-                    selectdb.myupdate(changestate)
-
-                    warningsql = "insert into warning(domname,class,sqlid,lof) values('%s','%s','%d','%f')"%(domname,"State Anomaly",statedatanew[a][0],alof)
-                    selectdb.myupdate(warningsql)
-                    warining_st(domname,statedatanew[a][0],alof)
-                    #db.oncesql(changestate)
-                    printlog('state add in '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock()))
-                    #print 'state add in '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock())
-                    if state_f==0:
-                        factortotal = factortotal + alof
-                    else:
-                        factortotal = factortotal + state_f
-
-                else:
-                    changestate = "update "+sqltable+" set stat = 2,lof="+str(alof)+" where id =" + str(statedatanew[a][0])
-                    selectdb.oncesql(changestate)
-                    printlog('state move out '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock()))
-                    #print 'state move out '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock())
-            setfactor_sql="update response set state_factor = "+str(factortotal)+" where domname = '"+domname+"'"
-            selectdb.myupdate(setfactor_sql)
-            selectdb.allcommit()
-            printlog("start factor:"+str(factortotal))
-            if factortotal>state_p:
-                responsevm(domname,1)
+    try:
+        sqlstate = "select id,100-idl_cpu_in,usep_mem_in,usep_swap_in,pagein_in,pageout_in,interrupts1_in,interrupts2_in,interrupts3_in,loadavg1_in*100,loadavg5_in*100,loadavg15_in*100,int_sys_in*10,csw_sys_in*10,read_total_in/10,writ_total_in/10,ps_root_in,ps_other_in,use_cpu_out,recv_net_out,recv_netp_out,send_net_out,send_netp_out,lsmod_out,lsmod_out-lsmod0_in-lsmod1_in-lsmod2_in-lsmodother_in,ps_out-ps_root_in-ps_other_in from "+sqltable+" where stat = 0 and domname = '"+domname+"'"
+        i = 0
+        while True and state_Det!=0:
+            i = i + 1
+            statedatanew = selectdb.oncesql(sqlstate)
+            statedatanew = list(statedatanew)
+            datanewlen = len(statedatanew)
+            if datanewlen == 0:
+                time.sleep(1)
+                printlog("detect sleep 1!!"+str(i))
             else:
-                if factortotal>state_c:
-                    responsevm(domname,2)
+                printlog('start time:'+str(time.clock()))
+                addnum = 0
+                for a in range(0,datanewlen):
+                    alof = getoplof(statedata,K,MinPts,datalen,kdis,lrd,statedatanew[a][1:])
+                    changestate = ""
+                    if alof > 10 or alof < 0.7:
+                        changestate = "update "+sqltable+" set stat = 1,lof="+str(alof)+" where id =" + str(statedatanew[a][0])
+                        addnum = addnum + 1
+                        selectdb.myupdate(changestate)
+
+                        warningsql = "insert into warning(domname,class,sqlid,lof) values('%s','%s','%d','%f')"%(domname,"State Anomaly",statedatanew[a][0],alof)
+                        selectdb.myupdate(warningsql)
+                        warining_st(domname,statedatanew[a][0],alof)
+                        #db.oncesql(changestate)
+                        printlog('state add in '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock()))
+                        #print 'state add in '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock())
+                        if state_f==0:
+                            factortotal = factortotal + alof
+                        else:
+                            factortotal = factortotal + state_f
+
+                    else:
+                        changestate = "update "+sqltable+" set stat = 2,lof="+str(alof)+" where id =" + str(statedatanew[a][0])
+                        selectdb.oncesql(changestate)
+                        printlog('state move out '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock()))
+                        #print 'state move out '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock())
+                factortotal=factortotal+1
+                setfactor_sql="update response set state_factor = "+str(factortotal)+" where domname = '"+domname+"'"
+                selectdb.myupdate(setfactor_sql)
+                selectdb.allcommit()
+                printlog("start factor:"+str(factortotal))
+                print "start factor:",factortotal
+                if factortotal>state_p:
+                    responsevm(domname,1)
                 else:
-                    if factortotal>state_m:
-                        responsevm(domname,3)
-                    
-        state_detect = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+domname+'.statedetect', 'r')
-        state_Det = int(state_detect.readline())
-        state_detect.close()
-        if state_Det==0:
-            printlog("stop detect state!")
-            break
+                    if factortotal>state_c:
+                        responsevm(domname,2)
+                    else:
+                        if factortotal>state_m:
+                            responsevm(domname,3)
+            state_detect = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+domname+'.statedetect', 'r')
+            state_Det = int(state_detect.readline())
+            state_detect.close()
+            if state_Det==0:
+                remusefactor_sql="update response set state_factor = 0 where domname = '"+domname+"'"
+                selectdb.oncesql(remusefactor_sql)
+                printlog("stop detect state!")
+                break
+    except Exception:
+        print "cal lof fail" 
+        printlog("cal lof fail")           
+    
 
 
 def traindetectState(domname,sqltable,threshold,maxnum):

@@ -3,10 +3,9 @@ from state.DBHelper import DBHelper
 import math
 import Queue
 import time,threading
-
-
 import sys
 
+import signal
 from state.warning_log import *
 from sklearn import tree
 
@@ -17,7 +16,7 @@ from sklearn import svm
 from sklearn import ensemble
 from sklearn import neural_network
 from sklearn.model_selection import cross_val_score
-from sklearn import preprocessing
+from sklearn import preprocessing,externals
 from hpsklearn import HyperoptEstimator,random_forest,svc,knn,decision_tree,ada_boost,multinomial_nb,extra_trees,gradient_boosting,sgd
 
 def trainmode(mode):
@@ -69,6 +68,8 @@ def selectmode(domname):
     print len(X),len(Y),len(X[0])
     scaler = preprocessing.StandardScaler().fit(X)
     scaled_X = scaler.transform(X)
+    #mode = externals.joblib.load("RF_train_model.m")
+
     mode = HyperoptEstimator(classifier=random_forest('myRF'))
     #mode = HyperoptEstimator(classifier=svc('mysvc'))
     #mode = HyperoptEstimator(classifier=extra_trees('myextra_trees'))
@@ -85,11 +86,13 @@ def selectmode(domname):
     #mode = naive_bayes.GaussianNB()
     #mode = linear_model.LogisticRegression()
     mode.fit(scaled_X,Y)
-    print mode.best_model()
+    #print mode.best_model()
     #print mode()
- 
+    #with open("rf.dot",'w') as f:
+       # f = tree.export_graphviz(mode,out_file=f)
+    #externals.joblib.dump(mode,"RF_train_model.m")
     print "train over!"
-    sqlpsone = "select id,psid,psname,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from abnpsinfo where state = 0 and domname = '"+domname+"'"
+    sqlpsone = "select id,psid,psname,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from testset where state = 0 and domname = '"+domname+"'"
     psonedata = db.oncesql(sqlpsone)
     psonedata = list(psonedata)
     datanewlen = len(psonedata)
@@ -98,7 +101,7 @@ def selectmode(domname):
         x_id = a[0:2]
         x_stand = scaler.transform([x_test])
         y_test = mode.predict(x_stand)
-        changestate = "update abnpsinfo set state = "+str(y_test[0])+" where id =" + str(a[0])
+        changestate = "update testset set state = "+str(y_test[0])+" where id =" + str(a[0])
         print a[0],a[2]," is ",y_test[0]
         db.oncesql(changestate)
     db.allcommit()
@@ -122,7 +125,7 @@ def detectpsmode(domname):
     mode.fit(scaled_X,Y)
     #print mode.best_model()
     #print mode()
-    Globalvar.settrainover()
+    
     print "train over!"
     sqlpsone = "select id,psid,psname,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from testset where state = 0 and domname = '"+domname+"'"
     while True:
@@ -157,8 +160,6 @@ def clearfilelog():
     file_module.close()
 
 def quit(signum,frame):
-    Globalvar.setexit()
-    exdata.stopServer(Globalvar.getser())
     print "you stop calcul_lof!!"
     sys.exit()
 
@@ -166,7 +167,7 @@ if __name__ =='__main__':
     try:
         signal.signal(signal.SIGINT, quit)
         signal.signal(signal.SIGTERM, quit)
-        
+        over = True
         clearwarning()
         clearprintlog()
         clearfilelog()
@@ -178,6 +179,7 @@ if __name__ =='__main__':
                 domname,operation = command.split()
             else:
                 if command == 'q':
+                    over = False
                     break
                 else:
                     print "command error !"
@@ -229,13 +231,10 @@ if __name__ =='__main__':
                 t0 = threading.Thread(target = detectpsmode,args =[domname],name='detectPsmode')
                 t0.setDaemon(True)
                 t0.start()
-                while Globalvar.gettrainover():
-                   time.sleep(1)
+                
                 t1 = threading.Thread(target = runpsinfo,args =[domname,'2'],name='getpsinfo')
                 t1.setDaemon(True)
                 t1.start()
-        Globalvar.setexit()
-        exdata.stopServer(Globalvar.getser())
         
         print "exit calcul_lof normal!!"
 

@@ -67,6 +67,8 @@ def start_ip(domname,in_q):
         net_Det = int(net_detect.readline())
         net_detect.close()
         if net_Det==0:
+            remusefactor_sql="update response set net_factor = 0 where domname = '"+domname+"'"
+            dbwarning.oncesql(remusefactor_sql)
             break
         time.sleep(1)
     

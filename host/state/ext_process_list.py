@@ -50,6 +50,7 @@ def processes(vmi):
     while True:
         procname = vmi.read_str_va(next_process + name_offset, 0)
         pid = vmi.read_32_va(next_process + pid_offset, 0)
+        print pid,procname,hex(next_process)
         next_process = vmi.read_addr_va(next_process, 0)
         
         nump += 1
@@ -77,10 +78,10 @@ def processes(vmi):
         if (list_head == next_process):
             return nump,pslist
 
-def main(argv):
-    vmi = pyvmi.init_complete("ubuntu1604")
+def main(domname):
+    vmi = pyvmi.init_complete(domname)
     n = 1
     n,s = processes(vmi)
-    print "len %d" % (n)
+    #print "len %d" % (n)
 if __name__ == "__main__":
-    main(sys.argv)
+    main(sys.argv[1])

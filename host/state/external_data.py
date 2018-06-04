@@ -202,6 +202,7 @@ def exdamain(domname,tablename):
                     cpuoldtime = getcputime(domU)
                     net0old = net0now
                     net1old = net1now
+                    printlog("ex continue")
                     continue
                 #print vmnowstat
                 vmoutlaststat = Noequalzero(vmoutstat,vmoutlaststat)
@@ -265,7 +266,17 @@ def exdamain(domname,tablename):
                 state_detect.close()
                 print "5554"
                 if int(state_Det)==0:
+                    printlog("wait stop exdamain!")
+                    '''
+                    time.sleep(6)
+                    state='m'
+                    while state=='m':
+                        state_d = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+vmname+'.state', 'r')
+                        state = state_d.readline()
+                        state_d.close()
+                        time.sleep(2)
                     printlog("stop exdamain!")
+                    '''
                     print "-666"
                     break
                 else:
@@ -279,6 +290,7 @@ def exdamain(domname,tablename):
         #stopServer()
     except Exception:
         print "exdamain fail"
+        printlog("exdamain fail ")
 
 if __name__ =='__main__':
     try:

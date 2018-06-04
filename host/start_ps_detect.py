@@ -48,6 +48,8 @@ def detect_ps(domname,sqltable):
     printlog("ps train over!")
     print "train over!"
     sqlpsone = "select id,psid,psname,layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation from "+sqltable+" where state = 0 and domname = '"+domname+"'"
+    warning_psid=[]
+    warning_psname=[]
     while True:
         psonedata = db.oncesql(sqlpsone)
         psonedata = list(psonedata)
@@ -69,9 +71,14 @@ def detect_ps(domname,sqltable):
             print a[0],a[2]," is ",y_test[0]
             db.myupdate(changestate)
             if y_test[0]==1:
-                warningsql = "insert into warning(domname,class,sqlid,psid,pmname,lof) values('%s','%s','%d','%d','%s','%f')"%(domname,"Process Anomaly",a[0],a[1],a[2],1)
-                factortotal = factortotal+ps_f
-                db.myupdate(warningsql)
+                if a[1] not in warning_psid:
+                    warning_psid.append(a[1])
+                    warning_psname.append(a[2])
+                    warningsql = "insert into warning(domname,class,sqlid,psid,pmname,lof) values('%s','%s','%d','%d','%s','%f')"%(domname,"Process Anomaly",a[0],a[1],a[2],1)
+                    factortotal = factortotal+ps_f
+                    db.myupdate(warningsql)
+                #else:
+                    #printlog(a[2]+'already in warning list!')
         setfactor_sql="update response set ps_factor = "+str(factortotal)+" where domname = '"+domname+"'"
         db.myupdate(setfactor_sql)
         db.allcommit()
@@ -88,6 +95,8 @@ def detect_ps(domname,sqltable):
         ps_Det = int(ps_detect.readline())
         ps_detect.close()
         if ps_Det==0:
+            remusefactor_sql="update response set ps_factor = 0 where domname = '"+domname+"'"
+            db.oncesql(remusefactor_sql)
             break
 
 def start_ps(domname):
