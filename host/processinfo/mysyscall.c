@@ -189,13 +189,13 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname,addr_t 
         addr_t rdifilenameaddr2 = rdi; 
         char* rdifilename2 = vmi_read_str_va(vmivm->vmi,rdifilenameaddr2,pid);
         if(rdifilename2!=NULL){
-            fprintf(pf, "%s(%d) %s(%ld)open rdi:%s rsi:%lx\n", psname,pid,vmivm->syscallall[rax].name,rax, rdifilename2, rsi);
+            fprintf(pf, "[%s] %s(%d) %s(%ld)open rdi:%s rsi:%lx\n",vmivm->vmname, psname,pid,vmivm->syscallall[rax].name,rax, rdifilename2, rsi);
             free(rdifilename2);
         }
         break;
     case 8883:
         rdi = event->x86_regs->rdi;
-        fprintf(pf, "%s(%d) %s(%ld)close rdi:%ld \n", psname,pid,vmivm->syscallall[rax].name,rax, rdi);
+        fprintf(pf, "[%s] %s(%d) %s(%ld)close rdi:%ld \n",vmivm->vmname, psname,pid,vmivm->syscallall[rax].name,rax, rdi);
         break;
     case 42:
         rdi = event->x86_regs->rdi;
@@ -204,7 +204,7 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname,addr_t 
         //strcpy(sock->recvaddr,"1.1.1.1");
         //get_socket_info(vmivm,currentpsaddr,rdi,sock);
         //fprintf(pf, "%s(%d) %s(%ld) connect fd:%ld %s->%s\n", psname,pid,vmivm->syscallall[rax].name,rax,rdi,sock->sendaddr,sock->recvaddr);
-        fprintf(pf, "%s(%d) %s(%ld) connect fd:%ld\n", psname,pid,vmivm->syscallall[rax].name,rax,rdi);
+        fprintf(pf, "[%s] %s(%d) %s(%ld) connect fd:%ld\n",vmivm->vmname,psname,pid,vmivm->syscallall[rax].name,rax,rdi);
        // free(sock);
         break;
     case 88859:
@@ -213,7 +213,7 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname,addr_t 
         ///printf("%lx\n",rdi);
         char* rdifile = vmi_read_str_va(vmivm->vmi,filenameadd2,pid);
         if(rdifile!=NULL){
-            fprintf(pf,"%s(%d) %s(%ld)exe %s\n",psname,pid,vmivm->syscallall[rax].name,rax,rdifile);
+            fprintf(pf,"[%s] %s(%d) %s(%ld)exe %s\n",vmivm->vmname,psname,pid,vmivm->syscallall[rax].name,rax,rdifile);
             free(rdifile);
         }
         break;
@@ -225,7 +225,7 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname,addr_t 
         */
     case 62:
         rdi = event->x86_regs->rdi;
-        fprintf(pf,"%s(%d) %s(%ld)kill %ld\n",psname,pid,vmivm->syscallall[rax].name,rax,rdi);
+        fprintf(pf,"[%s] %s(%d) %s(%ld)kill %ld\n",vmivm->vmname,psname,pid,vmivm->syscallall[rax].name,rax,rdi);
         //printf("%s(%d) %s(%ld)kill %ld\n",psname,pid,vmivm->syscallall[rax].name,rax,rdi);
         if(pid<=rdi)
         {
@@ -244,17 +244,17 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname,addr_t 
         char* unlink_path = vmi_read_str_va(vmivm->vmi,unlink_pathaddr,pid);
         if(unlink_path!=NULL){
             get_module_name(vmivm,unlink_path);
-            fprintf(pf,"%s(%d) %s(%ld)unlink %s\n",psname,pid,vmivm->syscallall[rax].name,rax,unlink_path);
+            fprintf(pf,"[%s] %s(%d) %s(%ld)unlink %s\n",vmivm->vmname,psname,pid,vmivm->syscallall[rax].name,rax,unlink_path);
             //printf("%s(%d) %s(%ld)unlink %s\n",psname,pid,vmivm->syscallall[rax].name,rax,unlink_path);
             free(unlink_path);
         }
         break;
     case 176:
-        fprintf(pf,"%s(%d) %s(%ld) module delete\n",psname,pid,vmivm->syscallall[rax].name,rax);
+        fprintf(pf,"[%s] %s(%d) %s(%ld) module delete\n",vmivm->vmname,psname,pid,vmivm->syscallall[rax].name,rax);
         //printf("%s(%d) %s(%ld)  module delete\n",psname,pid,vmivm->syscallall[rax].name,rax);
         break;
     case 231:
-        fprintf(pf,"%s(%d) %s(%ld) group exit\n",psname,pid,vmivm->syscallall[rax].name,rax);
+        fprintf(pf,"[%s] %s(%d) %s(%ld) group exit\n",vmivm->vmname,psname,pid,vmivm->syscallall[rax].name,rax);
         //printf("%s(%d) %s(%ld) group exit\n",psname,pid,vmivm->syscallall[rax].name,rax);
         FILE *ep = fopen(vmivm->exitpsfile,"a");
         delete_one_ps(vmivm,pid);
@@ -262,7 +262,7 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname,addr_t 
         fclose(ep);
         break;
     case 313:
-        fprintf(pf,"%s(%d) %s(%ld) module init\n",psname,pid,vmivm->syscallall[rax].name,rax);
+        fprintf(pf,"[%s] %s(%d) %s(%ld) module init\n",vmivm->vmname,psname,pid,vmivm->syscallall[rax].name,rax);
         //printf("%s(%d) %s(%ld) module init\n",psname,pid,vmivm->syscallall[rax].name,rax);
         //MyList * initmod_list= createMySearchList(compare2mod);
         //int initmod_num = get_module_info(vmivm,initmod_list);
