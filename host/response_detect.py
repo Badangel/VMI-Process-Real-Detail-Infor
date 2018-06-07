@@ -4,7 +4,7 @@ import threading
 import subprocess
 import pexpect
 from state.DBHelper import DBHelper
-
+import cal_migrate_code
 from state.warning_log import *
 
 def pausevm(domname):
@@ -23,13 +23,14 @@ def closevm(domname):
 
 def migratevm(domname):
     fout = open('/home/vmi/Downloads/code/VmiXen/host/log/migrate.log','a')
-
+    
     printlog("migrate vm")
     selectdb = DBHelper.DBHelper()
     sqlstate = "select ip from iptable where factor = (select min(factor) from iptable)" 
     ipdata = selectdb.oncesql(sqlstate)
     ipdata1 = list(ipdata)
     ip = ipdata1[0][0]
+    #p,score = cal_migrate_code.migrate_score(domname)
     mypassword = '309911'
     printlog("migrate to "+str(ip))
     migrate_vm = pexpect.spawn('sudo /usr/sbin/xl migrate %s %s'%(domname,ip))

@@ -166,7 +166,7 @@ class MyHandler(SocketServer.BaseRequestHandler):
             if data=='q':
                 host_stat = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/host.state','r')
                 stat=host_stat.readlines()
-                print stat
+                print stat[0]
                 conn.send( '%s' % (stat)) 
                 host_stat.close()
         except Exception:
