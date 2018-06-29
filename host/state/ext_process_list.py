@@ -50,7 +50,7 @@ def processes(vmi):
     while True:
         procname = vmi.read_str_va(next_process + name_offset, 0)
         pid = vmi.read_32_va(next_process + pid_offset, 0)
-        print pid,procname,hex(next_process)
+        #print pid,procname,hex(next_process)
         next_process = vmi.read_addr_va(next_process, 0)
         
         nump += 1
@@ -78,10 +78,28 @@ def processes(vmi):
         if (list_head == next_process):
             return nump,pslist
 
+def printps(vmi):
+    tasks_offset, name_offset, pid_offset, list_head = get_os_params(vmi)
+
+    next_process = vmi.read_addr_va(list_head + tasks_offset, 0)
+    list_head = next_process
+
+    while True:
+        procname = vmi.read_str_va(next_process + name_offset, 0)
+        pid = vmi.read_32_va(next_process + pid_offset, 0)
+        print pid,procname,hex(next_process)
+        next_process = vmi.read_addr_va(next_process, 0)
+        
+        if (list_head == next_process):
+            return
+
 def main(domname):
     vmi = pyvmi.init_complete(domname)
+    '''
     n = 1
     n,s = processes(vmi)
+    '''
+    printps(vmi)
     #print "len %d" % (n)
 if __name__ == "__main__":
     main(sys.argv[1])

@@ -107,6 +107,7 @@ def get_files_info(vmi,fd,max_fds,offset):
                         print vfsname,pathname,numtoipv6(v6_rcv_saddr),':',sk_num,'->',numtoipv6(v6_daddr),':',sk_dport
                     else:
                         print vfsname,pathname
+                        
 def processelist(vmi):
     tasks_offset, name_offset, pid_offset, list_head = get_os_params(vmi)
 
@@ -126,7 +127,7 @@ def processelist(vmi):
         #print pid,procname,hex(next_process)
         nump += 1
         
-        print "%d&%s&%s"%(nump, procname,hex(next_process)[2:-1])
+        print "%d&%s&%s"%(pid, procname,hex(next_process)[2:-1])
         next_process = vmi.read_addr_va(next_process+tasks_offset, 0)
         if (list_head == next_process):
             return nump,pslist

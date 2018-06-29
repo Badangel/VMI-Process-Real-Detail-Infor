@@ -294,6 +294,7 @@ def detectState(domname,sqltable):
                 selectdb.oncesql(remusefactor_sql)
                 printlog("stop detect state!")
                 break
+            time.sleep(1)
     except Exception:
         print "cal lof fail" 
         printlog("cal lof fail")           
