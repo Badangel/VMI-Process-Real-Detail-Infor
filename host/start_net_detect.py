@@ -108,6 +108,11 @@ def get_vm_port_list(domname,domaddr,offset):
         
     return socketport
 
+def get_port_to_ps(port,socketport):
+    for a in socketport:
+        if a[2]==port:
+            return a[0],a[1]
+    return 0,0
 
 def start_ip(domname,in_q):
     dbwarning = DBHelper.DBHelper()
@@ -178,17 +183,33 @@ def start_tcp(domname,out_q):
             domaddr = i
             break
     domaddrnum = iptonum(domaddr)
+
+    offset = read_offset(domname)
+    socketport=[]
+
     sql = "select event.cid,signature.sig_name,iphdr.ip_src,iphdr.ip_dst,tcphdr.tcp_sport,tcphdr.tcp_dport from event,iphdr,signature,tcphdr where event.timestamp>=(now()-interval 10 hour) and event.state=0 and tcphdr.cid = event.cid and (iphdr.ip_src="+str(domaddrnum)+" or iphdr.ip_dst="+str(domaddrnum)+") and event.cid = iphdr.cid and event.signature = signature.sig_id; "
     while True:
         ipeventdata = db.oncesql(sql)
         ipeventdata = list(ipeventdata)
         i = 0
+
+        if len(ipeventdata)>0:
+            socketport = get_vm_port_list(domname,domaddr,offset)
+
         for a in ipeventdata:
             i=i+1
             saddr = numtoip(a[2])
             daddr = numtoip(a[3])
             print i,a[0],a[1],numtoip(a[2])+':'+str(a[4])+'->'+numtoip(a[3])+':'+str(a[5])
-            warningsql = "insert into warning(domname,class,sqlid,saddr,daddr,sport,dport) values('%s','%s','%d','%s','%s','%d','%d')"%(domname,"Net Anomaly",a[0],saddr,daddr,a[4],a[5])
+            
+            psid = -1
+            psname = ""
+            if numtoip(a[2]) == domaddr:
+                psid,psname = get_port_to_ps(a[4],socketport)
+            if numtoip(a[3]) == domaddr:
+                psid,psname = get_port_to_ps(a[5],socketport)
+
+            warningsql = "insert into warning(domname,class,sqlid,psid,psname,saddr,daddr,sport,dport) values('%s','%s','%d','%d','%s','%s','%s','%d','%d')"%(domname,"Net Anomaly",a[0],psid,psname,saddr,daddr,a[4],a[5])
             dbwarning.oncesql(warningsql)
             updatenet = "update event set state = 1 where cid = "+str(a[0])
             db.oncesql(updatenet)
@@ -221,12 +242,13 @@ def test(domname):
             domaddr = i
             break
     domaddrnum = iptonum(domaddr)
+    print 'ip:',domaddr
     offset = read_offset(domname)
     print get_vm_port_list(domname,domaddr,offset)
 
 if __name__=='__main__':
     domname = sys.argv[1]
-
+    
     net_detect = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+domname+'.netdetect', 'r')
     net_Det = net_detect.readline()
     net_detect.close()
