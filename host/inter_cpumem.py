@@ -15,10 +15,10 @@ def get_inter_cpumem(vmname):
     k=dstat_lines.replace('|','  ')
     vmstat = re.compile('([0-9a-zA-Z.]+?)\s').findall(k)
     memp = 100*stof(vmstat[16])/(stof(vmstat[16])+stof(vmstat[17])+stof(vmstat[18])+stof(vmstat[19]))
-    print "<br>CPU:",100-int(vmstat[2]),"%"
-    print "MEM:",int(memp),"%"
-    print "<br>Disk Read:",vmstat[6],"Write:",vmstat[7]
-    print "<br>Net Down:",vmstat[20],"Up:",vmstat[21]
+    print "<CPU>"+str(100-int(vmstat[2]))+"%</CPU>"
+    print "<MEM>"+str(int(memp))+"%</MEM>"
+    print "<Disk_Read>",stof(vmstat[6]),"</Disk_Read><Disk_Write>",stof(vmstat[7]),"</Disk_Write>"
+    print "<Net_Down>",stof(vmstat[20]),"</Net_Down><Net_Up>",stof(vmstat[21]),"</Net_Up>"
     return 100-int(vmstat[2]),memp
 
 if __name__ =='__main__':
