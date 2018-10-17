@@ -4,6 +4,7 @@
 * give some funtions to get infomation about one task deeply
 */
 #include <string.h>
+#include <arpa/inet.h>
 #include "mypsinfo.h"
 #include "myList.h"
 
@@ -239,6 +240,7 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
                 unsigned char *dIp = (unsigned char *)&daddr;
                 vmi_read_16_va(vmiinfo->vmi, sk + vmiinfo->vmoffset[sk_num_offset], 0, &sk_num);
                 vmi_read_16_va(vmiinfo->vmi, sk + vmiinfo->vmoffset[sk_dport_offset], 0, &sk_dport);
+                sk_dport = htons(sk_dport);
 
                 if (strcmp(filename, "TCP") == 0){
                     tmp->socketinfo[2] = tmp->socketinfo[2] + 1;
@@ -277,6 +279,7 @@ void get_files_info(VmiInfo* vmiinfo, addr_t fdaddr, unsigned int max_file, Task
 
                 vmi_read_16_va(vmiinfo->vmi, sk + vmiinfo->vmoffset[sk_num_offset], 0, &sk_num);
                 vmi_read_16_va(vmiinfo->vmi, sk + vmiinfo->vmoffset[sk_dport_offset], 0, &sk_dport);
+                sk_dport = htons(sk_dport);
 
                 SocketSR *sock = malloc(sizeof(SocketSR));
                 sock->classify = 1;

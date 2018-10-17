@@ -96,14 +96,14 @@ def get_files_info(vmi,fd,max_fds,offset):
                     daddr = vmi.read_32_va(sk + offset['sk_daddr_offset'], 0)
                     rcv_saddr = vmi.read_32_va(sk + offset['sk_rcv_saddr_offset'], 0)
                     sk_num = vmi.read_16_va(sk + offset['sk_num_offset'], 0)
-                    sk_dport = vmi.read_16_va(sk + offset['sk_dport_offset'], 0)
+                    sk_dport = socket.htons(vmi.read_16_va(sk + offset['sk_dport_offset'], 0))
                     print vfsname,pathname,numtoip(rcv_saddr),':',sk_num,'->',numtoip(daddr),':',sk_dport
                 else:
                     if filename == 'TCPv6':
                         v6_daddr = vmi.read_64_va(sk + offset['sk_v6_daddr_offset'], 0)
                         v6_rcv_saddr = vmi.read_64_va(sk + offset['sk_v6_rcv_saddr_offset'], 0)
                         sk_num = vmi.read_16_va(sk + offset['sk_num_offset'], 0)
-                        sk_dport = vmi.read_16_va(sk + offset['sk_dport_offset'], 0)
+                        sk_dport = socket.htons(vmi.read_16_va(sk + offset['sk_dport_offset'], 0))
                         print vfsname,pathname,numtoipv6(v6_rcv_saddr),':',sk_num,'->',numtoipv6(v6_daddr),':',sk_dport
                     else:
                         print vfsname,pathname

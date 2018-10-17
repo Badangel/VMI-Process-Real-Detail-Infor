@@ -183,7 +183,7 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname,addr_t 
     //get_psname_by_pid(vmivm,pid,psname);
     switch(rax)
     {
-    case 8882:
+    case 2:
         rdi = event->x86_regs->rdi;
         rsi = event->x86_regs->rsi;
         addr_t rdifilenameaddr2 = rdi; 
@@ -193,7 +193,7 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname,addr_t 
             free(rdifilename2);
         }
         break;
-    case 8883:
+    case 3:
         rdi = event->x86_regs->rdi;
         fprintf(pf, "[%s] %s(%d) %s(%ld)close rdi:%ld \n",vmivm->vmname, psname,pid,vmivm->syscallall[rax].name,rax, rdi);
         break;
@@ -237,7 +237,7 @@ void record_syscall(VmiInfo* vmivm, reg_t rax,vmi_pid_t pid,char* psname,addr_t 
             fclose(ep);
         }
         break;
-    case 88887:
+    case 87:
         rdi = event->x86_regs->rdi;
         addr_t  unlink_pathaddr= rdi;
         ///printf("%lx\n",rdi);
