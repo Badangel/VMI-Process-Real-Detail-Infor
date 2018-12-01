@@ -40,10 +40,10 @@ int get_module_info(VmiInfo* vmiinfo,MyList* list){
 		
         }
         strcpy(onemodule->name,modname);
-	    vmi_read_32_va(vmi, next_module + vmiinfo->vmoffset[num_syms_offset], 0, &num_syms_mod);
-	    vmi_read_32_va(vmi, next_module + vmiinfo->vmoffset[num_kp_offset], 0, &num_kp_mod);
-        onemodule->num_syms = num_syms_mod;
-        onemodule->num_kp = num_kp_mod;
+	    //vmi_read_32_va(vmi, next_module + vmiinfo->vmoffset[num_syms_offset], 0, &num_syms_mod);
+	    //vmi_read_32_va(vmi, next_module + vmiinfo->vmoffset[num_kp_offset], 0, &num_kp_mod);
+        onemodule->num_syms = 0;
+        onemodule->num_kp = 0;
         myListInsertDataAtLast(list, onemodule);
         //printf("%s %d %d\n", modname, num_syms_mod, num_kp_mod);
         free(modname);
@@ -75,7 +75,7 @@ int find_hide_module(VmiInfo* vmiinfo,MYSQL *mysql,MyList* list,int hidenum){
         if(myListFindDataIndex(list,p->data)<0){
             fprintf(pf, "%s(module) is hided!! \n", hidemod->name);
             char sql_insert[1024];
-            sprintf(sql_insert,"insert into warning(domname,class,pmname)values('%s','%s','%s');",vmiinfo->vmname,"Module hided",hidemod->name);
+            sprintf(sql_insert,"insert into warning(domname,class,pmname)values('%s','%s','%s');",vmiinfo->vmname,"Module Hided",hidemod->name);
             exec_db(mysql,sql_insert);
             hidenum--;
             if(hidenum==0){
@@ -96,7 +96,7 @@ int find_hide_module(VmiInfo* vmiinfo,MYSQL *mysql,MyList* list,int hidenum){
             printf("%s(module) is hided!! \n", modname);
             printf("33\n");
             char sql_insert[1024];
-            sprintf(sql_insert,"insert into warning(domname,class,pmname)values('%s','%s','%s');",vmiinfo->vmname,"Module hided",modname);
+            sprintf(sql_insert,"insert into warning(domname,class,pmname)values('%s','%s','%s');",vmiinfo->vmname,"Module Hided",modname);
             exec_db(mysql,sql_insert);
             hidenum--;
         }

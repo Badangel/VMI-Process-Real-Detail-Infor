@@ -1,6 +1,7 @@
 #include "myList.h"
 #include <stdlib.h>
-#include <vminit.h>
+#include "vminit.h"
+#include "acl.h"
 //init mylist
 MyList * createMyList()
 {
@@ -210,9 +211,11 @@ int myListFindDataIndex(const MyList * const list, void * data)
     int re = 0;
     if (list->equal)
     {
+        //printf("use own equal %s!\n",aa->name);
+        //printf("list size %d!\n",myListGetSize(list));
         while (p)
         {
-            if (p->data == data || (*(list->equal))(p->data, data))
+            if ((*(list->equal))(p->data, data)|| p->data == data)
             {
                 return re;
             }

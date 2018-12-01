@@ -272,7 +272,7 @@ def detectState(domname,sqltable):
                         selectdb.oncesql(changestate)
                         printlog('state move out '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock()))
                         #print 'state move out '+str(statedatanew[a][0])+' '+str(alof)+' '+str(time.clock())
-                factortotal=factortotal+1
+                factortotal=factortotal
                 setfactor_sql="update response set state_factor = "+str(factortotal)+" where domname = '"+domname+"'"
                 selectdb.myupdate(setfactor_sql)
                 selectdb.allcommit()

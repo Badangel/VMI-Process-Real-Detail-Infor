@@ -181,9 +181,9 @@ def exdamain(domname,tablename):
 	    state_detect1.close()
         while True :
             try:
-                #print i                
+                print i                
                 ps_out,psoutlist = processes(vmi)
-                #print "11"
+                print "11"
                 ps_out -= 2
                 psouttime = time.time()
                 lsmod_out = modules(vmi)
@@ -191,7 +191,7 @@ def exdamain(domname,tablename):
                 statmonitor_popen = subprocess.Popen(['xentop','-i 1','-nb'], stdout = subprocess.PIPE)
                 outdstat = statmonitor_popen.stdout.readlines()
                 
-                #print "222"
+                print "222"
                 vmnowstat = re.compile('\s([0-9.]+?)\s').findall(outdstat[2])
                 net0now = re.compile('\s([0-9.]+?)[bp]+[a-z]+?\s').findall(outdstat[3])
                 net1now = re.compile('\s([0-9.]+?)[bp]+[a-z]+?\s').findall(outdstat[4])
@@ -212,7 +212,7 @@ def exdamain(domname,tablename):
                 cpunowtime = 0
                 cpunowtime = getcputime(domU)
 
-                #print "333"
+                print "333"
 
                 use_cpu_out = min(float(cpunowtime-cpuoldtime)/10000000.0,100.0)
                 #print use_cpu_out
@@ -241,17 +241,17 @@ def exdamain(domname,tablename):
                     dstat_lines=" 1  1   1   1   1   1|   1     1 |   1     1 |   1     1    1 |1 1 1| 1M 1M  1M 1M|1B   1k|1  1 1|   1     1 | 1k 1M| 1  1 "
                 
                 file_dstat.close()
-                #print "444"
+                print "444"
                 #print re.compile('\s[0-9a-zA-Z.]+?\s').findall(dstat_lines)
                 
                 #print vmstat
                                
-                #print "555"
+                print "555"
                 psoutstate,ps_root,ps_other,hidelist = getOutPsNum(vmi,domname,psoutlist,psouttime,hidelist)
                 module_num = [0,0,0,0]#relation about 0,1,2,more module
-                #print "5551"
+                print "5551"
                 getOutModuleNum(domname,module_num)
-                #print "5552"
+                print "666"
                 if ps_root==0:
                     dstat_lines = " 1  1   1   1   1   1|   1     1 |   1     1 |   1     1    1 |1 1 1| 1M 1M  1M 1M|1B   1k|1  1 1|   1     1 | 1k 1M| 1  1 "
                     module_num = [0,0,0,0]
@@ -277,10 +277,10 @@ def exdamain(domname,tablename):
                         time.sleep(2)
                     printlog("stop exdamain!")
                     '''
-                    print "-666"
+                    print "-777"
                     break
                 else:
-                    #print "666"
+                    print "777"
                     data = db.oncesql(sql)
                     printlog("add 1 to "+tablename)
                     
@@ -293,10 +293,12 @@ def exdamain(domname,tablename):
         printlog("exdamain fail ")
 
 if __name__ =='__main__':
+    exdamain(sys.argv[1],sys.argv[2])
+    '''
     try:
         signal.signal(signal.SIGINT,quit)
         signal.signal(signal.SIGTERM,quit) 
         exdamain(sys.argv[1],sys.argv[2])
     except Exception:
         print "over"
-    
+    '''

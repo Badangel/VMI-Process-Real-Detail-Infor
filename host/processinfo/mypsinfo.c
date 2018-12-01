@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include "mypsinfo.h"
 #include "myList.h"
+#include "acl.h"
 
 addr_t file = 1;
 
@@ -607,7 +608,7 @@ void get_task_info(VmiInfo* vmiinfo, addr_t current_process, TaskNode *tmptn)
         free(procname);
         procname = NULL;
     }
-    ///printf("tfa\n");
+    ///printf("\n\n\n");
 } ///end get_task_info
 
 addr_t get_psname_by_pid(VmiInfo* vmiinfo,vmi_pid_t pid,char* psname)
@@ -904,11 +905,15 @@ void detect_hide_ps(VmiInfo* vmiinfo,MYSQL *mysql,LinkQueue* queue, MyList *psli
         //printf("T-pid:%d(%s) P-pid:%d(%s)\n",q->tspid,q->tsname,aa->pid,aa->name);
         if(q->tspid > aa->pid){
             char s[8];
+            s[7]='\0';
             strncpy(s, aa->name, 7);
             if (strcmp("kworker", s) != 0)
             {
                 printf("[warning]%s(%d) is hided!!!\n", aa->name, aa->pid);
                 fprintf(pf, "%s(%d) is hided!!!\n", aa->name, aa->pid);
+                char sql_insert[1024];
+                sprintf(sql_insert,"insert into warning(domname,class,psid,pmname)values('%s','%s','%d','%s');",vmiinfo->vmname,"Process Hided",aa->pid,aa->name);
+                exec_db(mysql,sql_insert);
             }
              p = p->next;
              continue;

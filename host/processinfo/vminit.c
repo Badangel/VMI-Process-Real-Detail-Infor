@@ -388,14 +388,14 @@ int set_offset(VmiInfo* vmiinfo,char* offsetname,unsigned long value)
         vmiinfo->vmoffset[nameidata_path_offset] = value;
         return 1;
     }
-    if(strcmp(offsetname, "num_syms_offset") == 0)
+    if(strcmp(offsetname, "source_list_offset") == 0)
     {
-        vmiinfo->vmoffset[num_syms_offset] = value;
+        vmiinfo->vmoffset[source_list_offset] = value;
         return 1;
     }
-    if(strcmp(offsetname, "num_kp_offset") == 0)
+    if(strcmp(offsetname, "target_list_offset") == 0)
     {
-        vmiinfo->vmoffset[num_kp_offset] = value;
+        vmiinfo->vmoffset[target_list_offset] = value;
         return 1;
     }
     return 0;

@@ -52,6 +52,7 @@ void* getACLList(VmiInfo* vmivm, MyList * list)
             resread = fscanf(fp,"%*[^\n]");
         }
     }
+    ///printf("!!!!get acl list size %d!\n",myListGetSize(list));
     vmivm->acl_list = list;
     return list;
 }
@@ -60,10 +61,15 @@ int compare2aclps(void* a,void* b)
 {
     ACLPs* aa = a;
     ACLPs* bb = b;
+    //printf("[%s %s]",aa->name,bb->name);
     if(strcmp(aa->name,bb->name)==0)
+    {
         return 1;
+    }
     else
+    {
         return 0;
+    }
     return 0;
 }
 

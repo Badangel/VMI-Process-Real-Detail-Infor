@@ -165,6 +165,7 @@ int main (int argc, char **argv)
         perror("failed to pipe");
         exit(1);
     }
+    
     if( (fpid = fork())<0 )
     {
         perror("failed to fork");
@@ -174,12 +175,11 @@ int main (int argc, char **argv)
     {
         ///printf("%d father start!\n",fpid);
         ///init the ACL list of ps
+        
+        ///myListOutput(acl_list, outputACL);
         MyList * acl_list= createMySearchList(compare2aclps);
         getACLList(vmivm,acl_list);
-        ///myListOutput(acl_list, outputACL);
-
         
-
         /* walk the task list */
         int n = 1000;
         int readn;
@@ -247,6 +247,7 @@ int main (int argc, char **argv)
                     tasknodetmp->state = 3;
                     ///printf("ACL: ");
                 }
+                
                 ///printf("%d:%s %d\n",psnum,tasknodetmp->tsname,tasknodetmp->tspid);
 
                 /*push the ps into the list*/
@@ -295,7 +296,7 @@ int main (int argc, char **argv)
             //printf("This is farther, write hello to pipe\n");
             //write(fd[1], "hello\n", 25);
 
-            MyList* exitps_list = createMyList();
+            MyList* exitps_list = createMySearchList(compare2aclps);
             int exitps_num = read_exitps_from_file(vmivm,exitps_list);       
             
             int getsysnum = 0;
@@ -356,6 +357,7 @@ int main (int argc, char **argv)
             
             setParentLayer(queue);
 
+            
             traversal(vmivm,&mysql,queue,pre_queue,frenum,table);
 
             add_exitps_sql(vmivm,&mysql,exitps_list,table);

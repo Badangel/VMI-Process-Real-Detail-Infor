@@ -15,6 +15,7 @@ from state.warning_log import *
 
 def detect_ps(domname,sqltable):
     db = DBHelper.DBHelper()
+    printlog("ps train 000!")
     sqlps = "select layer,prio,inc_minflt,inc_majflt,inc_utime,inc_stime,mm_users,mm_count,stack_vm,unix, netlink,tcp,udp,tcpv6,eventfd,inotify, timerfd, signalfd, eventpoll, pipe, filenum,ps_control,file_rw,file_control,sys_control,mem_control,net_control,socket_control,user_control,ps_communcation,state from trainset"
     psdata = db.oncesql(sqlps)
     psdata = list(psdata)
@@ -28,7 +29,7 @@ def detect_ps(domname,sqltable):
     scaled_X = scaler.transform(X)
     mode = ensemble.RandomForestClassifier()
     mode.fit(scaled_X,Y)
-
+    printlog("ps train 111!")
     getpsfactor_sql = "select ps_p,ps_m,ps_c,process_anomaly from response where domname = '"+domname+"'"
     psfactor = db.oncesql(getpsfactor_sql)
     
@@ -40,7 +41,7 @@ def detect_ps(domname,sqltable):
     ps_c = int(pfactor[2])
     ps_f = int(pfactor[3])
     factortotal = 0
-
+    printlog("ps train 222!")
     ps_detect = open('/home/vmi/Downloads/code/VmiXen/host/tempfile/'+domname+'.psdetect', 'w')
     ps_detect.write("2")
     ps_detect.close()
@@ -106,7 +107,7 @@ def start_ps(domname):
     operation = 2
     
     printlog("ps collect will start!!")        
-    t1 = threading.Thread(target = runpsinfo,args =[domname,str(operation)],name='getpsinfo')
+    t1 = threading.Thread(target = runpsinfo,args =[domname,str(operation)],name='runpsinfo')
     t1.setDaemon(False)
     t1.start()   
     
